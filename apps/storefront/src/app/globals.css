@@ -1,0 +1,168 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Shippori+Mincho:wght@400;600&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Palette — lace, blush, ink, gold */
+  --cream:       #fdf8f3;
+  --parchment:   #f5ede0;
+  --blush:       #f2c9c9;
+  --rose:        #e8a0a0;
+  --deep-rose:   #c96b6b;
+  --mauve:       #9b6b7a;
+  --ink:         #1e1416;
+  --charcoal:    #3a2a30;
+  --silver:      #c8bfc4;
+  --lace:        #fef4f4;
+  --gold:        #c9a96e;
+  --gold-light:  #e8d5aa;
+
+  /* Semantic */
+  --bg:          var(--cream);
+  --surface:     #ffffff;
+  --surface-alt: var(--lace);
+  --border:      #e8ddd8;
+  --border-soft: #f0e8e4;
+  --text-primary:   var(--ink);
+  --text-secondary: var(--charcoal);
+  --text-muted:     #8a7070;
+  --accent:      var(--deep-rose);
+  --accent-soft: var(--blush);
+
+  /* Typography */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-jp:      'Shippori Mincho', serif;
+
+  /* Motion */
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Spacing */
+  --container: 1280px;
+  --gutter:    clamp(16px, 4vw, 48px);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(30,20,22,0.06);
+  --shadow-sm: 0 2px 8px rgba(30,20,22,0.08), 0 1px 2px rgba(30,20,22,0.04);
+  --shadow-md: 0 8px 24px rgba(30,20,22,0.10), 0 2px 6px rgba(30,20,22,0.06);
+  --shadow-lg: 0 20px 48px rgba(30,20,22,0.12), 0 4px 12px rgba(30,20,22,0.08);
+  --shadow-rose: 0 8px 32px rgba(201,107,107,0.20);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--parchment);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rose);
+  border-radius: 99px;
+}
+
+/* Selection */
+::selection {
+  background: var(--blush);
+  color: var(--charcoal);
+}
+
+/* Reset buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Reset links */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--deep-rose);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Lace texture overlay pattern (subtle) */
+.lace-bg {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(242,201,201,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(201,169,110,0.08) 0%, transparent 50%);
+}
+
+/* Utility: hide visually but keep in a11y tree */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* Global animation keyframes */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes ribbonSlide {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes petalDrift {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}

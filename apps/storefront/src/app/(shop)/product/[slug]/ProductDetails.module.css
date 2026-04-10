@@ -1,0 +1,865 @@
+/* ═══════════════════════════════════════════
+   SKUFNYA — Product Details Module CSS
+   Maid-aesthetic anime figure shop
+   ═══════════════════════════════════════════ */
+
+/* ── Breadcrumb ─────────────────────────── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 40px;
+  animation: fadeUp 0.5s var(--ease-out-expo) both;
+}
+
+.breadcrumbLink {
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.breadcrumbLink:hover {
+  color: var(--deep-rose);
+}
+
+.breadcrumbSep {
+  color: var(--silver);
+  font-size: 10px;
+}
+
+.breadcrumbCurrent {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ── Page wrapper ───────────────────────── */
+.page {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: clamp(32px, 5vw, 64px) var(--gutter);
+}
+
+/* ── Product layout ─────────────────────── */
+.productGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+}
+
+/* ── Gallery column ─────────────────────── */
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 24px;
+  animation: fadeUp 0.7s var(--ease-out-expo) 0.05s both;
+}
+
+.mainImageWrap {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  cursor: default;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s var(--ease-out-expo);
+  display: block;
+}
+
+.mainImageWrap:hover .mainImage {
+  transform: scale(1.04);
+}
+
+.mainImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(160deg, var(--lace), var(--parchment), var(--blush));
+}
+
+.mainImagePlaceholderIcon {
+  font-size: 80px;
+  filter: drop-shadow(0 8px 24px rgba(201, 107, 107, 0.25));
+  animation: floatY 5s ease-in-out infinite;
+}
+
+.mainImagePlaceholderLabel {
+  font-family: var(--font-jp);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--mauve);
+  text-transform: uppercase;
+}
+
+/* Adult blur */
+.blurred {
+  filter: blur(20px);
+  transition: filter 0.4s ease;
+}
+
+/* Image badges overlay */
+.imageBadges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+.imageBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 1px;
+  line-height: 1;
+}
+
+.badgeAdult {
+  background: var(--mauve);
+  color: #fff;
+}
+
+.badgePreorder {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+/* Adult unlock hint */
+.adultHintButton {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 20, 22, 0.75);
+  backdrop-filter: blur(8px);
+  color: rgba(253, 248, 243, 0.85);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  border-radius: 2px;
+  white-space: nowrap;
+  z-index: 3;
+  border: 1px solid rgba(253, 248, 243, 0.2);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.adultHintButton:hover {
+  background: rgba(30, 20, 22, 0.9);
+}
+
+/* Thumbnail strip */
+.thumbGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.thumb {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--parchment);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s var(--ease-spring);
+}
+
+.thumb:hover {
+  border-color: var(--rose);
+  transform: scale(1.03);
+}
+
+.thumbActive {
+  border-color: var(--deep-rose);
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s var(--ease-out-expo);
+}
+
+.thumb:hover .thumbImg {
+  transform: scale(1.08);
+}
+
+.thumbBlurred {
+  filter: blur(8px);
+}
+
+/* ── Info column ────────────────────────── */
+.info {
+  display: flex;
+  flex-direction: column;
+  animation: fadeUp 0.7s var(--ease-out-expo) 0.15s both;
+}
+
+/* Sale type pill */
+.saleTypePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 1px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.pillInStock {
+  background: rgba(158, 209, 159, 0.15);
+  color: #5a9e5b;
+  border: 1px solid rgba(90, 158, 91, 0.25);
+}
+
+.pillPreorder {
+  background: rgba(201, 169, 110, 0.15);
+  color: var(--gold);
+  border: 1px solid rgba(201, 169, 110, 0.25);
+}
+
+.pillBackorder {
+  background: rgba(155, 107, 122, 0.12);
+  color: var(--mauve);
+  border: 1px solid rgba(155, 107, 122, 0.25);
+}
+
+.pillDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Title block */
+.seriesLabel {
+  font-family: var(--font-jp);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.productTitle {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+/* Rating row */
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.ratingCount {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Price block */
+.priceBlock {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 20px 24px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.priceBlock::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--deep-rose);
+  border-radius: 2px 0 0 2px;
+}
+
+.priceMain {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--deep-rose);
+  line-height: 1;
+}
+
+/* Short description */
+.shortDesc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* ── Variants ───────────────────────────── */
+.variantsSection {
+  margin-bottom: 28px;
+}
+
+.variantsTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.variantsTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-soft);
+}
+
+.variantsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.variantCard {
+  border-radius: 2px;
+  border: 1.5px solid var(--border-soft);
+  background: var(--surface);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s var(--ease-spring),
+    box-shadow 0.2s;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.variantMedia {
+  width: 72px;
+  min-width: 72px;
+  height: 72px;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  background: var(--parchment);
+  flex-shrink: 0;
+}
+
+.variantThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.variantThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  background: linear-gradient(160deg, var(--lace), var(--parchment), var(--blush));
+}
+
+.variantCard:hover {
+  border-color: var(--rose);
+  transform: translateX(3px);
+  box-shadow: var(--shadow-sm);
+}
+
+.variantCardSelected {
+  border-color: var(--deep-rose);
+  background: var(--lace);
+  box-shadow: var(--shadow-rose);
+}
+
+.variantCardSelected:hover {
+  transform: translateX(0);
+}
+
+.variantLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.variantName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.variantMeta {
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.variantRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.variantPrice {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--deep-rose);
+  line-height: 1;
+}
+
+.variantStock {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.inStock {
+  color: #5a9e5b;
+}
+
+.outOfStock {
+  color: var(--text-muted);
+}
+
+.variantSelector {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.variantCardSelected .variantSelector {
+  border-color: var(--deep-rose);
+  background: var(--deep-rose);
+}
+
+.variantSelectorDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.variantCardSelected .variantSelectorDot {
+  opacity: 1;
+}
+
+.colorSwatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition:
+    transform 0.2s var(--ease-spring),
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+.colorSwatchSelected {
+  border-color: var(--deep-rose);
+  box-shadow:
+    0 0 0 3px rgba(201, 107, 107, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  transform: scale(1.02);
+}
+
+/* ── Quantity selector ──────────────────── */
+.quantitySection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.quantityLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.quantityBtn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.quantityBtn:hover {
+  background: var(--parchment);
+  color: var(--deep-rose);
+}
+
+.quantityBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.quantityValue {
+  width: 48px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Actions ─────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 16px 28px;
+  border-radius: 2px;
+  transition:
+    background 0.2s,
+    transform 0.2s var(--ease-spring),
+    box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btnPrimary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  background-size: 200% 100%;
+  background-position: -200% center;
+  transition: background-position 0.5s;
+}
+
+.btnPrimary:hover {
+  background: var(--charcoal);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btnPrimary:hover::after {
+  background-position: 200% center;
+}
+
+.btnPrimary:active {
+  transform: translateY(0);
+}
+
+.btnSecondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 13px 28px;
+  border-radius: 2px;
+  border: 1.5px solid var(--border);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.btnSecondary:hover {
+  border-color: var(--rose);
+  color: var(--deep-rose);
+  background: var(--lace);
+}
+
+.btnRow {
+  display: flex;
+  gap: 10px;
+}
+
+.btnRow .btnSecondary {
+  flex: 1;
+}
+
+/* ── Description tabs ────────────────────── */
+.tabs {
+  margin-top: 48px;
+  border-top: 1px solid var(--border);
+  padding-top: 48px;
+  animation: fadeUp 0.7s var(--ease-out-expo) 0.25s both;
+}
+
+.tabNav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 32px;
+}
+
+.tabBtn {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 12px 24px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  color: var(--text-secondary);
+}
+
+.tabBtnActive {
+  color: var(--deep-rose);
+  border-bottom-color: var(--deep-rose);
+}
+
+.tabContent {
+  animation: fadeIn 0.35s ease both;
+}
+
+/* Description content */
+.descriptionText {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--text-secondary);
+  max-width: 680px;
+}
+
+/* Specs table */
+.specsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.specsRow {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.specsRow:last-child {
+  border-bottom: none;
+}
+
+.specsKey {
+  padding: 14px 16px 14px 0;
+  color: var(--text-muted);
+  font-family: var(--font-jp);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.specsValue {
+  padding: 14px 0;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.breadcrumbLink:focus-visible,
+.thumb:focus-visible,
+.variantCard:focus-visible,
+.quantityBtn:focus-visible,
+.btnPrimary:focus-visible,
+.btnSecondary:focus-visible,
+.tabBtn:focus-visible,
+.adultHintButton:focus-visible {
+  outline: 2px solid var(--deep-rose);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breadcrumb,
+  .gallery,
+  .info,
+  .tabs,
+  .mainImage,
+  .thumb,
+  .thumbImg,
+  .pillDot {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 1024px) {
+  .productGrid {
+    gap: 40px;
+  }
+
+  .gallery {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .gallery {
+    position: static;
+  }
+
+  .priceMain {
+    font-size: 28px;
+  }
+
+  .tabNav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tabNav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabBtn {
+    padding: 12px 16px;
+  }
+
+  .specsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .thumbGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .breadcrumb {
+    margin-bottom: 24px;
+  }
+
+  .btnRow {
+    flex-direction: column;
+  }
+
+  .quantitySection {
+    flex-wrap: wrap;
+  }
+
+  .variantCard {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .variantMedia {
+    width: 56px;
+    min-width: 56px;
+    height: 56px;
+  }
+
+  .variantPrice {
+    font-size: 16px;
+  }
+}

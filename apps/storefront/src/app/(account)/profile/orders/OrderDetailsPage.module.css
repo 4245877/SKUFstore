@@ -1,0 +1,280 @@
+.page {
+  min-height: 100vh;
+  background: #f7f7fb;
+  color: #17171c;
+}
+
+.container {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 72px;
+}
+
+.loading {
+  padding: 48px 0;
+  color: #66667a;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: #66667a;
+}
+
+.breadcrumbLink {
+  color: #66667a;
+  text-decoration: none;
+}
+
+.breadcrumbLink:hover {
+  color: #8b5cf6;
+}
+
+.breadcrumbDivider {
+  color: #b0b0c2;
+}
+
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b5cf6;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.05;
+}
+
+.subtitle {
+  margin: 10px 0 0;
+  color: #66667a;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statusPending {
+  background: #fff7e6;
+  color: #9a6700;
+}
+
+.statusPaid {
+  background: #e8f7ec;
+  color: #166534;
+}
+
+.statusProcessing {
+  background: #efe8ff;
+  color: #6b46c1;
+}
+
+.statusShipped {
+  background: #e8f2ff;
+  color: #1d4ed8;
+}
+
+.statusDelivered {
+  background: #e8f7ec;
+  color: #166534;
+}
+
+.statusCancelled {
+  background: #ffe8e8;
+  color: #b42318;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.mainCard,
+.sideCard,
+.emptyState {
+  background: #fff;
+  border: 1px solid #ececf5;
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.sectionTitle {
+  margin: 0 0 18px;
+  font-size: 22px;
+}
+
+.items {
+  display: grid;
+  gap: 14px;
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #efeff6;
+}
+
+.itemVisual {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #efe8ff 0%, #f7dfe8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b46c1;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.itemContent {
+  min-width: 0;
+}
+
+.itemName {
+  display: inline-block;
+  color: #17171c;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.itemName:hover {
+  color: #8b5cf6;
+}
+
+.itemSubtitle {
+  margin: 6px 0 0;
+  color: #66667a;
+  font-size: 14px;
+}
+
+.itemMeta {
+  margin: 8px 0 0;
+  color: #66667a;
+}
+
+.itemTotal {
+  margin: 0;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.sidebar {
+  display: grid;
+  gap: 16px;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #efeff6;
+}
+
+.summaryTotal {
+  border-bottom: 0;
+  padding-top: 16px;
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.detailsList {
+  display: grid;
+  gap: 16px;
+}
+
+.detailLabel {
+  display: block;
+  margin-bottom: 6px;
+  color: #66667a;
+  font-size: 14px;
+}
+
+.detailValue {
+  display: block;
+  line-height: 1.6;
+}
+
+.emptyState {
+  text-align: center;
+}
+
+.emptyText {
+  margin: 12px 0 20px;
+  color: #66667a;
+  line-height: 1.6;
+}
+
+.primaryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  background: #17171c;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.primaryLink:hover {
+  background: #0f0f14;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .container {
+    width: min(100% - 24px, 1180px);
+    padding: 24px 0 48px;
+  }
+
+  .heading {
+    flex-direction: column;
+  }
+
+  .itemRow {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .itemTotal {
+    justify-self: start;
+  }
+}

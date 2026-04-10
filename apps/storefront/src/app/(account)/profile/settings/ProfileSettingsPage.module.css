@@ -1,0 +1,788 @@
+/* ═══════════════════════════════════════════
+   SKUFNYA — Profile Settings Module CSS
+   Maid-aesthetic anime figure shop
+   ═══════════════════════════════════════════ */
+
+/* ── Page shell ─────────────────────────── */
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: clamp(64px, 10vw, 120px);
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* ── Breadcrumb ──────────────────────────── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  animation: fadeIn 0.5s var(--ease-out-expo) both;
+}
+
+.breadcrumbLink {
+  color: var(--text-muted);
+  transition: color 0.18s;
+}
+
+.breadcrumbLink:hover {
+  color: var(--deep-rose);
+}
+
+.breadcrumbSep {
+  color: var(--silver);
+  font-size: 11px;
+}
+
+.breadcrumbCurrent {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ── Page hero header ────────────────────── */
+.hero {
+  padding: clamp(32px, 5vw, 56px) 0 clamp(28px, 4vw, 44px);
+  animation: fadeUp 0.7s var(--ease-out-expo) 0.05s both;
+  position: relative;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 64px;
+  height: 1.5px;
+  background: linear-gradient(to right, var(--deep-rose), var(--blush));
+  border-radius: 99px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-jp);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--mauve);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--mauve);
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 480px;
+}
+
+/* ── Two-column layout ───────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
+  animation: fadeUp 0.8s var(--ease-out-expo) 0.15s both;
+}
+
+/* ── Main column ─────────────────────────── */
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Card ────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.3s;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+/* subtle top accent line */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, var(--blush), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* ── Card head ───────────────────────────── */
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px 0;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.cardLabel {
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--mauve);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+/* ── Status pill ─────────────────────────── */
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #5a7a5a;
+  background: #f0f7f0;
+  border: 1px solid #c8e0c8;
+  border-radius: 99px;
+  padding: 4px 12px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusPill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6db06d;
+  flex-shrink: 0;
+  animation: pulse-soft 2.4s ease-in-out infinite;
+}
+
+/* ── Form grid ───────────────────────────── */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 0 28px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: default;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.input {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  width: 100%;
+}
+
+.input::placeholder {
+  color: var(--silver);
+}
+
+.input:hover {
+  border-color: var(--rose);
+}
+
+.input:focus {
+  border-color: var(--deep-rose);
+  box-shadow: 0 0 0 3px rgba(201, 107, 107, 0.10);
+}
+
+/* ── Actions ─────────────────────────────── */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 28px 28px;
+  flex-wrap: wrap;
+}
+
+/* Primary button */
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 11px 24px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  transition: background 0.18s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.primaryButton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-position: -200% center;
+  transition: background-position 0.5s;
+}
+
+.primaryButton:hover {
+  background: var(--charcoal);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.primaryButton:hover::after {
+  background-position: 200% center;
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+/* Secondary button */
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.2s var(--ease-spring);
+  cursor: pointer;
+}
+
+.secondaryButton:hover {
+  background: var(--parchment);
+  border-color: var(--rose);
+  color: var(--charcoal);
+  transform: translateY(-1px);
+}
+
+.secondaryButton:active {
+  transform: translateY(0);
+}
+
+/* ── Security section ────────────────────── */
+.securityGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 28px 28px;
+}
+
+.securityItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-soft);
+  flex-wrap: wrap;
+}
+
+.securityItem:last-child {
+  border-bottom: none;
+}
+
+.securityTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.securityText {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Toggle list ─────────────────────────── */
+.toggleList {
+  display: flex;
+  flex-direction: column;
+  padding: 0 28px 28px;
+  gap: 0;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-soft);
+  cursor: pointer;
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+}
+
+.toggleRow:hover .toggleTitle {
+  color: var(--deep-rose);
+}
+
+.toggleTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 3px;
+  transition: color 0.18s;
+}
+
+.toggleText {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Custom toggle switch */
+.toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  width: 42px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 99px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.25s var(--ease-in-out);
+  outline: none;
+}
+
+.toggle::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  box-shadow: 0 1px 4px rgba(30, 20, 22, 0.18);
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.2s;
+}
+
+.toggle:checked {
+  background: var(--deep-rose);
+}
+
+.toggle:checked::before {
+  transform: translateX(18px);
+  box-shadow: 0 1px 6px rgba(201, 107, 107, 0.35);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--deep-rose);
+  outline-offset: 2px;
+}
+
+/* ── Danger card ─────────────────────────── */
+.dangerCard {
+  border-color: #f5dede;
+}
+
+.dangerCard::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #e88, transparent 80%);
+  opacity: 0.5;
+}
+
+.dangerText {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  padding: 0 28px;
+  margin-bottom: 4px;
+}
+
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: #b03030;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  border-radius: 2px;
+  border: 1px solid #e0a0a0;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.2s var(--ease-spring);
+}
+
+.dangerButton:hover {
+  background: #fdf0f0;
+  border-color: #c05050;
+  transform: translateY(-1px);
+}
+
+.dangerButton:active {
+  transform: translateY(0);
+}
+
+/* ── Sidebar ─────────────────────────────── */
+.sidebar {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Side card ───────────────────────────── */
+.sideCard {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s;
+}
+
+.sideCard:hover {
+  box-shadow: var(--shadow-xs);
+}
+
+/* soft lace corner decoration */
+.sideCard::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(242, 201, 201, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sideLabel {
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--mauve);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sideLabel::after {
+  content: '';
+  display: block;
+  flex: 1;
+  height: 1px;
+  background: var(--blush);
+}
+
+.sideLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sideLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  padding: 9px 10px;
+  border-radius: 2px;
+  transition: background 0.18s, color 0.18s, padding-left 0.2s var(--ease-spring);
+  position: relative;
+}
+
+.sideLink::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 2px;
+  height: 60%;
+  background: var(--deep-rose);
+  border-radius: 99px;
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.sideLink:hover {
+  background: var(--lace);
+  color: var(--deep-rose);
+  padding-left: 16px;
+}
+
+.sideLink:hover::before {
+  transform: translateY(-50%) scaleY(1);
+}
+
+.sideText {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* ── Divider used inside cards ───────────── */
+.divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 0 28px;
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr 240px;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .sideCard {
+    flex: 1 1 200px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldWide {
+    grid-column: auto;
+  }
+
+  .cardHead {
+    padding: 20px 20px 0;
+  }
+
+  .formGrid {
+    padding: 0 20px;
+  }
+
+  .actions {
+    padding: 20px 20px 24px;
+  }
+
+  .securityGrid,
+  .toggleList,
+  .dangerText {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .message,
+  .sectionNote {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .sideLinks {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .sideLink {
+    padding: 7px 12px;
+  }
+
+  .sideLink:hover {
+    padding-left: 12px;
+  }
+
+  .sideLink::before {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    flex-direction: column;
+  }
+
+  .securityItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    justify-content: center;
+  }
+
+  .dangerButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero {
+    padding-top: 24px;
+  }
+}
+
+.loading {
+  font-family: var(--font-jp);
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 96px 0;
+  animation: pulse-soft 1.8s ease-in-out infinite;
+}
+
+.message {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 0 28px 4px;
+}
+
+.messageSuccess {
+  color: #4a9e63;
+}
+
+.messageError {
+  color: #b85555;
+}
+
+.sectionNote {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  padding: 0 28px 28px;
+}
+
+.input:disabled {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.primaryButton:disabled::after {
+  display: none;
+}
+
+.primaryButton:disabled:hover,
+.secondaryButton:disabled:hover,
+.dangerButton:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
