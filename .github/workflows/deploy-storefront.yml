@@ -28,7 +28,6 @@ jobs:
       DEPLOY_TARGET: pages
       NEXT_PUBLIC_BASE_PATH: /SKUFstore
       NEXT_PUBLIC_API_URL: https://api.skufnya.com
-      API_INTERNAL_URL: http://api.skufnya.com
 
     steps:
       - name: Checkout
@@ -50,6 +49,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check public API
+        run: |
+          curl --fail --show-error --location "https://api.skufnya.com/api/catalog/products?page=1&limit=1"
 
       - name: Build Storefront
         run: pnpm --filter storefront build
