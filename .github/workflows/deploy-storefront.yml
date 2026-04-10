@@ -6,6 +6,10 @@ on:
     paths:
       - "apps/storefront/**"
       - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/deploy-storefront.yml"
   workflow_dispatch:
 
 permissions:
@@ -20,14 +24,17 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Install pnpm
         uses: pnpm/action-setup@v5
         with:
-          version: 9
           run_install: false
 
       - name: Setup Node
@@ -43,16 +50,17 @@ jobs:
         run: pnpm --filter storefront build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./apps/storefront/out
 
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
