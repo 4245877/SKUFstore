@@ -26,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DEPLOY_TARGET: pages
-      NEXT_PUBLIC_BASE_PATH: /SKUFstore
       NEXT_PUBLIC_API_URL: https://api.skufnya.com
       API_INTERNAL_URL: https://api.skufnya.com
 
