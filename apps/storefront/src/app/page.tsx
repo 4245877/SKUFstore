@@ -16,8 +16,6 @@ export const metadata: Metadata = {
     'Магазин эксклюзивных аниме-фигурок. Scale, Nendoroid, Figma и коллекционные статуэтки от ведущих японских производителей.',
 }
 
-export const dynamic = 'force-dynamic'
-
 const FEATURES = [
   {
     icon: '🛡️',
