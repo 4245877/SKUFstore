@@ -3,7 +3,7 @@
 import { useEffect, useState, useId } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiFetch, buildOAuthStartUrl } from '../../../lib/api';
+import { buildOAuthStartUrl, loginAccount } from '../../../lib/api';
 import styles from './LoginPage.module.css';
 
 /* ─────────────────────────────────────────
@@ -167,13 +167,10 @@ export default function LoginPage() {
     setGlobalError('');
 
     try {
-      await apiFetch<{ user: unknown }>('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-          remember: values.remember,
-        }),
+      await loginAccount({
+        email: values.email,
+        password: values.password,
+        remember: values.remember,
       });
 
       router.push(returnTo);

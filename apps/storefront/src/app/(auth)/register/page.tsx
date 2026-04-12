@@ -3,7 +3,11 @@
 import { useEffect, useState, useId } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { apiFetch, buildOAuthStartUrl } from '../../../lib/api';
+import {
+  buildOAuthStartUrl,
+  registerAccount,
+  requestRegisterCode,
+} from '../../../lib/api';
 import s from './RegisterPage.module.css';
 
 type StrengthLevel = 0 | 1 | 2 | 3;
@@ -60,6 +64,7 @@ export default function RegisterPage() {
     username: '',
     password: '',
     confirm: '',
+    code: '',
     agree: false,
     newsletter: false,
   });
@@ -69,6 +74,8 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [codeRequested, setCodeRequested] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -88,13 +95,12 @@ export default function RegisterPage() {
   const handleFieldChange =
     (key: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value =
-        e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+      const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
-      setForm(prev => ({ ...prev, [key]: value }));
+      setForm((prev) => ({ ...prev, [key]: value }));
 
       if (errors[key]) {
-        setErrors(prev => {
+        setErrors((prev) => {
           const next = { ...prev };
           delete next[key];
           return next;
@@ -122,6 +128,11 @@ export default function RegisterPage() {
     if (form.password !== form.confirm) errs.confirm = 'Паролі не збігаються';
     if (!form.agree) errs.agree = 'Ти маєш прийняти умови';
 
+    if (codeRequested) {
+      if (!form.code.trim()) errs.code = 'Введи код із листа';
+      else if (!/^\d{6}$/.test(form.code.trim())) errs.code = 'Код має містити 6 цифр';
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -129,22 +140,29 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setGlobalError('');
+    setSuccessMessage('');
 
     if (!validate()) return;
 
     setLoading(true);
 
     try {
-      await apiFetch<{ user: unknown }>('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
-          username: form.username,
-          email: form.email,
-          password: form.password,
-          remember: true,
-        }),
+      if (!codeRequested) {
+        await requestRegisterCode(form.email);
+
+        setCodeRequested(true);
+        setSuccessMessage('Ми надіслали 6-значний код на твою електронну пошту.');
+        return;
+      }
+
+      await registerAccount({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        code: form.code.trim(),
+        remember: true,
       });
 
       router.push('/profile');
@@ -165,8 +183,37 @@ export default function RegisterPage() {
       buildOAuthStartUrl(provider, {
         returnTo: '/profile',
         remember: true,
-      })
+      }),
     );
+  };
+
+  const handleResendCode = async () => {
+    setGlobalError('');
+    setSuccessMessage('');
+
+    if (!form.email.trim()) {
+      setErrors((prev) => ({
+        ...prev,
+        email: 'Спочатку введи електронну пошту',
+      }));
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await requestRegisterCode(form.email);
+
+      setCodeRequested(true);
+      setSuccessMessage('Новий код підтвердження надіслано.');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Не вдалося надіслати код повторно.';
+
+      setGlobalError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -232,12 +279,22 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form
-            className={s.form}
-            onSubmit={handleSubmit}
-            noValidate
-            aria-label="Форма реєстрації"
-          >
+          {successMessage && (
+            <div
+              role="status"
+              style={{
+                marginBottom: 16,
+                padding: '12px 14px',
+                borderRadius: 14,
+                border: '1px solid rgba(120,180,120,0.35)',
+                background: 'rgba(120,180,120,0.10)',
+              }}
+            >
+              {successMessage}
+            </div>
+          )}
+
+          <form className={s.form} onSubmit={handleSubmit} noValidate aria-label="Форма реєстрації">
             <div className={s.fieldRow}>
               <Field
                 id={`${uid}-fn`}
@@ -278,6 +335,54 @@ export default function RegisterPage() {
               autoComplete="email"
             />
 
+            {codeRequested && (
+              <div className={s.field}>
+                <label className={s.label} htmlFor={`${uid}-code`}>
+                  Код із листа <span className={s.labelRequired}>*</span>
+                </label>
+                <div className={s.inputWrap}>
+                  <span className={s.inputIcon} aria-hidden="true">
+                    ✉
+                  </span>
+                  <input
+                    id={`${uid}-code`}
+                    className={`${s.input}${errors.code ? ` ${s.inputError}` : ''}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={form.code}
+                    onChange={handleFieldChange('code')}
+                    aria-invalid={!!errors.code}
+                    aria-describedby={errors.code ? `${uid}-code-err` : undefined}
+                  />
+                </div>
+
+                {errors.code && (
+                  <span className={s.fieldError} id={`${uid}-code-err`} role="alert">
+                    <span aria-hidden="true">⚠</span> {errors.code}
+                  </span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={loading}
+                  style={{
+                    marginTop: 10,
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    font: 'inherit',
+                  }}
+                >
+                  Надіслати код ще раз
+                </button>
+              </div>
+            )}
+
             <Field
               id={`${uid}-user`}
               label="Ім’я користувача"
@@ -313,7 +418,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   className={s.inputToggle}
-                  onClick={() => setShowPw(v => !v)}
+                  onClick={() => setShowPw((v) => !v)}
                   aria-label={showPw ? 'Сховати пароль' : 'Показати пароль'}
                 >
                   {showPw ? '🙈' : '👁'}
@@ -321,13 +426,9 @@ export default function RegisterPage() {
               </div>
 
               {form.password && (
-                <div
-                  className={s.strengthMeter}
-                  id={`${uid}-pw-strength`}
-                  aria-live="polite"
-                >
+                <div className={s.strengthMeter} id={`${uid}-pw-strength`} aria-live="polite">
                   <div className={s.strengthBars} aria-hidden="true">
-                    {([1, 2, 3] as const).map(n => (
+                    {([1, 2, 3] as const).map((n) => (
                       <div
                         key={n}
                         className={`${s.strengthBar}${strength >= n ? ` ${s.active}` : ''}`}
@@ -367,7 +468,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   className={s.inputToggle}
-                  onClick={() => setShowConfirm(v => !v)}
+                  onClick={() => setShowConfirm((v) => !v)}
                   aria-label={
                     showConfirm
                       ? 'Сховати підтвердження пароля'
@@ -423,24 +524,20 @@ export default function RegisterPage() {
               />
               <span className={s.checkboxBox} aria-hidden="true" />
               <span className={s.checkLabel}>
-                Надсилайте мені новинки, поповнення асортименту та ексклюзивні
-                пропозиції 🌸
+                Надсилайте мені новинки, поповнення асортименту та ексклюзивні пропозиції 🌸
               </span>
             </label>
 
-            <button
-              type="submit"
-              className={s.submitBtn}
-              disabled={loading}
-              aria-busy={loading}
-            >
+            <button type="submit" className={s.submitBtn} disabled={loading} aria-busy={loading}>
               {loading ? (
                 <>
                   <span className={s.spinner} aria-hidden="true" />
-                  Створення акаунта…
+                  {codeRequested ? 'Підтвердження…' : 'Надсилання коду…'}
                 </>
+              ) : codeRequested ? (
+                <>Підтвердити код і створити акаунт ✦</>
               ) : (
-                <>Створити акаунт ✦</>
+                <>Надіслати код ✦</>
               )}
             </button>
           </form>
@@ -540,8 +637,7 @@ function DecoContent() {
         <span className={s.decoTitleAccent}>преміальних фігурок</span>
       </h2>
       <p className={s.decoText}>
-        Створи акаунт, щоб зберігати улюблене, відстежувати замовлення та
-        керувати своїм профілем.
+        Створи акаунт, щоб зберігати улюблене, відстежувати замовлення та керувати своїм профілем.
       </p>
 
       <div className={s.decoTrust} aria-hidden="true" />
