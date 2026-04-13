@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import styles from './CheckoutPage.module.css';
-import { createOrder, resolveMediaUrl } from '../../../lib/api';
+import { apiFetch, createOrder, resolveMediaUrl } from '../../../lib/api';
 import {
   clearCart,
   formatPrice,
@@ -37,12 +37,23 @@ type CheckoutCartItem = CartItem & {
   imageAlt?: string | null;
 };
 
+type NovaPoshtaPointType = 'branch' | 'postomat';
+
+type NovaPoshtaDivision = {
+  id: string;
+  name: string;
+  address: string;
+  settlementName: string;
+  number: string | null;
+  fullLabel: string;
+};
+
 const DELIVERY_LABELS: Record<
   DeliveryMethod,
   { label: string; sub: string; badge?: string; badgeFree?: boolean }
 > = {
   'nova-poshta-branch': {
-    label: 'Нова пошта, відділення',
+    label: 'Нова пошта, відділення / поштомат',
     sub: 'Стандартна доставка по Україні',
   },
   courier: {
@@ -56,6 +67,14 @@ const DELIVERY_LABELS: Record<
     badge: 'Безкоштовно',
     badgeFree: true,
   },
+};
+
+const NOVA_POSHTA_POINT_TYPE_LABELS: Record<
+  NovaPoshtaPointType,
+  { label: string; sub: string }
+> = {
+  branch: { label: 'Відділення', sub: 'Класичне відділення Нова Пошта' },
+  postomat: { label: 'Поштомат', sub: 'Автоматична комірка для отримання' },
 };
 
 const PAYMENT_LABELS: Record<PaymentMethod, { label: string; sub: string }> = {
@@ -82,6 +101,10 @@ function formatItemCount(count: number) {
   return `${count} позицій`;
 }
 
+function formatNovaPoshtaPointType(value: NovaPoshtaPointType) {
+  return value === 'postomat' ? 'Поштомат' : 'Відділення';
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [items, setItems] = useState<CheckoutCartItem[]>([]);
@@ -90,14 +113,83 @@ export default function CheckoutPage() {
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [form, setForm] = useState<CheckoutFormValues>(initialForm);
+  const [npPointType, setNpPointType] = useState<NovaPoshtaPointType>('branch');
+  const [npOptions, setNpOptions] = useState<NovaPoshtaDivision[]>([]);
+  const [npIsLoading, setNpIsLoading] = useState(false);
+  const [npError, setNpError] = useState<string | null>(null);
+  const [npSelectedId, setNpSelectedId] = useState<string | null>(null);
 
   const deliveryMethods = Object.keys(DELIVERY_LABELS) as DeliveryMethod[];
   const paymentMethods = Object.keys(PAYMENT_LABELS) as PaymentMethod[];
+  const novaPoshtaPointTypes = Object.keys(
+    NOVA_POSHTA_POINT_TYPE_LABELS,
+  ) as NovaPoshtaPointType[];
 
   useEffect(() => {
     setItems(readCart());
     setIsReady(true);
   }, []);
+
+  const isNovaPoshtaDelivery = form.deliveryMethod === 'nova-poshta-branch';
+
+  useEffect(() => {
+    if (!isNovaPoshtaDelivery) {
+      setNpOptions([]);
+      setNpError(null);
+      setNpIsLoading(false);
+      return;
+    }
+
+    const city = form.city.trim();
+
+    if (city.length < 2) {
+      setNpOptions([]);
+      setNpError(null);
+      setNpIsLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const timeoutId = window.setTimeout(async () => {
+      setNpIsLoading(true);
+      setNpError(null);
+
+      try {
+        const data = (await apiFetch(
+          `/shipping/nova-poshta/divisions?city=${encodeURIComponent(city)}&type=${encodeURIComponent(npPointType)}`,
+          { method: 'GET' },
+        )) as { items?: NovaPoshtaDivision[] };
+
+        if (isCancelled) return;
+
+        const nextItems = Array.isArray(data?.items) ? data.items : [];
+        setNpOptions(nextItems);
+
+        if (nextItems.length === 0) {
+          setNpError('За цим містом нічого не знайдено. Спробуй уточнити назву міста.');
+        }
+      } catch (error) {
+        if (isCancelled) return;
+
+        setNpOptions([]);
+        setNpError(
+          error instanceof Error
+            ? error.message
+            : 'Не вдалося отримати список точок видачі Нова Пошта.',
+        );
+      } finally {
+        if (!isCancelled) {
+          setNpIsLoading(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [form.city, isNovaPoshtaDelivery, npPointType]);
 
   const subtotal = getCartSubtotal(items);
   const deliveryPrice = getDeliveryPrice(form.deliveryMethod, items);
@@ -107,7 +199,45 @@ export default function CheckoutPage() {
     field: K,
     value: CheckoutFormValues[K],
   ) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      if (field === 'city' && prev.deliveryMethod === 'nova-poshta-branch') {
+        return {
+          ...prev,
+          city: value as CheckoutFormValues['city'],
+          address: '',
+        };
+      }
+
+      if (field === 'deliveryMethod' && value === 'nova-poshta-branch') {
+        return {
+          ...prev,
+          deliveryMethod: value as CheckoutFormValues['deliveryMethod'],
+          address: '',
+        };
+      }
+
+      return { ...prev, [field]: value };
+    });
+
+    if (field === 'city' || field === 'address') {
+      setNpSelectedId(null);
+    }
+
+    if (field === 'deliveryMethod' && value !== 'nova-poshta-branch') {
+      setNpOptions([]);
+      setNpError(null);
+      setNpSelectedId(null);
+    }
+  }
+
+  function handleSelectNovaPoshtaDivision(division: NovaPoshtaDivision) {
+    setForm((prev) => ({
+      ...prev,
+      city: division.settlementName,
+      address: division.fullLabel,
+    }));
+    setNpSelectedId(division.id);
+    setSubmitError(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -117,17 +247,37 @@ export default function CheckoutPage() {
     setSubmitError(null);
     setIsSubmitting(true);
 
+    const requiredFields = [
+      form.fullName.trim(),
+      form.email.trim(),
+      form.phone.trim(),
+      form.city.trim(),
+      form.address.trim(),
+    ];
+
+    if (requiredFields.some((value) => value.length === 0)) {
+      setSubmitError('Заповни, будь ласка, усі обовʼязкові поля.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isNovaPoshtaDelivery && !npSelectedId) {
+      setSubmitError('Оберіть, будь ласка, відділення або поштомат Нова Пошта зі списку.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await createOrder({
-        email: form.email,
-        fullName: form.fullName,
-        phone: form.phone,
-        city: form.city,
-        address: form.address,
+        email: form.email.trim(),
+        fullName: form.fullName.trim(),
+        phone: form.phone.trim(),
+        city: form.city.trim(),
+        address: form.address.trim(),
         deliveryMethod: form.deliveryMethod,
         paymentMethod: form.paymentMethod,
         currency: 'UAH',
-        comment: form.comment || undefined,
+        comment: form.comment.trim() || undefined,
         items: items.map((item) => {
           const cartItem = item as CheckoutCartItem & { variantId?: string };
 
@@ -310,17 +460,100 @@ export default function CheckoutPage() {
                 })}
               </div>
 
+              {isNovaPoshtaDelivery ? (
+                <>
+                  <div className={styles.options}>
+                    {novaPoshtaPointTypes.map((value) => {
+                      const { label, sub } = NOVA_POSHTA_POINT_TYPE_LABELS[value];
+
+                      return (
+                        <label key={value} className={styles.option}>
+                          <input
+                            type="radio"
+                            name="novaPoshtaPointType"
+                            checked={npPointType === value}
+                            onChange={() => {
+                              setNpPointType(value);
+                              setNpOptions([]);
+                              setNpError(null);
+                              setNpSelectedId(null);
+                              handleChange('address', '');
+                            }}
+                          />
+                          <span className={styles.optionContent}>
+                            <strong className={styles.optionLabel}>{label}</strong>
+                            <small className={styles.optionSub}>{sub}</small>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className={`${styles.field} ${styles.gridFull}`}>
+                    <span className={styles.label}>Точка видачі Нова Пошта</span>
+                    <small className={styles.optionSub}>
+                      {form.city.trim().length < 2
+                        ? 'Спочатку вкажи місто вище.'
+                        : 'Список точок видачі оновлюється автоматично.'}
+                    </small>
+                  </div>
+
+                  {npIsLoading ? (
+                    <p className={styles.emptyText}>Шукаємо доступні точки видачі…</p>
+                  ) : null}
+
+                  {npError ? (
+                    <p role="alert" className={styles.emptyText}>
+                      {npError}
+                    </p>
+                  ) : null}
+
+                  {npOptions.length > 0 ? (
+                    <div className={styles.options}>
+                      {npOptions.map((division) => (
+                        <label key={division.id} className={styles.option}>
+                          <input
+                            type="radio"
+                            name="novaPoshtaDivision"
+                            checked={npSelectedId === division.id}
+                            onChange={() => handleSelectNovaPoshtaDivision(division)}
+                          />
+                          <span className={styles.optionContent}>
+                            <strong className={styles.optionLabel}>{division.name}</strong>
+                            <small className={styles.optionSub}>{division.address}</small>
+                          </span>
+                          <span className={styles.optionBadge}>
+                            {formatNovaPoshtaPointType(npPointType)}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+
               <label className={`${styles.field} ${styles.gridFull}`}>
                 <span className={`${styles.label} ${styles.labelRequired}`}>
-                  Адреса&nbsp;/&nbsp;відділення
+                  {isNovaPoshtaDelivery ? (
+                    'Обрана точка видачі'
+                  ) : (
+                    <>
+                      Адреса&nbsp;/&nbsp;відділення
+                    </>
+                  )}
                 </span>
                 <input
                   className={styles.input}
                   value={form.address}
                   onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder="Вулиця, будинок або номер відділення"
+                  placeholder={
+                    isNovaPoshtaDelivery
+                      ? 'Оберіть відділення або поштомат зі списку вище'
+                      : 'Вулиця, будинок або номер відділення'
+                  }
                   required
-                  autoComplete="street-address"
+                  autoComplete={isNovaPoshtaDelivery ? 'off' : 'street-address'}
+                  readOnly={isNovaPoshtaDelivery}
                 />
               </label>
             </section>
