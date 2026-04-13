@@ -128,10 +128,15 @@ export default function CheckoutPage() {
         paymentMethod: form.paymentMethod,
         currency: 'UAH',
         comment: form.comment || undefined,
-        items: items.map((item) => ({
-          variantId: item.id,
-          qty: item.quantity,
-        })),
+        items: items.map((item) => {
+          const cartItem = item as CheckoutCartItem & { variantId?: string };
+
+          return {
+            variantId: cartItem.variantId ?? item.id,
+            productId: item.productId ?? undefined,
+            qty: item.quantity,
+          };
+        }),
       });
 
       writeLastOrder(response.order as any);
