@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import styles from './CheckoutPage.module.css';
@@ -46,6 +46,8 @@ type NovaPoshtaDivision = {
   settlementName: string;
   number: string | null;
   fullLabel: string;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 const DELIVERY_LABELS: Record<
@@ -118,6 +120,7 @@ export default function CheckoutPage() {
   const [npIsLoading, setNpIsLoading] = useState(false);
   const [npError, setNpError] = useState<string | null>(null);
   const [npSelectedId, setNpSelectedId] = useState<string | null>(null);
+  const [npDivisionQuery, setNpDivisionQuery] = useState('');
 
   const deliveryMethods = Object.keys(DELIVERY_LABELS) as DeliveryMethod[];
   const paymentMethods = Object.keys(PAYMENT_LABELS) as PaymentMethod[];
@@ -131,6 +134,46 @@ export default function CheckoutPage() {
   }, []);
 
   const isNovaPoshtaDelivery = form.deliveryMethod === 'nova-poshta-branch';
+
+  const npCitySuggestions = useMemo(() => {
+    const seen = new Set<string>();
+
+    return npOptions
+      .map((item) => item.settlementName.trim())
+      .filter((name) => {
+        const key = name.toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => a.localeCompare(b, 'uk'));
+  }, [npOptions]);
+
+  const filteredNpOptions = useMemo(() => {
+    const query = npDivisionQuery.trim().toLowerCase();
+
+    if (!query) {
+      return npOptions;
+    }
+
+    return npOptions.filter((division) => {
+      const haystack = [
+        division.name,
+        division.address,
+        division.fullLabel,
+        division.number ?? '',
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [npOptions, npDivisionQuery]);
+
+  const selectedNpDivision = useMemo(
+    () => npOptions.find((division) => division.id === npSelectedId) ?? null,
+    [npOptions, npSelectedId],
+  );
 
   useEffect(() => {
     if (!isNovaPoshtaDelivery) {
@@ -219,6 +262,10 @@ export default function CheckoutPage() {
       return { ...prev, [field]: value };
     });
 
+    if (field === 'city') {
+      setNpDivisionQuery('');
+    }
+
     if (field === 'city' || field === 'address') {
       setNpSelectedId(null);
     }
@@ -236,6 +283,7 @@ export default function CheckoutPage() {
       city: division.settlementName,
       address: division.fullLabel,
     }));
+    setNpDivisionQuery(division.fullLabel);
     setNpSelectedId(division.id);
     setSubmitError(null);
   }
@@ -422,7 +470,15 @@ export default function CheckoutPage() {
                     placeholder="Київ"
                     required
                     autoComplete="address-level2"
+                    list={isNovaPoshtaDelivery ? 'nova-poshta-city-suggestions' : undefined}
                   />
+                  {isNovaPoshtaDelivery ? (
+                    <datalist id="nova-poshta-city-suggestions">
+                      {npCitySuggestions.map((city) => (
+                        <option key={city} value={city} />
+                      ))}
+                    </datalist>
+                  ) : null}
                 </label>
               </div>
             </section>
@@ -498,6 +554,28 @@ export default function CheckoutPage() {
                     </small>
                   </div>
 
+                  <label className={`${styles.field} ${styles.gridFull}`}>
+                    <span className={styles.label}>
+                      {npPointType === 'postomat' ? 'Пошук поштомату' : 'Пошук відділення'}
+                    </span>
+                    <input
+                      className={styles.input}
+                      value={npDivisionQuery}
+                      onChange={(e) => {
+                        setNpDivisionQuery(e.target.value);
+                        setNpSelectedId(null);
+                        handleChange('address', '');
+                      }}
+                      placeholder={
+                        npPointType === 'postomat'
+                          ? 'Наприклад, 245 або назва вулиці'
+                          : 'Наприклад, 12 або назва вулиці'
+                      }
+                      autoComplete="off"
+                      disabled={form.city.trim().length < 2}
+                    />
+                  </label>
+
                   {npIsLoading ? (
                     <p className={styles.emptyText}>Шукаємо доступні точки видачі…</p>
                   ) : null}
@@ -508,9 +586,9 @@ export default function CheckoutPage() {
                     </p>
                   ) : null}
 
-                  {npOptions.length > 0 ? (
+                  {filteredNpOptions.length > 0 ? (
                     <div className={styles.options}>
-                      {npOptions.map((division) => (
+                      {filteredNpOptions.map((division) => (
                         <label key={division.id} className={styles.option}>
                           <input
                             type="radio"
@@ -527,6 +605,39 @@ export default function CheckoutPage() {
                           </span>
                         </label>
                       ))}
+                    </div>
+                  ) : null}
+
+                  {!npIsLoading &&
+                  !npError &&
+                  npOptions.length > 0 &&
+                  filteredNpOptions.length === 0 ? (
+                    <p className={styles.emptyText}>
+                      Нічого не знайдено за цим запитом. Спробуй номер відділення,
+                      поштомату або вулицю.
+                    </p>
+                  ) : null}
+
+                  {selectedNpDivision?.latitude != null &&
+                  selectedNpDivision?.longitude != null ? (
+                    <div className={styles.gridFull} style={{ marginTop: 16 }}>
+                      <span className={styles.label}>Карта точки видачі</span>
+                      <div
+                        style={{
+                          overflow: 'hidden',
+                          borderRadius: 20,
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          minHeight: 320,
+                        }}
+                      >
+                        <iframe
+                          title="Карта точки видачі Нова Пошта"
+                          src={`https://www.google.com/maps?q=${selectedNpDivision.latitude},${selectedNpDivision.longitude}&z=16&output=embed`}
+                          loading="lazy"
+                          style={{ width: '100%', height: 320, border: 0 }}
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
                     </div>
                   ) : null}
                 </>
