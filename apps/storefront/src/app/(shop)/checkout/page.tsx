@@ -200,7 +200,7 @@ export default function CheckoutPage() {
 
       try {
         const data = (await apiFetch(
-          `/shipping/nova-poshta/divisions?city=${encodeURIComponent(city)}&type=${encodeURIComponent(npPointType)}`,
+          `/api/shipping/nova-poshta/divisions?city=${encodeURIComponent(city)}&type=${encodeURIComponent(npPointType)}`,
           { method: 'GET' },
         )) as { items?: NovaPoshtaDivision[] };
 
