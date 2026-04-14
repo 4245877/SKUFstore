@@ -199,8 +199,19 @@ export default function CheckoutPage() {
       setNpError(null);
 
       try {
+        const params = new URLSearchParams({
+          city,
+          type: npPointType,
+          limit: '100',
+        });
+
+        const divisionQuery = npDivisionQuery.trim();
+        if (divisionQuery.length >= 1) {
+          params.set('q', divisionQuery);
+        }
+
         const data = (await apiFetch(
-          `/api/shipping/nova-poshta/divisions?city=${encodeURIComponent(city)}&type=${encodeURIComponent(npPointType)}`,
+          `/api/shipping/nova-poshta/divisions?${params.toString()}`,
           { method: 'GET' },
         )) as { items?: NovaPoshtaDivision[] };
 
@@ -232,7 +243,7 @@ export default function CheckoutPage() {
       isCancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [form.city, isNovaPoshtaDelivery, npPointType]);
+  }, [form.city, isNovaPoshtaDelivery, npPointType, npDivisionQuery]);
 
   const subtotal = getCartSubtotal(items);
   const deliveryPrice = getDeliveryPrice(form.deliveryMethod, items);
@@ -470,16 +481,33 @@ export default function CheckoutPage() {
                     placeholder="Київ"
                     required
                     autoComplete="address-level2"
-                    list={isNovaPoshtaDelivery ? 'nova-poshta-city-suggestions' : undefined}
                   />
-                  {isNovaPoshtaDelivery ? (
-                    <datalist id="nova-poshta-city-suggestions">
-                      {npCitySuggestions.map((city) => (
-                        <option key={city} value={city} />
-                      ))}
-                    </datalist>
-                  ) : null}
                 </label>
+
+                {isNovaPoshtaDelivery &&
+                form.city.trim().length >= 2 &&
+                npCitySuggestions.length > 0 ? (
+                  <div className={styles.options}>
+                    {npCitySuggestions.slice(0, 8).map((city) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => handleChange('city', city)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '12px 14px',
+                          borderRadius: 14,
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          background: 'rgba(255,255,255,0.03)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </section>
 
