@@ -50,6 +50,11 @@ type NovaPoshtaDivision = {
   longitude: number | null;
 };
 
+type NovaPoshtaSettlement = {
+  name: string;
+  label: string;
+};
+
 const DELIVERY_LABELS: Record<
   DeliveryMethod,
   { label: string; sub: string; badge?: string; badgeFree?: boolean }
@@ -117,6 +122,10 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<CheckoutFormValues>(initialForm);
   const [npPointType, setNpPointType] = useState<NovaPoshtaPointType>('branch');
   const [npOptions, setNpOptions] = useState<NovaPoshtaDivision[]>([]);
+  const [npCityOptions, setNpCityOptions] = useState<NovaPoshtaSettlement[]>([]);
+  const [npCityIsLoading, setNpCityIsLoading] = useState(false);
+  const [npCityError, setNpCityError] = useState<string | null>(null);
+  const [npCityConfirmed, setNpCityConfirmed] = useState(false);
   const [npIsLoading, setNpIsLoading] = useState(false);
   const [npError, setNpError] = useState<string | null>(null);
   const [npSelectedId, setNpSelectedId] = useState<string | null>(null);
@@ -135,48 +144,81 @@ export default function CheckoutPage() {
 
   const isNovaPoshtaDelivery = form.deliveryMethod === 'nova-poshta-branch';
 
-  const npCitySuggestions = useMemo(() => {
-    const seen = new Set<string>();
-
-    return npOptions
-      .map((item) => item.settlementName.trim())
-      .filter((name) => {
-        const key = name.toLowerCase();
-        if (!key || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .sort((a, b) => a.localeCompare(b, 'uk'));
-  }, [npOptions]);
-
-  const filteredNpOptions = useMemo(() => {
-    const query = npDivisionQuery.trim().toLowerCase();
-
-    if (!query) {
-      return npOptions;
-    }
-
-    return npOptions.filter((division) => {
-      const haystack = [
-        division.name,
-        division.address,
-        division.fullLabel,
-        division.number ?? '',
-      ]
-        .join(' ')
-        .toLowerCase();
-
-      return haystack.includes(query);
-    });
-  }, [npOptions, npDivisionQuery]);
-
   const selectedNpDivision = useMemo(
     () => npOptions.find((division) => division.id === npSelectedId) ?? null,
     [npOptions, npSelectedId],
   );
 
+  const filteredNpOptions = npOptions;
+
   useEffect(() => {
     if (!isNovaPoshtaDelivery) {
+      setNpCityOptions([]);
+      setNpCityError(null);
+      setNpCityIsLoading(false);
+      return;
+    }
+
+    const query = form.city.trim();
+
+    if (query.length < 2) {
+      setNpCityOptions([]);
+      setNpCityError(null);
+      setNpCityIsLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const timeoutId = window.setTimeout(async () => {
+      setNpCityIsLoading(true);
+      setNpCityError(null);
+
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          limit: '8',
+        });
+
+        const data = (await apiFetch(
+          `/api/shipping/nova-poshta/settlements?${params.toString()}`,
+          { method: 'GET' },
+        )) as { items?: NovaPoshtaSettlement[] };
+
+        if (isCancelled) return;
+
+        setNpCityOptions(Array.isArray(data?.items) ? data.items : []);
+      } catch (error) {
+        if (isCancelled) return;
+
+        setNpCityOptions([]);
+        setNpCityError(
+          error instanceof Error
+            ? error.message
+            : 'Не вдалося отримати список населених пунктів.',
+        );
+      } finally {
+        if (!isCancelled) {
+          setNpCityIsLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [form.city, isNovaPoshtaDelivery]);
+
+  useEffect(() => {
+    if (!isNovaPoshtaDelivery) {
+      setNpOptions([]);
+      setNpError(null);
+      setNpIsLoading(false);
+      return;
+    }
+
+    if (!npCityConfirmed) {
       setNpOptions([]);
       setNpError(null);
       setNpIsLoading(false);
@@ -221,7 +263,11 @@ export default function CheckoutPage() {
         setNpOptions(nextItems);
 
         if (nextItems.length === 0) {
-          setNpError('За цим містом нічого не знайдено. Спробуй уточнити назву міста.');
+          setNpError(
+            divisionQuery.length >= 1
+              ? 'Нічого не знайдено за цим запитом. Спробуй номер відділення, поштомату або вулицю.'
+              : 'За цим містом нічого не знайдено. Спробуй уточнити назву міста.',
+          );
         }
       } catch (error) {
         if (isCancelled) return;
@@ -243,7 +289,7 @@ export default function CheckoutPage() {
       isCancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [form.city, isNovaPoshtaDelivery, npPointType, npDivisionQuery]);
+  }, [form.city, isNovaPoshtaDelivery, npCityConfirmed, npPointType, npDivisionQuery]);
 
   const subtotal = getCartSubtotal(items);
   const deliveryPrice = getDeliveryPrice(form.deliveryMethod, items);
@@ -274,7 +320,11 @@ export default function CheckoutPage() {
     });
 
     if (field === 'city') {
+      setNpCityConfirmed(false);
       setNpDivisionQuery('');
+      setNpOptions([]);
+      setNpError(null);
+      setNpSelectedId(null);
     }
 
     if (field === 'city' || field === 'address') {
@@ -282,6 +332,9 @@ export default function CheckoutPage() {
     }
 
     if (field === 'deliveryMethod' && value !== 'nova-poshta-branch') {
+      setNpCityConfirmed(false);
+      setNpCityOptions([]);
+      setNpCityError(null);
       setNpOptions([]);
       setNpError(null);
       setNpSelectedId(null);
@@ -294,8 +347,26 @@ export default function CheckoutPage() {
       city: division.settlementName,
       address: division.fullLabel,
     }));
+    setNpCityOptions([]);
+    setNpCityError(null);
     setNpDivisionQuery(division.fullLabel);
     setNpSelectedId(division.id);
+    setSubmitError(null);
+  }
+
+  function handleSelectNovaPoshtaCity(city: NovaPoshtaSettlement) {
+    setForm((prev) => ({
+      ...prev,
+      city: city.name,
+      address: '',
+    }));
+    setNpCityConfirmed(true);
+    setNpCityOptions([]);
+    setNpCityError(null);
+    setNpDivisionQuery('');
+    setNpOptions([]);
+    setNpError(null);
+    setNpSelectedId(null);
     setSubmitError(null);
   }
 
@@ -480,19 +551,37 @@ export default function CheckoutPage() {
                     onChange={(e) => handleChange('city', e.target.value)}
                     placeholder="Київ"
                     required
-                    autoComplete="address-level2"
+                    autoComplete="off"
                   />
                 </label>
 
+                {isNovaPoshtaDelivery && form.city.trim().length >= 2 && npCityIsLoading ? (
+                  <div className={styles.options}>
+                    <div className={styles.option}>
+                      <span className={styles.optionContent}>
+                        <strong className={styles.optionLabel}>
+                          Шукаємо населений пункт…
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isNovaPoshtaDelivery && npCityError ? (
+                  <p role="alert" className={styles.emptyText}>
+                    {npCityError}
+                  </p>
+                ) : null}
+
                 {isNovaPoshtaDelivery &&
                 form.city.trim().length >= 2 &&
-                npCitySuggestions.length > 0 ? (
+                npCityOptions.length > 0 ? (
                   <div className={styles.options}>
-                    {npCitySuggestions.slice(0, 8).map((city) => (
+                    {npCityOptions.map((city) => (
                       <button
-                        key={city}
+                        key={city.label}
                         type="button"
-                        onClick={() => handleChange('city', city)}
+                        onClick={() => handleSelectNovaPoshtaCity(city)}
                         style={{
                           width: '100%',
                           textAlign: 'left',
@@ -503,7 +592,18 @@ export default function CheckoutPage() {
                           cursor: 'pointer',
                         }}
                       >
-                        {city}
+                        <strong>{city.name}</strong>
+                        {city.label && city.label !== city.name ? (
+                          <div
+                            style={{
+                              marginTop: 4,
+                              fontSize: 13,
+                              opacity: 0.8,
+                            }}
+                          >
+                            {city.label}
+                          </div>
+                        ) : null}
                       </button>
                     ))}
                   </div>
@@ -578,7 +678,9 @@ export default function CheckoutPage() {
                     <small className={styles.optionSub}>
                       {form.city.trim().length < 2
                         ? 'Спочатку вкажи місто вище.'
-                        : 'Список точок видачі оновлюється автоматично.'}
+                        : !npCityConfirmed
+                          ? 'Спочатку вибери місто зі списку підказок.'
+                          : 'Список точок видачі оновлюється автоматично.'}
                     </small>
                   </div>
 
@@ -600,7 +702,7 @@ export default function CheckoutPage() {
                           : 'Наприклад, 12 або назва вулиці'
                       }
                       autoComplete="off"
-                      disabled={form.city.trim().length < 2}
+                      disabled={form.city.trim().length < 2 || !npCityConfirmed}
                     />
                   </label>
 
@@ -634,16 +736,6 @@ export default function CheckoutPage() {
                         </label>
                       ))}
                     </div>
-                  ) : null}
-
-                  {!npIsLoading &&
-                  !npError &&
-                  npOptions.length > 0 &&
-                  filteredNpOptions.length === 0 ? (
-                    <p className={styles.emptyText}>
-                      Нічого не знайдено за цим запитом. Спробуй номер відділення,
-                      поштомату або вулицю.
-                    </p>
                   ) : null}
 
                   {selectedNpDivision?.latitude != null &&
