@@ -161,7 +161,7 @@ export default function CheckoutPage() {
 
     const query = form.city.trim();
 
-    if (query.length < 2) {
+    if (query.length < 3) {
       setNpCityOptions([]);
       setNpCityError(null);
       setNpCityIsLoading(false);
@@ -202,7 +202,7 @@ export default function CheckoutPage() {
           setNpCityIsLoading(false);
         }
       }
-    }, 250);
+    }, 500);
 
     return () => {
       isCancelled = true;
