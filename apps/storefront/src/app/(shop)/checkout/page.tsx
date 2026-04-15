@@ -649,9 +649,11 @@ export default function CheckoutPage() {
                             checked={npPointType === value}
                             onChange={() => {
                               setNpPointType(value);
+                              setNpDivisionQuery('');
                               setNpOptions([]);
                               setNpError(null);
                               setNpSelectedId(null);
+                              setSubmitError(null);
                               handleChange('address', '');
                             }}
                           />
