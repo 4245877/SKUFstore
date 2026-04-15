@@ -218,16 +218,19 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!npCityConfirmed) {
+    const city = form.city.trim();
+    const divisionQuery = npDivisionQuery.trim();
+
+    if (city.length < 2) {
       setNpOptions([]);
       setNpError(null);
       setNpIsLoading(false);
       return;
     }
 
-    const city = form.city.trim();
-
-    if (city.length < 2) {
+    // Если город не выбран из подсказки, всё равно даём искать по номеру/улице вручную.
+    // Иначе пользователь вообще не может найти 335 / 40712.
+    if (!npCityConfirmed && divisionQuery.length < 2) {
       setNpOptions([]);
       setNpError(null);
       setNpIsLoading(false);
@@ -247,7 +250,6 @@ export default function CheckoutPage() {
           limit: '100',
         });
 
-        const divisionQuery = npDivisionQuery.trim();
         if (divisionQuery.length >= 1) {
           params.set('q', divisionQuery);
         }
@@ -266,7 +268,7 @@ export default function CheckoutPage() {
           setNpError(
             divisionQuery.length >= 1
               ? 'Нічого не знайдено за цим запитом. Спробуй номер відділення, поштомату або вулицю.'
-              : 'За цим містом нічого не знайдено. Спробуй уточнити назву міста.',
+              : 'За цим містом нічого не знайдено. Спробуй уточнити назву міста або введи номер / вулицю нижче.',
           );
         }
       } catch (error) {
@@ -289,7 +291,7 @@ export default function CheckoutPage() {
       isCancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [form.city, isNovaPoshtaDelivery, npCityConfirmed, npPointType, npDivisionQuery]);
+  }, [form.city, isNovaPoshtaDelivery, npPointType, npDivisionQuery, npCityConfirmed]);
 
   const subtotal = getCartSubtotal(items);
   const deliveryPrice = getDeliveryPrice(form.deliveryMethod, items);
@@ -579,7 +581,7 @@ export default function CheckoutPage() {
                   <div className={styles.options}>
                     {npCityOptions.map((city) => (
                       <button
-                        key={city.label}
+                        key={`${city.name}-${city.label}`}
                         type="button"
                         onClick={() => handleSelectNovaPoshtaCity(city)}
                         style={{
@@ -592,18 +594,7 @@ export default function CheckoutPage() {
                           cursor: 'pointer',
                         }}
                       >
-                        <strong>{city.name}</strong>
-                        {city.label && city.label !== city.name ? (
-                          <div
-                            style={{
-                              marginTop: 4,
-                              fontSize: 13,
-                              opacity: 0.8,
-                            }}
-                          >
-                            {city.label}
-                          </div>
-                        ) : null}
+                        <strong>{city.label}</strong>
                       </button>
                     ))}
                   </div>
@@ -679,7 +670,7 @@ export default function CheckoutPage() {
                       {form.city.trim().length < 2
                         ? 'Спочатку вкажи місто вище.'
                         : !npCityConfirmed
-                          ? 'Спочатку вибери місто зі списку підказок.'
+                          ? 'Можна вибрати місто зі списку підказок або просто ввести його вручну та знайти точку за номером чи вулицею.'
                           : 'Список точок видачі оновлюється автоматично.'}
                     </small>
                   </div>
@@ -702,7 +693,7 @@ export default function CheckoutPage() {
                           : 'Наприклад, 12 або назва вулиці'
                       }
                       autoComplete="off"
-                      disabled={form.city.trim().length < 2 || !npCityConfirmed}
+                      disabled={form.city.trim().length < 2}
                     />
                   </label>
 
