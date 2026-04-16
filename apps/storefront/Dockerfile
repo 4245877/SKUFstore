@@ -31,4 +31,4 @@ COPY --from=builder /app/apps/storefront/public ./apps/storefront/public
 
 EXPOSE 3000
 
-CMD ["node", "apps/storefront/server.js"] 
+CMD ["node", "apps/storefront/server.js"]
