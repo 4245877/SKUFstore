@@ -14,47 +14,23 @@ import s from './Home.module.css'
 const FEATURES = [
   {
     icon: '🛡️',
-    title: 'Гарантія справжності',
-    text: 'Тільки ліцензійні фігурки від офіційних дистриб’юторів.',
+    title: 'Уважний відбір моделей',
+    text: 'Добираємо фігурки та варіанти з акцентом на якість деталей і вдалу презентацію.',
   },
   {
     icon: '📦',
-    title: 'Бережне пакування',
+    title: 'Дбайливе пакування',
     text: 'Надійний захист кожної позиції під час доставки.',
   },
   {
     icon: '✈️',
     title: 'Доставка по Україні',
-    text: 'Самовивіз, кур’єр і перевізники з відстеженням замовлення.',
+    text: 'Самовивіз і доставка перевізниками з відстеженням замовлення.',
   },
   {
     icon: '♻️',
-    title: 'Зручний сервіс',
-    text: 'Підтримка по замовленню та допомога з вибором фігурок.',
-  },
-] as const
-
-const TESTIMONIALS = [
-  {
-    text: 'Заказ пришёл быстро, упаковка очень аккуратная. Фигурка полностью соответствует фото.',
-    name: 'Анастасія К.',
-    role: 'Постійний покупець',
-    avatar: '🌸',
-    stars: 5,
-  },
-  {
-    text: 'Хороший каталог и понятная карточка товара. Удобно, что сразу видно бренд и серию.',
-    name: 'Дмитро П.',
-    role: 'Колекціонер',
-    avatar: '⚔️',
-    stars: 5,
-  },
-  {
-    text: 'Понравилось, что на главной сразу видно актуальные позиции, а не просто случайные заглушки.',
-    name: 'Єва Р.',
-    role: 'Покупець',
-    avatar: '🥜',
-    stars: 5,
+    title: 'Підтримка з вибором',
+    text: 'Допоможемо зорієнтуватися в каталозі, матеріалах і доступних варіантах.',
   },
 ] as const
 
@@ -66,17 +42,6 @@ const CATEGORY_DECOR = [
   { emoji: '🎀', color: '#e7d9f6' },
   { emoji: '🪄', color: '#cfe7f1' },
 ] as const
-
-const DEFAULT_BRANDS = [
-  'Good Smile Company',
-  'ALTER',
-  'Max Factory',
-  'Kotobukiya',
-  'Banpresto',
-  'Aniplex',
-  'FREEing',
-  'Revolve',
-]
 
 function flattenCategoryTree(items: CatalogCategoryTreeItem[]): CatalogCategoryTreeItem[] {
   return items.flatMap((item) => [item, ...flattenCategoryTree(item.children ?? [])])
@@ -134,17 +99,28 @@ function buildBrands(products: HomeProductItem[]) {
     )
   )
 
-  const source = unique.length > 0 ? unique : DEFAULT_BRANDS
-  return [...source, ...source]
+  return [...unique, ...unique]
 }
 
-function formatQualityScore(score: number) {
-  if (!Number.isFinite(score)) return null
+function formatSaleTypeLabel(saleType?: HomeProductItem['saleType'] | null) {
+  switch (saleType) {
+    case 'IN_STOCK':
+      return 'В наявності'
+    case 'PREORDER':
+      return 'Передзамовлення'
+    case 'BACKORDER':
+      return 'Під замовлення'
+    default:
+      return '—'
+  }
+}
 
-  const normalized = Math.max(0, Math.min(10, score))
-  const rounded = Math.round(normalized * 10) / 10
+function formatShowcaseBadge(product: HomeProductItem) {
+  if (Number.isFinite(product.qualityScore) && product.qualityScore >= 9) {
+    return 'Рекомендовано'
+  }
 
-  return Number.isInteger(rounded) ? `${rounded}/10` : `${rounded.toFixed(1)}/10`
+  return 'Вітрина магазину'
 }
 
 export default function HomePageClient() {
@@ -239,8 +215,8 @@ export default function HomePageClient() {
           </h1>
 
           <p className={s.heroDesc}>
-            На головній тепер показуються реальні товари та реальні категорії з каталогу.
-            Тільки активні позиції, які ти позначиш для вітрини.
+            Добірка актуальних фігурок і категорій з каталогу, щоб було легше знайти цікаві
+            позиції та перейти до покупки.
           </p>
 
           <div className={s.heroActions}>
@@ -322,16 +298,14 @@ export default function HomePageClient() {
                   />
                 </div>
 
-                <div className={s.heroBadge}>
-                  {formatQualityScore(showcaseProduct.qualityScore) ?? '9+/10'}
-                </div>
+                <div className={s.heroBadge}>{formatShowcaseBadge(showcaseProduct)}</div>
 
                 <div className={s.heroMetaPanel}>
                   <div className={s.heroMetaKicker}>
                     {showcaseProduct.franchise?.name ||
                       showcaseProduct.category?.name ||
                       showcaseProduct.brand?.name ||
-                      'Skufnya showcase'}
+                      'Вітрина магазину'}
                   </div>
 
                   <div className={s.heroMetaTitle}>{showcaseProduct.title}</div>
@@ -342,26 +316,28 @@ export default function HomePageClient() {
                 <div className={s.heroImageMedia}>
                   <div className={s.heroImagePlaceholder}>
                     <span className={s.heroImageIcon}>🌸</span>
-                    <span className={s.heroImageLabel}>Skufnya showcase</span>
+                    <span className={s.heroImageLabel}>Вітрина магазину</span>
                   </div>
                 </div>
-                <div className={s.heroBadge}>Live catalog</div>
+                <div className={s.heroBadge}>Каталог онлайн</div>
               </>
             )}
           </Link>
         </div>
       </section>
 
-      <div className={s.brands} aria-label="Бренди та франшизи">
-        <div className={s.brandsInner} aria-hidden="true">
-          {brandItems.map((brand, index) => (
-            <Fragment key={`${brand}-${index}`}>
-              <span className={s.brandItem}>{brand}</span>
-              <span className={s.brandDot} />
-            </Fragment>
-          ))}
+      {brandItems.length > 0 && (
+        <div className={s.brands} aria-label="Бренди та франшизи">
+          <div className={s.brandsInner} aria-hidden="true">
+            {brandItems.map((brand, index) => (
+              <Fragment key={`${brand}-${index}`}>
+                <span className={s.brandItem}>{brand}</span>
+                <span className={s.brandDot} />
+              </Fragment>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <section className={`${s.section} ${s.featured}`} aria-labelledby="featured-title">
         <div className={s.sectionInner}>
@@ -412,14 +388,7 @@ export default function HomePageClient() {
                       )}
 
                       <div className={s.cardActions}>
-                        <span className={s.cardBtn}>Відкрити</span>
-                        <span
-                          className={s.cardBtnWish}
-                          aria-label="Додати до бажаного"
-                          role="img"
-                        >
-                          🤍
-                        </span>
+                        <span className={s.cardBtn}>Докладніше</span>
                       </div>
                     </div>
 
@@ -436,7 +405,7 @@ export default function HomePageClient() {
                         </span>
 
                         <span className={s.cardScale}>
-                          {p.defaultVariant?.sizeLabel || p.saleType || '—'}
+                          {p.defaultVariant?.sizeLabel || formatSaleTypeLabel(p.saleType)}
                         </span>
                       </div>
                     </div>
@@ -446,9 +415,7 @@ export default function HomePageClient() {
             </div>
           ) : (
             <div className={s.sectionNotice}>
-              На головній поки немає товарів. Перевір, щоб у товару були:
-              <strong> status=ACTIVE</strong>, активний варіант, зображення та прапорець
-              <strong> showOnHome=true</strong>.
+              Поки що у вітрині немає товарів. Заглянь трохи пізніше або відкрий увесь каталог.
             </div>
           )}
         </div>
@@ -564,55 +531,18 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      <section className={`${s.section} ${s.testimonials}`} aria-labelledby="reviews-title">
-        <div className={s.sectionInner}>
-          <div className={s.sectionHead}>
-            <div>
-              <p className={s.sectionLabel}>Відгуки покупців</p>
-              <h2 className={s.sectionTitle} id="reviews-title">
-                Що кажуть <span className={s.sectionTitleAccent}>колекціонери</span>
-              </h2>
-            </div>
-          </div>
-
-          <div className={s.testimonialGrid}>
-            {TESTIMONIALS.map((t) => (
-              <blockquote className={s.testimonialCard} key={t.name}>
-                <div className={s.testimonialStars} aria-label={`Оцінка ${t.stars} з 5`}>
-                  {Array.from({ length: t.stars }).map((_, i) => (
-                    <span className={s.star} key={i} aria-hidden="true">
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <p className={s.testimonialText}>{t.text}</p>
-                <footer className={s.testimonialAuthor}>
-                  <div className={s.testimonialAvatar} aria-hidden="true">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p className={s.testimonialName}>{t.name}</p>
-                    <p className={s.testimonialRole}>{t.role}</p>
-                  </div>
-                </footer>
-              </blockquote>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className={`${s.section} ${s.newsletter}`} aria-labelledby="newsletter-title">
         <div className={s.newsletterInner}>
           <span className={s.newsletterIcon} aria-hidden="true">
             💌
           </span>
           <h2 className={s.newsletterTitle} id="newsletter-title">
-            Будьте першими
+            Розсилка скоро
           </h2>
           <p className={s.newsletterText}>
-            Підпишіться на розсилку і дізнавайтеся про нові надходження та спеціальні
-            пропозиції першими.
+            Готуємо підписку на новинки та спеціальні пропозиції. Блок ще в розробці.
           </p>
+
           <div
             className={s.newsletterForm}
             role="group"
@@ -625,16 +555,16 @@ export default function HomePageClient() {
               id="email-input"
               type="email"
               className={s.newsletterInput}
-              placeholder="ваш@email.com"
+              placeholder="Форма скоро з’явиться"
               autoComplete="email"
+              disabled
             />
-            <button type="button" className={s.newsletterBtn}>
-              Підписатися
+            <button type="button" className={s.newsletterBtn} disabled>
+              Скоро
             </button>
           </div>
-          <p className={s.newsletterDisclaimer}>
-            Без спаму. Тільки важливі новини магазину.
-          </p>
+
+          <p className={s.newsletterDisclaimer}>Поки що стеж за оновленнями через каталог.</p>
         </div>
       </section>
     </main>
