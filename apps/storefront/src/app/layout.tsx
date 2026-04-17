@@ -3,7 +3,7 @@ import "./globals.css";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 
-const siteUrl = "https://4245877.github.io/SKUFstore";
+const siteUrl = "https://www.skufnya.com";
 const ogImageUrl = `${siteUrl}/opengraph-image.png`;
 
 export const metadata: Metadata = {
