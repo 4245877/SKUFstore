@@ -1,67 +1,67 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-
-const siteUrl = "https://www.skufnya.com";
-const ogImageUrl = `${siteUrl}/opengraph-image.png`;
-
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: "SKUFnya — серйозна полиця, несерйозний вайб",
-    template: "%s | SKUFnya",
-  },
-  description:
-    "Магазин аніме-фігурок для дорослих фанатів і колекціонерів: scale, Nendoroid, Figma, лімітовані релізи та вайб спільноти для своїх.",
-  keywords: [
-    "аніме-фігурки",
-    "колекційні фігурки",
-    "scale figures",
-    "Nendoroid",
-    "Figma",
-    "anime store",
-    "аніме-магазин",
-    "колекціонери",
-    "best girl",
-    "SKUFnya",
-  ],
-  openGraph: {
-    title: "SKUFnya — серйозна полиця, несерйозний вайб",
-    description:
-      "Аніме-фігурки для дорослого фандому: scale, Nendoroid, Figma, лімітовані релізи й колекційний вайб для своїх.",
-    url: siteUrl,
-    siteName: "SKUFnya",
-    locale: "uk_UA",
-    type: "website",
-    images: [
-      {
-        url: ogImageUrl,
-        width: 1200,
-        height: 630,
-        alt: "SKUFnya — серйозна полиця, несерйозний вайб",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SKUFnya — серйозна полиця, несерйозний вайб",
-    description:
-      "Магазин аніме-фігурок для дорослих фанатів і колекціонерів: лімітки, релізи та фандомний вайб для своїх.",
-    images: [ogImageUrl],
-  },
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="uk">
-      <body>
-        <Header />
-        {children}
-        <Footer />
-      </body>
-    </html>
-  );
+import type { Metadata } from "next";
+import "./globals.css";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
+
+const siteUrl = "https://www.skufnya.com";
+const ogImageUrl = `${siteUrl}/opengraph-image.png`;
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "SKUFnya — магазин оригінальних аніме-фігурок",
+    template: "%s | SKUFnya",
+  },
+  description:
+    "Оригінальні аніме-фігурки з ніжною аніме-естетикою: scale, Nendoroid, Figma та колекційні релізи, дбайливо відібрані для тих, хто цінує прекрасне.",
+  keywords: [
+    "аніме-фігурки",
+    "оригінальні аніме-фігурки",
+    "колекційні фігурки",
+    "scale figures",
+    "Nendoroid",
+    "Figma",
+    "anime store",
+    "аніме-магазин",
+    "anime figures",
+    "SKUFnya",
+  ],
+  openGraph: {
+    title: "SKUFnya — колекціонуй прекрасне",
+    description:
+      "Світ аніме-естетики, ніжності та оригінальних фігурок. Охайно зібрана колекція для тих, хто цінує витончене.",
+    url: siteUrl,
+    siteName: "SKUFnya",
+    locale: "uk_UA",
+    type: "website",
+    images: [
+      {
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+        alt: "SKUFnya — брендове зображення з аніме-персонажем у maid-естетиці",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SKUFnya — колекціонуй прекрасне",
+    description:
+      "Ніжна anime-естетика, оригінальні фігурки та дбайливо відібрана колекція для тих, хто цінує прекрасне.",
+    images: [ogImageUrl],
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="uk">
+      <body>
+        <Header />
+        {children}
+        <Footer />
+      </body>
+    </html>
+  );
 }
