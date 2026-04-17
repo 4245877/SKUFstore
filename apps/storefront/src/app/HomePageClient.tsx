@@ -138,6 +138,15 @@ function buildBrands(products: HomeProductItem[]) {
   return [...source, ...source]
 }
 
+function formatQualityScore(score: number) {
+  if (!Number.isFinite(score)) return null
+
+  const normalized = Math.max(0, Math.min(10, score))
+  const rounded = Math.round(normalized * 10) / 10
+
+  return Number.isInteger(rounded) ? `${rounded}/10` : `${rounded.toFixed(1)}/10`
+}
+
 export default function HomePageClient() {
   const [products, setProducts] = useState<HomeProductItem[]>([])
   const [categoryTree, setCategoryTree] = useState<CatalogCategoryTreeItem[]>([])
@@ -173,6 +182,16 @@ export default function HomePageClient() {
   const flatCategories = useMemo(() => flattenCategoryTree(categoryTree), [categoryTree])
 
   const brandItems = useMemo(() => buildBrands(products), [products])
+
+  const showcaseProduct = useMemo(() => {
+    const eligible = products.filter(
+      (product) => product.qualityScore >= 9 && Boolean(product.coverImage?.url)
+    )
+
+    if (eligible.length === 0) return null
+
+    return eligible[Math.floor(Math.random() * eligible.length)]
+  }, [products])
 
   const totalProducts = useMemo(
     () => categoryTree.reduce((sum, item) => sum + (item.productCount ?? 0), 0),
@@ -281,14 +300,82 @@ export default function HomePageClient() {
           </div>
         </div>
 
-        <div className={s.heroVisual} aria-hidden="true">
-          <div className={s.heroImageFrame}>
-            <div className={s.heroImagePlaceholder}>
-              <span className={s.heroImageIcon}>🌸</span>
-              <span className={s.heroImageLabel}>Skufnya showcase</span>
-            </div>
-            <div className={s.heroBadge}>Live catalog</div>
-          </div>
+        <div className={s.heroVisual}>
+          <Link
+            href={showcaseProduct ? `/product/${showcaseProduct.slug}` : '/catalog'}
+            className={s.heroImageFrame}
+            aria-label={
+              showcaseProduct
+                ? `Відкрити товар ${showcaseProduct.title}`
+                : 'Перейти до каталогу'
+            }
+            style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
+          >
+            {showcaseProduct?.coverImage?.url ? (
+              <>
+                <img
+                  src={resolveMediaUrl(showcaseProduct.coverImage.url) || ''}
+                  alt={showcaseProduct.coverImage.alt || showcaseProduct.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'block',
+                    objectFit: 'cover',
+                  }}
+                />
+
+                <div className={s.heroBadge}>
+                  {formatQualityScore(showcaseProduct.qualityScore) ?? '9+/10'}
+                </div>
+
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 'auto 18px 18px 18px',
+                    padding: '14px 16px',
+                    borderRadius: '18px',
+                    background: 'rgba(22, 16, 18, 0.62)',
+                    backdropFilter: 'blur(10px)',
+                    color: '#fff7f4',
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.18)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '0.72rem',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      opacity: 0.8,
+                      marginBottom: '6px',
+                    }}
+                  >
+                    {showcaseProduct.franchise?.name ||
+                      showcaseProduct.category?.name ||
+                      showcaseProduct.brand?.name ||
+                      'Skufnya showcase'}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: '1rem',
+                      lineHeight: 1.35,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {showcaseProduct.title}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={s.heroImagePlaceholder}>
+                  <span className={s.heroImageIcon}>🌸</span>
+                  <span className={s.heroImageLabel}>Skufnya showcase</span>
+                </div>
+                <div className={s.heroBadge}>Live catalog</div>
+              </>
+            )}
+          </Link>
         </div>
       </section>
 
