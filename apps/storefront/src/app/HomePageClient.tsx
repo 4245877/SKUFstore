@@ -309,63 +309,41 @@ export default function HomePageClient() {
                 ? `Відкрити товар ${showcaseProduct.title}`
                 : 'Перейти до каталогу'
             }
-            style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
           >
             {showcaseProduct?.coverImage?.url ? (
               <>
-		<img
-		  src={resolveMediaUrl(showcaseProduct.coverImage.url) || ''}
-		  alt={showcaseProduct.coverImage.alt || showcaseProduct.title}
-		  className={s.heroShowcaseImage}
-		/>
+                <div className={s.heroImageMedia}>
+                  <img
+                    src={resolveMediaUrl(showcaseProduct.coverImage.url) || ''}
+                    alt={showcaseProduct.coverImage.alt || showcaseProduct.title}
+                    className={s.heroShowcaseImage}
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
 
                 <div className={s.heroBadge}>
                   {formatQualityScore(showcaseProduct.qualityScore) ?? '9+/10'}
                 </div>
 
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 'auto 18px 18px 18px',
-                    padding: '14px 16px',
-                    borderRadius: '18px',
-                    background: 'rgba(22, 16, 18, 0.62)',
-                    backdropFilter: 'blur(10px)',
-                    color: '#fff7f4',
-                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.18)',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: '0.72rem',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      opacity: 0.8,
-                      marginBottom: '6px',
-                    }}
-                  >
+                <div className={s.heroMetaPanel}>
+                  <div className={s.heroMetaKicker}>
                     {showcaseProduct.franchise?.name ||
                       showcaseProduct.category?.name ||
                       showcaseProduct.brand?.name ||
                       'Skufnya showcase'}
                   </div>
 
-                  <div
-                    style={{
-                      fontSize: '1rem',
-                      lineHeight: 1.35,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {showcaseProduct.title}
-                  </div>
+                  <div className={s.heroMetaTitle}>{showcaseProduct.title}</div>
                 </div>
               </>
             ) : (
               <>
-                <div className={s.heroImagePlaceholder}>
-                  <span className={s.heroImageIcon}>🌸</span>
-                  <span className={s.heroImageLabel}>Skufnya showcase</span>
+                <div className={s.heroImageMedia}>
+                  <div className={s.heroImagePlaceholder}>
+                    <span className={s.heroImageIcon}>🌸</span>
+                    <span className={s.heroImageLabel}>Skufnya showcase</span>
+                  </div>
                 </div>
                 <div className={s.heroBadge}>Live catalog</div>
               </>
