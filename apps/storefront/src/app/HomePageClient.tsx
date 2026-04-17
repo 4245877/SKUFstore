@@ -313,16 +313,11 @@ export default function HomePageClient() {
           >
             {showcaseProduct?.coverImage?.url ? (
               <>
-                <img
-                  src={resolveMediaUrl(showcaseProduct.coverImage.url) || ''}
-                  alt={showcaseProduct.coverImage.alt || showcaseProduct.title}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'block',
-                    objectFit: 'cover',
-                  }}
-                />
+		<img
+		  src={resolveMediaUrl(showcaseProduct.coverImage.url) || ''}
+		  alt={showcaseProduct.coverImage.alt || showcaseProduct.title}
+		  className={s.heroShowcaseImage}
+		/>
 
                 <div className={s.heroBadge}>
                   {formatQualityScore(showcaseProduct.qualityScore) ?? '9+/10'}
