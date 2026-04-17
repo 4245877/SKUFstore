@@ -12,7 +12,11 @@ export type CartItem = {
   imageAlt?: string | null;
 };
 
-export type DeliveryMethod = 'nova-poshta-branch' | 'courier' | 'pickup';
+export type DeliveryMethod =
+  | 'nova-poshta-branch'
+  | 'ukrposhta-branch'
+  | 'courier'
+  | 'pickup';
 export type PaymentMethod = 'card' | 'cash-on-delivery';
 
 export type CheckoutFormValues = {

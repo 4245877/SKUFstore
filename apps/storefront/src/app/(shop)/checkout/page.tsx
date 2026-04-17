@@ -55,6 +55,26 @@ type NovaPoshtaSettlement = {
   label: string;
 };
 
+type UkrPoshtaOffice = {
+  id: string;
+  name: string;
+  address: string;
+  settlementName: string;
+  postcode: string | null;
+  fullLabel: string;
+  latitude: number | null;
+  longitude: number | null;
+  typeLabel: string | null;
+};
+
+type UkrPoshtaSettlement = {
+  id: string;
+  name: string;
+  label: string;
+  koatuu: string | null;
+  katottg: string | null;
+};
+
 const DELIVERY_LABELS: Record<
   DeliveryMethod,
   { label: string; sub: string; badge?: string; badgeFree?: boolean }
@@ -62,6 +82,10 @@ const DELIVERY_LABELS: Record<
   'nova-poshta-branch': {
     label: 'Нова пошта, відділення / поштомат',
     sub: 'Стандартна доставка по Україні',
+  },
+  'ukrposhta-branch': {
+    label: 'Укрпошта, відділення',
+    sub: 'Доставка до відділення за індексом',
   },
   courier: {
     label: "Кур'єр",
@@ -130,6 +154,16 @@ export default function CheckoutPage() {
   const [npError, setNpError] = useState<string | null>(null);
   const [npSelectedId, setNpSelectedId] = useState<string | null>(null);
   const [npDivisionQuery, setNpDivisionQuery] = useState('');
+  const [upOptions, setUpOptions] = useState<UkrPoshtaOffice[]>([]);
+  const [upCityOptions, setUpCityOptions] = useState<UkrPoshtaSettlement[]>([]);
+  const [upCityIsLoading, setUpCityIsLoading] = useState(false);
+  const [upCityError, setUpCityError] = useState<string | null>(null);
+  const [upCityConfirmed, setUpCityConfirmed] = useState(false);
+  const [upSelectedCityId, setUpSelectedCityId] = useState<string | null>(null);
+  const [upIsLoading, setUpIsLoading] = useState(false);
+  const [upError, setUpError] = useState<string | null>(null);
+  const [upSelectedId, setUpSelectedId] = useState<string | null>(null);
+  const [upOfficeQuery, setUpOfficeQuery] = useState('');
 
   const deliveryMethods = Object.keys(DELIVERY_LABELS) as DeliveryMethod[];
   const paymentMethods = Object.keys(PAYMENT_LABELS) as PaymentMethod[];
@@ -143,10 +177,17 @@ export default function CheckoutPage() {
   }, []);
 
   const isNovaPoshtaDelivery = form.deliveryMethod === 'nova-poshta-branch';
+  const isUkrPoshtaDelivery = form.deliveryMethod === 'ukrposhta-branch';
+  const isCarrierReadonlyAddress = isNovaPoshtaDelivery || isUkrPoshtaDelivery;
 
   const selectedNpDivision = useMemo(
     () => npOptions.find((division) => division.id === npSelectedId) ?? null,
     [npOptions, npSelectedId],
+  );
+
+  const selectedUpOffice = useMemo(
+    () => upOptions.find((office) => office.id === upSelectedId) ?? null,
+    [upOptions, upSelectedId],
   );
 
   const filteredNpOptions = npOptions;
@@ -209,6 +250,65 @@ export default function CheckoutPage() {
       window.clearTimeout(timeoutId);
     };
   }, [form.city, isNovaPoshtaDelivery]);
+
+  useEffect(() => {
+    if (!isUkrPoshtaDelivery) {
+      setUpCityOptions([]);
+      setUpCityError(null);
+      setUpCityIsLoading(false);
+      return;
+    }
+
+    const query = form.city.trim();
+
+    if (query.length < 2) {
+      setUpCityOptions([]);
+      setUpCityError(null);
+      setUpCityIsLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const timeoutId = window.setTimeout(async () => {
+      setUpCityIsLoading(true);
+      setUpCityError(null);
+
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          limit: '8',
+        });
+
+        const data = (await apiFetch(
+          `/api/shipping/ukrposhta/settlements?${params.toString()}`,
+          { method: 'GET' },
+        )) as { items?: UkrPoshtaSettlement[] };
+
+        if (isCancelled) return;
+
+        setUpCityOptions(Array.isArray(data?.items) ? data.items : []);
+      } catch (error) {
+        if (isCancelled) return;
+
+        setUpCityOptions([]);
+        setUpCityError(
+          error instanceof Error
+            ? error.message
+            : 'Не вдалося отримати список населених пунктів Укрпошта.',
+        );
+      } finally {
+        if (!isCancelled) {
+          setUpCityIsLoading(false);
+        }
+      }
+    }, 500);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [form.city, isUkrPoshtaDelivery]);
 
   useEffect(() => {
     if (!isNovaPoshtaDelivery) {
@@ -293,6 +393,77 @@ export default function CheckoutPage() {
     };
   }, [form.city, isNovaPoshtaDelivery, npPointType, npDivisionQuery, npCityConfirmed]);
 
+  useEffect(() => {
+    if (!isUkrPoshtaDelivery) {
+      setUpOptions([]);
+      setUpError(null);
+      setUpIsLoading(false);
+      return;
+    }
+
+    if (!upCityConfirmed || !upSelectedCityId) {
+      setUpOptions([]);
+      setUpError(null);
+      setUpIsLoading(false);
+      return;
+    }
+
+    const officeQuery = upOfficeQuery.trim();
+    let isCancelled = false;
+
+    const timeoutId = window.setTimeout(async () => {
+      setUpIsLoading(true);
+      setUpError(null);
+
+      try {
+        const params = new URLSearchParams({
+          cityId: upSelectedCityId,
+          limit: '100',
+        });
+
+        if (officeQuery.length >= 1) {
+          params.set('q', officeQuery);
+        }
+
+        const data = (await apiFetch(
+          `/api/shipping/ukrposhta/offices?${params.toString()}`,
+          { method: 'GET' },
+        )) as { items?: UkrPoshtaOffice[] };
+
+        if (isCancelled) return;
+
+        const nextItems = Array.isArray(data?.items) ? data.items : [];
+        setUpOptions(nextItems);
+
+        if (nextItems.length === 0) {
+          setUpError(
+            officeQuery.length >= 1
+              ? 'Нічого не знайдено за цим запитом. Спробуй індекс або назву вулиці.'
+              : 'У цьому місті не знайдено доступних відділень Укрпошта.',
+          );
+        }
+      } catch (error) {
+        if (isCancelled) return;
+
+        setUpOptions([]);
+        setUpError(
+          error instanceof Error
+            ? error.message
+            : 'Не вдалося отримати список відділень Укрпошта.',
+        );
+      } finally {
+        if (!isCancelled) {
+          setUpIsLoading(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [isUkrPoshtaDelivery, upCityConfirmed, upSelectedCityId, upOfficeQuery]);
+
   const subtotal = getCartSubtotal(items);
   const deliveryPrice = getDeliveryPrice(form.deliveryMethod, items);
   const total = subtotal + deliveryPrice;
@@ -302,7 +473,11 @@ export default function CheckoutPage() {
     value: CheckoutFormValues[K],
   ) {
     setForm((prev) => {
-      if (field === 'city' && prev.deliveryMethod === 'nova-poshta-branch') {
+      if (
+        field === 'city' &&
+        (prev.deliveryMethod === 'nova-poshta-branch' ||
+          prev.deliveryMethod === 'ukrposhta-branch')
+      ) {
         return {
           ...prev,
           city: value as CheckoutFormValues['city'],
@@ -310,7 +485,10 @@ export default function CheckoutPage() {
         };
       }
 
-      if (field === 'deliveryMethod' && value === 'nova-poshta-branch') {
+      if (
+        field === 'deliveryMethod' &&
+        (value === 'nova-poshta-branch' || value === 'ukrposhta-branch')
+      ) {
         return {
           ...prev,
           deliveryMethod: value as CheckoutFormValues['deliveryMethod'],
@@ -327,19 +505,37 @@ export default function CheckoutPage() {
       setNpOptions([]);
       setNpError(null);
       setNpSelectedId(null);
+
+      setUpCityConfirmed(false);
+      setUpSelectedCityId(null);
+      setUpOfficeQuery('');
+      setUpOptions([]);
+      setUpError(null);
+      setUpSelectedId(null);
     }
 
     if (field === 'city' || field === 'address') {
       setNpSelectedId(null);
+      setUpSelectedId(null);
     }
 
-    if (field === 'deliveryMethod' && value !== 'nova-poshta-branch') {
+    if (field === 'deliveryMethod') {
       setNpCityConfirmed(false);
       setNpCityOptions([]);
       setNpCityError(null);
       setNpOptions([]);
       setNpError(null);
       setNpSelectedId(null);
+      setNpDivisionQuery('');
+
+      setUpCityConfirmed(false);
+      setUpCityOptions([]);
+      setUpCityError(null);
+      setUpSelectedCityId(null);
+      setUpOptions([]);
+      setUpError(null);
+      setUpSelectedId(null);
+      setUpOfficeQuery('');
     }
   }
 
@@ -372,6 +568,36 @@ export default function CheckoutPage() {
     setSubmitError(null);
   }
 
+  function handleSelectUkrPoshtaCity(city: UkrPoshtaSettlement) {
+    setForm((prev) => ({
+      ...prev,
+      city: city.name,
+      address: '',
+    }));
+    setUpCityConfirmed(true);
+    setUpSelectedCityId(city.id);
+    setUpCityOptions([]);
+    setUpCityError(null);
+    setUpOfficeQuery('');
+    setUpOptions([]);
+    setUpError(null);
+    setUpSelectedId(null);
+    setSubmitError(null);
+  }
+
+  function handleSelectUkrPoshtaOffice(office: UkrPoshtaOffice) {
+    setForm((prev) => ({
+      ...prev,
+      city: office.settlementName,
+      address: office.fullLabel,
+    }));
+    setUpOptions([]);
+    setUpError(null);
+    setUpOfficeQuery(office.fullLabel);
+    setUpSelectedId(office.id);
+    setSubmitError(null);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (items.length === 0 || isSubmitting) return;
@@ -395,6 +621,12 @@ export default function CheckoutPage() {
 
     if (isNovaPoshtaDelivery && !npSelectedId) {
       setSubmitError('Оберіть, будь ласка, відділення або поштомат Нова Пошта зі списку.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isUkrPoshtaDelivery && !upSelectedId) {
+      setSubmitError('Оберіть, будь ласка, відділення Укрпошта зі списку.');
       setIsSubmitting(false);
       return;
     }
@@ -599,6 +831,49 @@ export default function CheckoutPage() {
                     ))}
                   </div>
                 ) : null}
+
+                {isUkrPoshtaDelivery && form.city.trim().length >= 2 && upCityIsLoading ? (
+                  <div className={styles.options}>
+                    <div className={styles.option}>
+                      <span className={styles.optionContent}>
+                        <strong className={styles.optionLabel}>
+                          Шукаємо населений пункт…
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isUkrPoshtaDelivery && upCityError ? (
+                  <p role="alert" className={styles.emptyText}>
+                    {upCityError}
+                  </p>
+                ) : null}
+
+                {isUkrPoshtaDelivery &&
+                form.city.trim().length >= 2 &&
+                upCityOptions.length > 0 ? (
+                  <div className={styles.options}>
+                    {upCityOptions.map((city) => (
+                      <button
+                        key={city.id}
+                        type="button"
+                        onClick={() => handleSelectUkrPoshtaCity(city)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '12px 14px',
+                          borderRadius: 14,
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          background: 'rgba(255,255,255,0.03)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <strong>{city.label}</strong>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </section>
 
@@ -756,10 +1031,96 @@ export default function CheckoutPage() {
                 </>
               ) : null}
 
+              {isUkrPoshtaDelivery ? (
+                <>
+                  <div className={`${styles.field} ${styles.gridFull}`}>
+                    <span className={styles.label}>Відділення Укрпошта</span>
+                    <small className={styles.optionSub}>
+                      {!upCityConfirmed
+                        ? 'Спочатку обери місто зі списку підказок вище.'
+                        : 'Можна шукати відділення за індексом або назвою вулиці.'}
+                    </small>
+                  </div>
+
+                  <label className={`${styles.field} ${styles.gridFull}`}>
+                    <span className={styles.label}>Пошук відділення</span>
+                    <input
+                      className={styles.input}
+                      value={upOfficeQuery}
+                      onChange={(e) => {
+                        setUpOfficeQuery(e.target.value);
+                        setUpSelectedId(null);
+                        handleChange('address', '');
+                      }}
+                      placeholder="Наприклад, 01001 або Хрещатик"
+                      autoComplete="off"
+                      disabled={!upCityConfirmed || !upSelectedCityId}
+                    />
+                  </label>
+
+                  {upIsLoading ? (
+                    <p className={styles.emptyText}>Шукаємо доступні відділення…</p>
+                  ) : null}
+
+                  {upError ? (
+                    <p role="alert" className={styles.emptyText}>
+                      {upError}
+                    </p>
+                  ) : null}
+
+                  {upOptions.length > 0 ? (
+                    <div className={styles.options}>
+                      {upOptions.map((office) => (
+                        <label key={office.id} className={styles.option}>
+                          <input
+                            type="radio"
+                            name="ukrposhtaOffice"
+                            checked={upSelectedId === office.id}
+                            onChange={() => handleSelectUkrPoshtaOffice(office)}
+                          />
+                          <span className={styles.optionContent}>
+                            <strong className={styles.optionLabel}>{office.name}</strong>
+                            <small className={styles.optionSub}>{office.address}</small>
+                          </span>
+                          <span className={styles.optionBadge}>
+                            {office.postcode ?? 'Укрпошта'}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {selectedUpOffice?.latitude != null &&
+                  selectedUpOffice?.longitude != null ? (
+                    <div className={styles.gridFull} style={{ marginTop: 16 }}>
+                      <span className={styles.label}>Карта відділення</span>
+                      <div
+                        style={{
+                          overflow: 'hidden',
+                          borderRadius: 20,
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          minHeight: 320,
+                        }}
+                      >
+                        <iframe
+                          title="Карта відділення Укрпошта"
+                          src={`https://www.google.com/maps?q=${selectedUpOffice.latitude},${selectedUpOffice.longitude}&z=16&output=embed`}
+                          loading="lazy"
+                          style={{ width: '100%', height: 320, border: 0 }}
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+
               <label className={`${styles.field} ${styles.gridFull}`}>
                 <span className={`${styles.label} ${styles.labelRequired}`}>
                   {isNovaPoshtaDelivery ? (
                     'Обрана точка видачі'
+                  ) : isUkrPoshtaDelivery ? (
+                    'Обране відділення'
                   ) : (
                     <>
                       Адреса&nbsp;/&nbsp;відділення
@@ -773,11 +1134,13 @@ export default function CheckoutPage() {
                   placeholder={
                     isNovaPoshtaDelivery
                       ? 'Оберіть відділення або поштомат зі списку вище'
-                      : 'Вулиця, будинок або номер відділення'
+                      : isUkrPoshtaDelivery
+                        ? 'Оберіть відділення Укрпошта зі списку вище'
+                        : 'Вулиця, будинок або номер відділення'
                   }
                   required
-                  autoComplete={isNovaPoshtaDelivery ? 'off' : 'street-address'}
-                  readOnly={isNovaPoshtaDelivery}
+                  autoComplete={isCarrierReadonlyAddress ? 'off' : 'street-address'}
+                  readOnly={isCarrierReadonlyAddress}
                 />
               </label>
             </section>
