@@ -8,6 +8,9 @@ const ogImageUrl = `${siteUrl}/opengraph-image.png`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  verification: {
+    google: "hACTECkBw9QUaRr7jTbTcEKo8tlD68GCGGM6qEFH8bU",
+  },
   title: {
     default: "SKUFnya — магазин оригінальних аніме-фігурок",
     template: "%s | SKUFnya",
