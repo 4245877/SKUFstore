@@ -1,4 +1,7 @@
+// apps/storefront/src/app/sitemap.ts
 import type { MetadataRoute } from "next";
+
+export const dynamic = "force-static";
 
 const siteUrl = "https://www.skufnya.com";
 
