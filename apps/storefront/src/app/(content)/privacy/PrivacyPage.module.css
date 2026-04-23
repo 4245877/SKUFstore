@@ -1,0 +1,416 @@
+/* ================================================
+   PrivacyPage.module.css
+   SKUFnya — Anime Figure Store
+   Aesthetic: maid uniform · lace · soft luxury · living
+   ================================================ */
+
+/* ── Page shell ─────────────────────────────── */
+.page {
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 10% -10%, rgba(242,201,201,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 110%,  rgba(201,169,110,0.10) 0%, transparent 55%),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Ccircle cx='20' cy='20' r='1' fill='%23f2c9c9' opacity='0.25'/%3E%3Ccircle cx='0'  cy='0'  r='1' fill='%23f2c9c9' opacity='0.15'/%3E%3Ccircle cx='40' cy='40' r='1' fill='%23f2c9c9' opacity='0.15'/%3E%3C/g%3E%3C/svg%3E");
+  padding-bottom: clamp(48px, 8vw, 96px);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── Decorative top ribbon ───────────────────── */
+.page::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--blush) 0%,
+    var(--deep-rose) 30%,
+    var(--gold) 60%,
+    var(--rose) 100%
+  );
+  z-index: 100;
+  animation: ribbonSlide 0.7s var(--ease-out-expo) both;
+}
+
+/* ── Floating lace corner ornament ──────────── */
+.page::after {
+  content: '✦';
+  position: fixed;
+  bottom: clamp(16px, 3vw, 32px);
+  right:  clamp(16px, 3vw, 32px);
+  font-size: 20px;
+  color: var(--rose);
+  opacity: 0.35;
+  animation: floatY 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Container ───────────────────────────────── */
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Hero section ────────────────────────────── */
+.hero {
+  padding: clamp(48px, 10vw, 112px) 0 clamp(32px, 6vw, 72px);
+  text-align: center;
+  position: relative;
+  animation: fadeUp 0.7s var(--ease-out-expo) both;
+}
+
+/* Decorative lace arc above hero */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(240px, 50vw, 560px);
+  height: clamp(80px, 14vw, 160px);
+  background: radial-gradient(ellipse 100% 80% at 50% 0%,
+    rgba(242,201,201,0.30) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-jp);
+  font-size: clamp(10px, 1.2vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--deep-rose);
+  margin-bottom: 16px;
+  position: relative;
+  padding: 0 24px;
+  animation: fadeIn 0.5s 0.1s var(--ease-out-expo) both;
+}
+
+/* Small bow ornaments flanking eyebrow */
+.eyebrow::before,
+.eyebrow::after {
+  content: '✿';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  opacity: 0.55;
+  color: var(--rose);
+}
+.eyebrow::before { left: 0; }
+.eyebrow::after  { right: 0; }
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 56px);
+  font-weight: 600;
+  line-height: 1.18;
+  color: var(--ink);
+  margin-bottom: 20px;
+  animation: fadeUp 0.7s 0.12s var(--ease-out-expo) both;
+  /* Subtle gradient shimmer on hover */
+  background: linear-gradient(135deg, var(--ink) 40%, var(--deep-rose) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lead {
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: clamp(15px, 1.6vw, 17px);
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  animation: fadeUp 0.7s 0.22s var(--ease-out-expo) both;
+}
+
+/* ── Divider between hero and sections ───────── */
+.hero + .section {
+  margin-top: 0;
+}
+
+/* ── Sections ─────────────────────────────────── */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: clamp(24px, 4vw, 48px) clamp(24px, 4vw, 48px);
+  margin-bottom: clamp(16px, 2.5vw, 28px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow 0.35s var(--ease-out-expo),
+    border-color 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+
+  /* Staggered entrance */
+  animation: fadeUp 0.65s var(--ease-out-expo) both;
+}
+
+/* Each .section gets a slightly later delay based on document order */
+.section:nth-child(1)  { animation-delay: 0.10s; }
+.section:nth-child(2)  { animation-delay: 0.16s; }
+.section:nth-child(3)  { animation-delay: 0.22s; }
+.section:nth-child(4)  { animation-delay: 0.28s; }
+.section:nth-child(5)  { animation-delay: 0.34s; }
+.section:nth-child(6)  { animation-delay: 0.40s; }
+.section:nth-child(7)  { animation-delay: 0.46s; }
+.section:nth-child(8)  { animation-delay: 0.52s; }
+
+.section:hover {
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(232,160,160,0.18);
+  border-color: var(--blush);
+  transform: translateY(-2px);
+}
+
+/* Left accent bar — maid ribbon stripe */
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--blush) 0%, var(--deep-rose) 50%, var(--gold) 100%);
+  border-radius: 4px 0 0 4px;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+.section:hover::before {
+  opacity: 1;
+}
+
+/* Decorative corner lace dot */
+.section::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, rgba(242,201,201,0.22) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ── Section heading ──────────────────────────── */
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  position: relative;
+  display: inline-block;
+}
+
+/* Underline with bow shape */
+.sectionTitle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--deep-rose) 0%,
+    var(--gold) 60%,
+    transparent 100%
+  );
+  border-radius: 2px;
+}
+
+/* ── Body text ──────────────────────────────────── */
+.text {
+  font-size: clamp(14px, 1.45vw, 16px);
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.text:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Lists ──────────────────────────────────────── */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list li {
+  font-size: clamp(14px, 1.45vw, 16px);
+  color: var(--text-secondary);
+  line-height: 1.75;
+  padding-left: 28px;
+  position: relative;
+}
+
+/* Bow-knot bullet using Unicode ribbon */
+.list li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  top: 3px;
+  font-size: 9px;
+  color: var(--deep-rose);
+  opacity: 0.8;
+  transition: transform 0.25s var(--ease-spring), opacity 0.25s;
+}
+
+.list li:hover::before {
+  transform: rotate(45deg) scale(1.3);
+  opacity: 1;
+}
+
+/* ── Links ──────────────────────────────────────── */
+.link {
+  color: var(--deep-rose);
+  font-weight: 500;
+  position: relative;
+  transition: color 0.22s;
+  padding-bottom: 1px;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--deep-rose), var(--gold));
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s var(--ease-out-expo);
+}
+
+.link:hover {
+  color: var(--mauve);
+}
+
+.link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ── Note / disclaimer callout ──────────────── */
+.note {
+  margin-top: 20px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg,
+    rgba(242,201,201,0.18) 0%,
+    rgba(201,169,110,0.10) 100%
+  );
+  border: 1px solid rgba(232,160,160,0.30);
+  border-radius: 12px;
+  font-size: clamp(12px, 1.3vw, 14px);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-muted);
+  line-height: 1.7;
+  position: relative;
+  padding-left: 36px;
+}
+
+.note::before {
+  content: '🎀';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  filter: saturate(0.7);
+}
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .hero {
+    padding-top: clamp(40px, 10vw, 72px);
+    padding-bottom: clamp(24px, 6vw, 48px);
+  }
+
+  .section {
+    border-radius: 14px;
+    padding: 20px 18px;
+  }
+
+  .section:hover {
+    transform: none; /* disable lift on touch */
+  }
+
+  .title {
+    font-size: clamp(24px, 6.5vw, 36px);
+  }
+
+  .lead {
+    font-size: 15px;
+  }
+
+  .sectionTitle {
+    font-size: clamp(15px, 4vw, 18px);
+  }
+
+  .text,
+  .list li {
+    font-size: 14px;
+  }
+
+  .note {
+    padding-left: 32px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .section::after {
+    display: none; /* less noise on small screens */
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .page::before,
+  .page::after,
+  .hero,
+  .section,
+  .eyebrow,
+  .title,
+  .lead {
+    animation: none;
+  }
+
+  .section {
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+
+  .link::after {
+    transition: transform 0.15s;
+  }
+}
