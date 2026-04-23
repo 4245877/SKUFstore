@@ -1,0 +1,412 @@
+/* ============================================================
+   UserDataDeletionPage.module.css
+   SKUFnya — Anime Figures Store · Maid-inspired aesthetic
+   ============================================================ */
+
+/* ── Page shell ── */
+.page {
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 40% at 10% 0%,  rgba(242,201,201,0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 100%, rgba(201,169,110,0.10) 0%, transparent 55%),
+    url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='24' cy='24' r='1' fill='%23e8ddd8' fill-opacity='0.55'/%3E%3C/svg%3E");
+  padding-block: clamp(48px, 8vw, 96px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative lace frills — top ribbon */
+.page::before {
+  content: '';
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: 5px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--deep-rose)   0px,
+    var(--deep-rose)  12px,
+    var(--blush)       12px,
+    var(--blush)       20px,
+    var(--gold)        20px,
+    var(--gold)        24px,
+    var(--blush)       24px,
+    var(--blush)       32px,
+    var(--deep-rose)   32px,
+    var(--deep-rose)   44px,
+    transparent        44px,
+    transparent        48px
+  );
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Floating frilly border — bottom decorative element */
+.page::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  inset-inline: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--blush) 0%,
+    var(--deep-rose) 25%,
+    var(--gold) 50%,
+    var(--deep-rose) 75%,
+    var(--blush) 100%
+  );
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ── Container ── */
+.container {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vw, 64px);
+  animation: fadeUp 0.6s var(--ease-out-expo) both;
+}
+
+/* ── Hero / header ── */
+.hero {
+  position: relative;
+  text-align: center;
+  padding-block: clamp(32px, 5vw, 56px);
+}
+
+/* Decorative bow icon above eyebrow */
+.hero::before {
+  content: '🎀';
+  display: block;
+  font-size: clamp(24px, 3vw, 36px);
+  margin-bottom: 12px;
+  animation: floatY 3s ease-in-out infinite;
+  line-height: 1;
+}
+
+/* Frilly horizontal rule below hero */
+.hero::after {
+  content: '';
+  display: block;
+  width: clamp(80px, 20%, 160px);
+  height: 2px;
+  margin: 28px auto 0;
+  background: linear-gradient(90deg, transparent, var(--deep-rose), var(--gold), var(--deep-rose), transparent);
+  border-radius: 99px;
+}
+
+.eyebrow {
+  font-family: var(--font-jp);
+  font-size: clamp(10px, 1.2vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--deep-rose);
+  margin-bottom: 14px;
+  opacity: 0.9;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 52px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+/* Subtle shimmer on title */
+.title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(201,169,110,0.35) 50%,
+    transparent 60%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+  pointer-events: none;
+}
+
+.lead {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.8vw, 17px);
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+/* ── Content sections ── */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: clamp(24px, 4vw, 40px);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s var(--ease-out-expo), transform 0.3s var(--ease-out-expo);
+  overflow: hidden;
+  animation: fadeUp 0.5s var(--ease-out-expo) both;
+}
+
+/* Stagger animation delays per section */
+.section:nth-child(1) { animation-delay: 0.05s; }
+.section:nth-child(2) { animation-delay: 0.10s; }
+.section:nth-child(3) { animation-delay: 0.15s; }
+.section:nth-child(4) { animation-delay: 0.20s; }
+.section:nth-child(5) { animation-delay: 0.25s; }
+.section:nth-child(6) { animation-delay: 0.30s; }
+
+.section:hover {
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--border);
+  transform: translateY(-2px);
+}
+
+/* Decorative left accent stripe */
+.section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(180deg, var(--blush), var(--deep-rose), var(--gold));
+  opacity: 0.75;
+  transition: opacity 0.3s;
+}
+
+.section:hover::before {
+  opacity: 1;
+}
+
+/* Corner lace flourish */
+.section::after {
+  content: '✿';
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 14px;
+  color: var(--blush);
+  opacity: 0.5;
+  transition: opacity 0.3s, transform 0.4s var(--ease-spring);
+  pointer-events: none;
+}
+
+.section:hover::after {
+  opacity: 0.9;
+  transform: rotate(15deg) scale(1.15);
+}
+
+/* ── Section typography ── */
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2.2vw, 20px);
+  font-weight: 600;
+  color: var(--charcoal);
+  line-height: 1.3;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Numbered section badge pulled from heading text */
+.sectionTitle::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--deep-rose), var(--gold));
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--blush);
+}
+
+.text {
+  font-size: clamp(14px, 1.5vw, 15.5px);
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 12px;
+  padding-left: 12px;
+}
+
+.text:last-child {
+  margin-bottom: 0;
+}
+
+/* ── List ── */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  padding-left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list li {
+  font-size: clamp(14px, 1.5vw, 15.5px);
+  color: var(--text-secondary);
+  line-height: 1.65;
+  padding-left: 22px;
+  position: relative;
+}
+
+/* Custom bullet — a small rose diamond */
+.list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, var(--rose), var(--deep-rose));
+  flex-shrink: 0;
+  transition: transform 0.3s var(--ease-spring), background 0.3s;
+}
+
+.list li:hover::before {
+  transform: rotate(135deg) scale(1.3);
+  background: linear-gradient(135deg, var(--gold), var(--deep-rose));
+}
+
+/* ── Links ── */
+.link {
+  color: var(--deep-rose);
+  font-weight: 500;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--deep-rose), var(--gold));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease-out-expo);
+  border-radius: 99px;
+}
+
+.link:hover {
+  color: var(--mauve);
+}
+
+.link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ── Note / callout ── */
+.note {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--lace) 0%, rgba(242,201,201,0.18) 100%);
+  border: 1px solid var(--blush);
+  border-left: 3px solid var(--deep-rose);
+  border-radius: 8px;
+  font-size: clamp(13px, 1.4vw, 14.5px);
+  font-style: italic;
+  font-family: var(--font-jp);
+  color: var(--mauve);
+  line-height: 1.7;
+  position: relative;
+  box-shadow: var(--shadow-xs);
+}
+
+.note::before {
+  content: '♡';
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  font-size: 18px;
+  color: var(--deep-rose);
+  background: var(--lace);
+  padding-inline: 4px;
+  line-height: 1;
+  font-style: normal;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .container {
+    gap: 24px;
+  }
+
+  .section {
+    border-radius: 12px;
+    padding: 20px 18px;
+  }
+
+  .hero {
+    padding-block: 24px 20px;
+  }
+
+  .sectionTitle {
+    padding-left: 8px;
+  }
+
+  .text,
+  .list {
+    padding-left: 8px;
+  }
+
+  .note {
+    padding: 14px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 26px;
+  }
+
+  .lead {
+    font-size: 14px;
+  }
+
+  .section::after {
+    display: none;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .page::before,
+  .hero::before,
+  .title::after {
+    animation: none;
+  }
+
+  .container,
+  .section {
+    animation: none;
+  }
+
+  .section:hover {
+    transform: none;
+  }
+}
