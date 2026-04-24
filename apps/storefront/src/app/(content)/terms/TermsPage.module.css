@@ -1,164 +1,175 @@
-/* TermsPage.module.css
-   SKUFnya — Anime Figurine Shop
-   Aesthetic: maid-form inspired — lace frills, ribbon accents, soft blush, refined ink
-   ─────────────────────────────────────────────── */
+/* ============================================================
+   TermsPage.module.css
+   Aesthetic direction: Maid Café Editorial
+   Cream pages · Auburn ink · Lace-trim ornaments · Serif warmth
+   Light, trustworthy, unmistakably otaku-boutique.
+   ============================================================ */
 
-/* ── Page shell ─────────────────────────────────── */
+/* ── Page Shell ─────────────────────────────────────────────── */
 .page {
   min-height: 100vh;
-  background-color: var(--bg);
+  background: var(--bg);
+
+  /* Subtle dot-grid texture (like parchment / manga tone paper) */
   background-image:
-    radial-gradient(ellipse 80% 40% at 10% 0%, rgba(242, 201, 201, 0.22) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 90% 100%, rgba(201, 169, 110, 0.10) 0%, transparent 60%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23e8ddd8' stroke-width='0.5' opacity='0.5'%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3Cline x1='30' y1='0' x2='30' y2='18'/%3E%3Cline x1='30' y1='42' x2='30' y2='60'/%3E%3Cline x1='0' y1='30' x2='18' y2='30'/%3E%3Cline x1='42' y1='30' x2='60' y2='30'/%3E%3C/g%3E%3C/svg%3E");
-  padding-bottom: clamp(60px, 10vw, 120px);
-  position: relative;
-  overflow-x: hidden;
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(178, 86, 52, 0.06) 0%, transparent 65%),
+    radial-gradient(circle, rgba(178, 86, 52, 0.055) 1px, transparent 1px);
+  background-size: 100%, 24px 24px;
+
+  padding-block: var(--space-xl) calc(var(--space-xl) * 3);
+  animation: pageFade 0.5s ease both;
 }
 
-/* Top decorative lace ribbon */
-.page::before {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 6px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--blush) 0px,
-    var(--blush) 12px,
-    var(--rose) 12px,
-    var(--rose) 14px,
-    var(--blush) 14px,
-    var(--blush) 26px,
-    transparent 26px,
-    transparent 30px
-  );
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 100;
-  animation: ribbonSlide 0.7s var(--ease-out-expo) both;
+@keyframes pageFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* ── Container ───────────────────────────────────── */
+/* ── Container ──────────────────────────────────────────────── */
 .container {
+  width: 100%;
   max-width: 780px;
-  margin: 0 auto;
-  padding: 0 var(--gutter);
+  margin-inline: auto;
+  padding-inline: var(--space-xl);
 }
 
-/* ── Hero section ────────────────────────────────── */
+@media (max-width: 768px) {
+  .container {
+    padding-inline: var(--pad);
+  }
+}
+
+/* ── Hero ───────────────────────────────────────────────────── */
 .hero {
-  padding: clamp(80px, 12vw, 140px) 0 clamp(40px, 6vw, 64px);
   text-align: center;
+  padding-block: calc(var(--space-xl) * 1.5) calc(var(--space-xl) * 2);
   position: relative;
-  animation: fadeUp 0.8s var(--ease-out-expo) both;
+
+  /* Bottom lace divider — a row of tiny diamonds */
+  padding-bottom: calc(var(--space-xl) * 2 + 24px);
 }
 
-/* Decorative bow above eyebrow */
+/* Decorative top ornament */
 .hero::before {
-  content: '✿';
+  content: '✦  ◇  ✦';
   display: block;
-  font-size: 22px;
-  color: var(--rose);
-  margin-bottom: 12px;
-  opacity: 0.75;
-  animation: floatY 4s ease-in-out infinite;
+  font-size: 0.625rem;
+  letter-spacing: 0.55em;
+  color: var(--primary);
+  opacity: 0.45;
+  margin-bottom: var(--space-lg);
+  user-select: none;
+  animation: riseIn 0.6s 0.1s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-/* Lace underline beneath hero */
+/* Lace-like bottom border */
 .hero::after {
   content: '';
-  display: block;
-  width: 160px;
-  height: 2px;
-  margin: 28px auto 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--blush) 20%,
-    var(--deep-rose) 50%,
-    var(--blush) 80%,
-    transparent
-  );
-  border-radius: 99px;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% + 4px);
+  height: 24px;
+
+  /* SVG lace pattern inline */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='24' viewBox='0 0 40 24'%3E%3Cpath d='M0 0 Q10 12 20 0 Q30 12 40 0' fill='none' stroke='%23B25634' stroke-opacity='0.18' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 40px 24px;
+  pointer-events: none;
 }
 
 .eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--deep-rose);
-  margin-bottom: 14px;
-  opacity: 0.9;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  border-radius: 999px;
+  padding: 0.25rem 0.875rem;
+  margin-bottom: var(--space-md);
+  animation: riseIn 0.5s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .title {
-  font-family: var(--font-display);
-  font-size: clamp(32px, 5.5vw, 56px);
-  font-weight: 600;
-  color: var(--ink);
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 400;
+  color: var(--text);
   line-height: 1.15;
-  letter-spacing: -0.01em;
-  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-md);
+  animation: riseIn 0.55s 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Italic accent on last word via generated pseudo — use span in JSX if desired */
+.title em {
+  font-style: italic;
+  color: var(--primary);
 }
 
 .lead {
-  font-family: var(--font-body);
-  font-size: clamp(15px, 2vw, 17px);
-  font-weight: 300;
-  color: var(--text-secondary);
+  font-size: 1.0625rem;
   line-height: 1.75;
-  max-width: 580px;
-  margin: 0 auto;
+  color: var(--text-muted);
+  max-width: 56ch;
+  margin-inline: auto;
+  animation: riseIn 0.55s 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-/* ── Sections ────────────────────────────────────── */
+/* ── Sections ───────────────────────────────────────────────── */
 .section {
-  position: relative;
-  padding: clamp(28px, 4vw, 40px) clamp(24px, 4vw, 44px);
-  margin-bottom: clamp(16px, 2.5vw, 24px);
+  margin-top: calc(var(--space-xl) * 1.75);
+  padding: var(--space-lg) var(--space-xl);
   background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: 16px;
-  box-shadow: var(--shadow-xs);
-  transition:
-    box-shadow 0.35s var(--ease-out-expo),
-    transform 0.35s var(--ease-out-expo),
-    border-color 0.25s ease;
-  animation: fadeUp 0.7s var(--ease-out-expo) both;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+
+  /* Staggered entrance */
+  opacity: 0;
+  animation: sectionIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Stagger section reveals */
-.section:nth-child(1)  { animation-delay: 0.10s; }
-.section:nth-child(2)  { animation-delay: 0.15s; }
-.section:nth-child(3)  { animation-delay: 0.20s; }
-.section:nth-child(4)  { animation-delay: 0.25s; }
-.section:nth-child(5)  { animation-delay: 0.30s; }
-.section:nth-child(6)  { animation-delay: 0.35s; }
-.section:nth-child(7)  { animation-delay: 0.40s; }
-.section:nth-child(8)  { animation-delay: 0.45s; }
-.section:nth-child(9)  { animation-delay: 0.50s; }
-.section:nth-child(10) { animation-delay: 0.55s; }
+/* Stagger each section */
+.section:nth-child(1)  { animation-delay: 0.30s; }
+.section:nth-child(2)  { animation-delay: 0.36s; }
+.section:nth-child(3)  { animation-delay: 0.42s; }
+.section:nth-child(4)  { animation-delay: 0.48s; }
+.section:nth-child(5)  { animation-delay: 0.54s; }
+.section:nth-child(6)  { animation-delay: 0.60s; }
+.section:nth-child(7)  { animation-delay: 0.66s; }
+.section:nth-child(8)  { animation-delay: 0.72s; }
+.section:nth-child(9)  { animation-delay: 0.78s; }
+.section:nth-child(10) { animation-delay: 0.84s; }
+.section:nth-child(n+11){ animation-delay: 0.90s; }
 
-.section:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-  border-color: var(--border);
+@keyframes sectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Left frill accent bar */
+/* Accent bar on the left side */
 .section::before {
   content: '';
   position: absolute;
+  top: var(--space-md);
   left: 0;
-  top: 20px;
-  bottom: 20px;
+  bottom: var(--space-md);
   width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: linear-gradient(180deg, var(--blush), var(--deep-rose), var(--blush));
+  background: var(--gradient-hair);
+  border-radius: 0 2px 2px 0;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -167,181 +178,193 @@
   opacity: 1;
 }
 
-/* Corner lace ornament */
+/* Subtle corner ornament */
 .section::after {
-  content: '◇';
+  content: '✦';
   position: absolute;
-  top: 18px;
-  right: 20px;
-  font-size: 10px;
-  color: var(--silver);
-  opacity: 0.5;
-  transition: opacity 0.3s ease, color 0.3s ease;
+  top: var(--space-sm);
+  right: var(--space-md);
+  font-size: 0.5rem;
+  color: var(--primary);
+  opacity: 0.15;
+  user-select: none;
   pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 .section:hover::after {
-  opacity: 0.9;
-  color: var(--rose);
+  opacity: 0.35;
 }
 
-/* ── Section headings ────────────────────────────── */
+.section:hover {
+  border-color: color-mix(in srgb, var(--primary) 20%, var(--border));
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: var(--space-md) var(--space-md);
+    margin-top: var(--space-xl);
+  }
+}
+
+/* ── Section Title ──────────────────────────────────────────── */
 .sectionTitle {
-  font-family: var(--font-display);
-  font-size: clamp(17px, 2.4vw, 21px);
-  font-weight: 600;
-  color: var(--charcoal);
-  margin-bottom: 14px;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.375rem);
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.01em;
   line-height: 1.3;
+  margin-bottom: var(--space-md);
+
+  /* Number prefix styling via counters (visual only) */
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 0.625rem;
 }
 
-/* Ribbon pill before heading number */
+/* Number badge — the digit at the start of each title */
 .sectionTitle::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--deep-rose);
-  flex-shrink: 0;
-  position: relative;
-  top: -1px;
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.15);
-  transition: box-shadow 0.3s ease;
+  /* empty — the number is already in the text */
+  content: none;
 }
 
-.section:hover .sectionTitle::before {
-  box-shadow: 0 0 0 5px rgba(201,107,107,0.20);
-}
-
-/* ── Body text ───────────────────────────────────── */
+/* ── Body Text ──────────────────────────────────────────────── */
 .text {
-  font-family: var(--font-body);
-  font-size: clamp(14px, 1.8vw, 15.5px);
-  font-weight: 400;
-  color: var(--text-secondary);
+  font-size: 0.9375rem;
   line-height: 1.8;
+  color: var(--neutral-600);
 }
 
-/* ── Lists ───────────────────────────────────────── */
+.text + .text {
+  margin-top: var(--space-sm);
+}
+
+/* ── List ───────────────────────────────────────────────────── */
 .list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: var(--space-xs) 0 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.5rem;
 }
 
 .list li {
-  font-family: var(--font-body);
-  font-size: clamp(14px, 1.8vw, 15.5px);
-  font-weight: 400;
-  color: var(--text-secondary);
-  line-height: 1.75;
-  padding-left: 22px;
-  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--neutral-600);
 }
 
-/* Lace bow bullet */
+/* Custom bullet: small auburn diamond */
 .list li::before {
-  content: '✦';
-  position: absolute;
-  left: 0;
-  top: 0.1em;
-  font-size: 9px;
-  color: var(--rose);
-  line-height: inherit;
+  content: '◆';
+  font-size: 0.4375rem;
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 0.55em;
+  opacity: 0.7;
 }
 
-/* ── Links ───────────────────────────────────────── */
+/* ── Links ──────────────────────────────────────────────────── */
 .link {
-  color: var(--deep-rose);
-  font-weight: 500;
-  text-decoration: none;
-  border-bottom: 1.5px solid transparent;
-  background-image: linear-gradient(var(--blush), var(--blush));
-  background-size: 100% 0%;
-  background-repeat: no-repeat;
-  background-position: 0 100%;
-  padding-bottom: 1px;
+  color: var(--link);
+  font-weight: 600;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
   transition:
-    color 0.2s ease,
-    border-color 0.2s ease,
-    background-size 0.25s var(--ease-out-expo);
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast);
 }
 
 .link:hover {
-  color: var(--mauve);
-  border-bottom-color: var(--blush);
-  background-size: 100% 100%;
+  color: var(--link-hover);
+  text-decoration-style: solid;
 }
 
-/* ── Note (bottom disclaimer) ────────────────────── */
+/* ── Note ───────────────────────────────────────────────────── */
 .note {
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted);
-  line-height: 1.7;
-  margin-top: 16px;
-  padding: 14px 18px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border-soft);
-  border-radius: 10px;
-  border-left: 3px solid var(--blush);
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: color-mix(in srgb, var(--primary) 6%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--neutral-600);
   font-style: italic;
+
+  /* Small seal icon before the note */
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
-/* ── Spacing between text + list in same section ── */
-.text + .list,
-.text + .text {
-  margin-top: 12px;
+.note::before {
+  content: '✿';
+  font-size: 0.75rem;
+  color: var(--primary);
+  opacity: 0.6;
+  flex-shrink: 0;
+  margin-top: 0.15em;
+  user-select: none;
 }
 
-/* ── Last section — extra closing flourish ─────── */
-.section:last-child {
-  text-align: left;
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.section:last-child::after {
-  content: '❋';
+/* ── Reduced Motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .hero::before,
+  .eyebrow,
+  .title,
+  .lead,
+  .section {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
-/* ── Mobile ──────────────────────────────────────── */
-@media (max-width: 640px) {
-  .hero {
-    padding-top: clamp(72px, 18vw, 100px);
+/* ── Print ──────────────────────────────────────────────────── */
+@media print {
+  .page {
+    background: white;
+    background-image: none;
+    padding: 0;
   }
 
   .section {
-    padding: 22px 20px;
-    border-radius: 12px;
+    border: 1px solid #ddd;
+    box-shadow: none;
+    break-inside: avoid;
+    animation: none;
+    opacity: 1;
   }
 
+  .section::before,
   .section::after {
     display: none;
   }
 
-  .note {
-    font-size: 12.5px;
-  }
-}
-
-/* ── Reduced motion ─────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .page::before,
-  .hero,
   .hero::before,
-  .section {
-    animation: none;
-  }
-
-  .section,
-  .link {
-    transition: none;
+  .hero::after {
+    display: none;
   }
 }
