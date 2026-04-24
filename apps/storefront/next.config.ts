@@ -9,9 +9,17 @@ const basePath = isPages && useBasePath ? rawBasePath : ''
 
 const nextConfig: NextConfig = {
   trailingSlash: true,
+
   images: {
     unoptimized: true,
   },
+
+  experimental: {
+    staticGenerationRetryCount: 3,
+    staticGenerationMaxConcurrency: 1,
+    staticGenerationMinPagesPerWorker: 1,
+  },
+
   ...(isPages
     ? {
         output: 'export',
