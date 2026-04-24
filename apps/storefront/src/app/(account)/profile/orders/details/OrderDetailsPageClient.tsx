@@ -13,12 +13,17 @@ import { getAccountOrder, type OrderRecord } from '../../../../../lib/api';
 
 const statusClassMap: Record<string, string> = {
   pending: 'statusPending',
+  awaiting_payment: 'statusPending',
   paid: 'statusPaid',
   processing: 'statusProcessing',
   shipped: 'statusShipped',
   delivered: 'statusDelivered',
   cancelled: 'statusCancelled',
 };
+
+function normalizeStatus(status: string) {
+  return status.toLowerCase();
+}
 
 export default function OrderDetailsPage() {
   const searchParams = useSearchParams();
@@ -28,6 +33,9 @@ export default function OrderDetailsPage() {
   const id = searchParams.get('id');
 
   useEffect(() => {
+    setIsReady(false);
+    setErrorMessage(null);
+
     if (!id) {
       setOrder(null);
       setIsReady(true);
@@ -39,12 +47,15 @@ export default function OrderDetailsPage() {
     (async () => {
       try {
         const response = await getAccountOrder(id);
+
         if (!isMounted) return;
+
         setOrder(response.order);
       } catch (error) {
         if (!isMounted) return;
+
         setErrorMessage(
-          error instanceof Error ? error.message : 'Не вдалося завантажити замовлення.',
+          error instanceof Error ? error.message : 'Не удалось загрузить заказ.',
         );
         setOrder(null);
       } finally {
@@ -64,11 +75,14 @@ export default function OrderDetailsPage() {
     return order.items.reduce((sum, item) => sum + item.quantity, 0);
   }, [order]);
 
+  const normalizedStatus = order ? normalizeStatus(order.status) : 'pending';
+  const statusClassName = statusClassMap[normalizedStatus] ?? statusClassMap.pending;
+
   if (!isReady) {
     return (
       <main className={styles.page}>
         <div className={styles.container}>
-          <p className={styles.loading}>Загрузка заказа…</p>
+          <p className={styles.loading}>Загружаем заказ...</p>
         </div>
       </main>
     );
@@ -112,11 +126,7 @@ export default function OrderDetailsPage() {
             </p>
           </div>
 
-          <span
-            className={`${styles.status} ${
-              styles[statusClassMap[order.status] || 'statusPending']
-            }`}
-          >
+          <span className={`${styles.status} ${styles[statusClassName]}`}>
             {getStatusLabel(order.status)}
           </span>
         </div>
@@ -181,17 +191,17 @@ export default function OrderDetailsPage() {
               <h2 className={styles.sectionTitle}>Получатель</h2>
 
               <div className={styles.detailsList}>
-                <div>
+                <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Имя</span>
                   <strong className={styles.detailValue}>{order.customer.fullName}</strong>
                 </div>
 
-                <div>
+                <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Телефон</span>
                   <strong className={styles.detailValue}>{order.customer.phone}</strong>
                 </div>
 
-                <div>
+                <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Email</span>
                   <strong className={styles.detailValue}>{order.customer.email}</strong>
                 </div>
@@ -202,17 +212,17 @@ export default function OrderDetailsPage() {
               <h2 className={styles.sectionTitle}>Доставка и оплата</h2>
 
               <div className={styles.detailsList}>
-                <div>
+                <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Город</span>
                   <strong className={styles.detailValue}>{order.customer.city}</strong>
                 </div>
 
-                <div>
+                <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Адрес</span>
                   <strong className={styles.detailValue}>{order.customer.address}</strong>
                 </div>
 
-                <div>
+                <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Способ оплаты</span>
                   <strong className={styles.detailValue}>
                     {order.customer.paymentMethod === 'card'
@@ -222,7 +232,7 @@ export default function OrderDetailsPage() {
                 </div>
 
                 {order.customer.comment ? (
-                  <div>
+                  <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Комментарий</span>
                     <strong className={styles.detailValue}>{order.customer.comment}</strong>
                   </div>
