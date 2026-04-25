@@ -43,9 +43,9 @@ type FavoriteItem = {
 };
 
 const STOCK_LABEL: Record<StockStatus, string> = {
-  'in-stock': 'В наличии',
-  'out-of-stock': 'Нет в наличии',
-  'pre-order': 'Предзаказ',
+  'in-stock': 'В наявності',
+  'out-of-stock': 'Немає в наявності',
+  'pre-order': 'Передзамовлення',
 };
 
 const STOCK_CLASS: Record<StockStatus, string> = {
@@ -61,7 +61,7 @@ function isAuthError(error: unknown) {
 
 function formatDate(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleDateString('ru-RU', {
+  return d.toLocaleDateString('uk-UA', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -69,7 +69,7 @@ function formatDate(iso: string) {
 }
 
 function formatPrice(value: number, currency: string) {
-  return new Intl.NumberFormat('ru-RU', {
+  return new Intl.NumberFormat('uk-UA', {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,
@@ -96,9 +96,9 @@ function pluralizeFigures(count: number) {
   const mod10 = count % 10;
   const mod100 = count % 100;
 
-  if (mod10 === 1 && mod100 !== 11) return 'фигурка';
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'фигурки';
-  return 'фигурок';
+  if (mod10 === 1 && mod100 !== 11) return 'фігурка';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'фігурки';
+  return 'фігурок';
 }
 
 function mapAccountFavorite(item: AccountFavoriteItem): FavoriteItem {
@@ -210,7 +210,7 @@ function GridCard({
           ) : (
             <div className={s.cardImagePlaceholder}>
               <span className={s.cardImageIcon}>🎀</span>
-              <span className={s.cardImageLabel}>{item.metaLabel || 'Фигурка'}</span>
+              <span className={s.cardImageLabel}>{item.metaLabel || 'Фігурка'}</span>
             </div>
           )}
         </Link>
@@ -219,15 +219,15 @@ function GridCard({
           type="button"
           className={`${s.cardHeartBtn} ${s.isWished}`}
           onClick={() => onRemove(item.productId)}
-          title="Убрать из избранного"
-          aria-label="Убрать из избранного"
+          title="Прибрати з обраного"
+          aria-label="Прибрати з обраного"
         >
           🩷
         </button>
 
         <div className={s.cardActions}>
           <button type="button" className={s.cardBtn} onClick={() => onAddToCart(item)}>
-            В корзину
+            У кошик
           </button>
         </div>
       </div>
@@ -240,7 +240,7 @@ function GridCard({
 
         <div className={s.cardMeta}>
           <span className={s.cardPrice}>{formatPrice(item.price, item.currency)}</span>
-          <span className={s.cardScale}>{item.metaLabel || 'Фигурка'}</span>
+          <span className={s.cardScale}>{item.metaLabel || 'Фігурка'}</span>
         </div>
 
         <div className={s.cardFooter}>
@@ -305,18 +305,18 @@ function ListCard({
           onClick={() => onAddToCart(item)}
         >
           <span className={s.listCardActionIcon}>🛒</span>
-          В корзину
+          У кошик
         </button>
 
         <button
           type="button"
           className={`${s.listCardActionBtn} ${s.listCardActionBtnDanger}`}
           onClick={() => onRemove(item.productId)}
-          title="Убрать из избранного"
-          aria-label="Убрать из избранного"
+          title="Прибрати з обраного"
+          aria-label="Прибрати з обраного"
         >
           <span className={s.listCardActionIcon}>🩷</span>
-          Убрать
+          Прибрати
         </button>
       </div>
     </article>
@@ -396,7 +396,7 @@ export default function FavoritesPage() {
     if (sort === 'added') arr.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
     if (sort === 'price-asc') arr.sort((a, b) => a.price - b.price);
     if (sort === 'price-desc') arr.sort((a, b) => b.price - a.price);
-    if (sort === 'name') arr.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    if (sort === 'name') arr.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
 
     return arr;
   }, [items, filter, sort]);
@@ -422,7 +422,7 @@ export default function FavoritesPage() {
       subtitle: item.series,
     });
 
-    showToast(`«${item.name}» добавлена в корзину`);
+    showToast(`«${item.name}» додано до кошика`);
   }
 
   async function handleRemove(productId: string) {
@@ -439,11 +439,11 @@ export default function FavoritesPage() {
         removeFavorite(productId);
       }
 
-      showToast(`«${item.name}» удалена из избранного`);
+      showToast(`«${item.name}» видалено з обраного`);
     } catch (error) {
       console.error(error);
       setItems(current);
-      showToast('Не удалось обновить избранное');
+      showToast('Не вдалося оновити обране');
     }
   }
 
@@ -458,11 +458,11 @@ export default function FavoritesPage() {
         clearFavorites();
       }
 
-      showToast('Список избранного очищен');
+      showToast('Список обраного очищено');
     } catch (error) {
       console.error(error);
       setItems(current);
-      showToast('Не удалось очистить избранное');
+      showToast('Не вдалося очистити обране');
     }
   }
 
@@ -489,10 +489,10 @@ export default function FavoritesPage() {
         setItems(readFavorites().map(mapGuestFavorite));
       }
 
-      showToast(`«${product.title}» добавлена в избранное`);
+      showToast(`«${product.title}» додано до обраного`);
     } catch (error) {
       console.error(error);
-      showToast('Не удалось добавить товар в избранное');
+      showToast('Не вдалося додати товар до обраного');
     } finally {
       setPendingSuggestionIds((prev) => {
         const next = new Set(prev);
@@ -507,16 +507,16 @@ export default function FavoritesPage() {
       <header className={s.pageHeader}>
         <div className={s.headerInner}>
           <div className={s.headerLeft}>
-            <nav className={s.breadcrumb} aria-label="Навигация">
-              <Link href="/" className={s.breadcrumbLink}>Главная</Link>
+            <nav className={s.breadcrumb} aria-label="Навігація">
+              <Link href="/" className={s.breadcrumbLink}>Головна</Link>
               <span className={s.breadcrumbSep}>❯</span>
-              <span className={s.breadcrumbCurrent}>Избранное</span>
+              <span className={s.breadcrumbCurrent}>Обране</span>
             </nav>
 
-            <p className={s.headerEyebrow}>избранное</p>
+            <p className={s.headerEyebrow}>обране</p>
             <h1 className={s.headerTitle}>
-              Моё <span className={s.headerTitleAccent}>избранное</span>
-              <span className={s.headerTitleJp}>Коллекция любимых фигурок</span>
+              Моє <span className={s.headerTitleAccent}>обране</span>
+              <span className={s.headerTitleJp}>Колекція улюблених фігурок</span>
             </h1>
           </div>
 
@@ -531,7 +531,7 @@ export default function FavoritesPage() {
       </header>
 
       {!isLoading && items.length > 0 && (
-        <div className={s.toolbar} role="toolbar" aria-label="Управление избранным">
+        <div className={s.toolbar} role="toolbar" aria-label="Керування обраним">
           <div className={s.toolbarInner}>
             <div className={s.toolbarLeft}>
               <button
@@ -539,7 +539,7 @@ export default function FavoritesPage() {
                 className={`${s.toolbarTab} ${filter === 'all' ? s.toolbarTabActive : ''}`}
                 onClick={() => setFilter('all')}
               >
-                Все
+                Усі
                 <span className={s.toolbarTabCount}>{items.length}</span>
               </button>
 
@@ -548,7 +548,7 @@ export default function FavoritesPage() {
                 className={`${s.toolbarTab} ${filter === 'in-stock' ? s.toolbarTabActive : ''}`}
                 onClick={() => setFilter('in-stock')}
               >
-                В наличии
+                В наявності
                 <span className={s.toolbarTabCount}>{inStockCount}</span>
               </button>
 
@@ -557,7 +557,7 @@ export default function FavoritesPage() {
                 className={`${s.toolbarTab} ${filter === 'pre-order' ? s.toolbarTabActive : ''}`}
                 onClick={() => setFilter('pre-order')}
               >
-                Предзаказ
+                Передзамовлення
                 <span className={s.toolbarTabCount}>{preOrderCount}</span>
               </button>
             </div>
@@ -567,23 +567,23 @@ export default function FavoritesPage() {
                 className={s.sortSelect}
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortKey)}
-                aria-label="Сортировка"
+                aria-label="Сортування"
               >
-                <option value="added">По дате добавления</option>
-                <option value="price-asc">Цена: по возрастанию</option>
-                <option value="price-desc">Цена: по убыванию</option>
-                <option value="name">По названию</option>
+                <option value="added">За датою додавання</option>
+                <option value="price-asc">Ціна: за зростанням</option>
+                <option value="price-desc">Ціна: за спаданням</option>
+                <option value="name">За назвою</option>
               </select>
 
               <div className={s.toolbarSep} />
 
-              <div className={s.viewToggle} role="group" aria-label="Вид отображения">
+              <div className={s.viewToggle} role="group" aria-label="Вигляд відображення">
                 <button
                   type="button"
                   className={`${s.viewBtn} ${view === 'grid' ? s.viewBtnActive : ''}`}
                   onClick={() => setView('grid')}
                   aria-pressed={view === 'grid'}
-                  title="Сетка"
+                  title="Сітка"
                 >
                   ⊞
                 </button>
@@ -605,7 +605,7 @@ export default function FavoritesPage() {
                 className={`${s.toolbarBtn} ${s.toolbarBtnDanger}`}
                 onClick={handleClearAll}
               >
-                🗑 Очистить всё
+                🗑 Очистити все
               </button>
             </div>
           </div>
@@ -620,8 +620,8 @@ export default function FavoritesPage() {
               <div className={s.emptyDot} />
               <div className={s.emptyDot} />
             </div>
-            <span className={s.emptyJp}>загрузка</span>
-            <h2 className={s.emptyTitle}>Загружаем избранное…</h2>
+            <span className={s.emptyJp}>завантаження</span>
+            <h2 className={s.emptyTitle}>Завантажуємо обране…</h2>
           </div>
         ) : items.length === 0 ? (
           <div className={s.emptyState} role="status" aria-live="polite">
@@ -630,20 +630,20 @@ export default function FavoritesPage() {
               <div className={s.emptyDot} />
               <div className={s.emptyDot} />
             </div>
-            <span className={s.emptyJp}>список пуст</span>
+            <span className={s.emptyJp}>список порожній</span>
             <h2 className={s.emptyTitle}>
-              Здесь пока <span className={s.emptyTitleAccent}>пусто</span>
+              Тут поки <span className={s.emptyTitleAccent}>порожньо</span>
             </h2>
             <p className={s.emptyText}>
-              Добавляй понравившиеся фигурки в избранное,
-              нажимая на сердечко на карточке товара.
+              Додавай фігурки, які сподобалися, до обраного,
+              натискаючи на сердечко на картці товару.
             </p>
             <Link href="/catalog" className={s.emptyCta}>
-              Перейти в каталог →
+              Перейти до каталогу →
             </Link>
           </div>
         ) : view === 'grid' ? (
-          <div className={s.grid} role="list" aria-label="Избранные фигурки">
+          <div className={s.grid} role="list" aria-label="Обрані фігурки">
             {sorted.map((item) => (
               <div key={item.productId} role="listitem">
                 <GridCard
@@ -655,7 +655,7 @@ export default function FavoritesPage() {
             ))}
           </div>
         ) : (
-          <div className={s.gridList} role="list" aria-label="Избранные фигурки">
+          <div className={s.gridList} role="list" aria-label="Обрані фігурки">
             {sorted.map((item) => (
               <div key={item.productId} role="listitem">
                 <ListCard
@@ -670,17 +670,17 @@ export default function FavoritesPage() {
       </main>
 
       {visibleSuggestions.length > 0 && (
-        <section className={s.suggestions} aria-label="Возможно, вам понравится">
+        <section className={s.suggestions} aria-label="Можливо, тобі сподобається">
           <div className={s.suggestionsInner}>
             <div className={s.suggestionsHead}>
               <div>
-                <p className={s.suggestionsLabel}>рекомендуем</p>
+                <p className={s.suggestionsLabel}>рекомендуємо</p>
                 <h2 className={s.suggestionsTitle}>
-                  Вам может <span className={s.suggestionsTitleAccent}>понравиться</span>
+                  Тобі може <span className={s.suggestionsTitleAccent}>сподобатися</span>
                 </h2>
               </div>
               <Link href="/catalog" className={s.suggestionsLink}>
-                Весь каталог →
+                Увесь каталог →
               </Link>
             </div>
 
@@ -725,8 +725,8 @@ export default function FavoritesPage() {
                         className={s.suggestCardWishBtn}
                         onClick={() => void handleToggleSuggestion(item)}
                         disabled={pendingSuggestionIds.has(item.id)}
-                        title="В избранное"
-                        aria-label="В избранное"
+                        title="До обраного"
+                        aria-label="До обраного"
                       >
                         {pendingSuggestionIds.has(item.id) ? '…' : '🤍'}
                       </button>
@@ -743,26 +743,26 @@ export default function FavoritesPage() {
         <div
           className={`${s.summaryBar} ${s.summaryBarVisible}`}
           role="complementary"
-          aria-label="Итог избранного"
+          aria-label="Підсумок обраного"
         >
           <div className={s.summaryBarInner}>
             <div className={s.summaryInfo}>
               <div className={s.summaryItem}>
-                <span className={s.summaryItemLabel}>Фигурок</span>
+                <span className={s.summaryItemLabel}>Фігурок</span>
                 <span className={s.summaryItemValue}>{items.length}</span>
               </div>
 
               <div className={s.summaryDivider} />
 
               <div className={s.summaryItem}>
-                <span className={s.summaryItemLabel}>В наличии</span>
+                <span className={s.summaryItemLabel}>В наявності</span>
                 <span className={s.summaryItemValue}>{inStockCount}</span>
               </div>
 
               <div className={s.summaryDivider} />
 
               <div className={s.summaryItem}>
-                <span className={s.summaryItemLabel}>Общая стоимость</span>
+                <span className={s.summaryItemLabel}>Загальна вартість</span>
                 <span className={`${s.summaryItemValue} ${s.summaryItemValueAccent}`}>
                   {formatPrice(totalPrice, items[0]?.currency || 'UAH')}
                 </span>
@@ -771,7 +771,7 @@ export default function FavoritesPage() {
 
             <div className={s.summaryActions}>
               <Link href="/catalog" className={s.summaryBtnSecondary}>
-                Продолжить выбор
+                Продовжити вибір
               </Link>
               <button
                 type="button"
@@ -780,7 +780,7 @@ export default function FavoritesPage() {
                   items.forEach(handleAddToCart);
                 }}
               >
-                🛒 Добавить всё в корзину
+                🛒 Додати все до кошика
               </button>
             </div>
           </div>
