@@ -191,7 +191,8 @@ export default function HomePageClient() {
             <span>Актуальні товари з каталогу на головній</span>
             <span className={s.ribbonSep}>✦</span>
             <span>-15% на перше замовлення за промокодом SKUFNYA</span>
-
+            <span className={s.ribbonSep}>✦</span>
+            <span>Новинки та хіти регулярно оновлюються</span>
           </div>
         </div>
       </div>
