@@ -74,6 +74,8 @@ type ApiErrorPayload = {
 
 type ApiFetchInit = RequestInit & {
   next?: { revalidate?: number; tags?: string[] };
+  retry?: boolean;
+  maxAttempts?: number;
 };
 
 type AnyRecord = Record<string, any>;
@@ -128,18 +130,21 @@ function parsePayload<T>(bodyText: string): T | ApiErrorPayload | null {
 }
 
 export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promise<T> {
-  const headers = new Headers(init.headers ?? {});
+  const { retry = true, maxAttempts, ...fetchInit } = init;
+  const headers = new Headers(fetchInit.headers ?? {});
 
   // Автоматически ставим application/json, если это не FormData (файлы)
-  if (!(init.body instanceof FormData) && !headers.has('Content-Type')) {
+  if (!(fetchInit.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
   const url = buildApiUrl(path);
+  const attempts =
+    retry === false ? 1 : Math.max(1, maxAttempts ?? MAX_API_FETCH_ATTEMPTS);
 
-  for (let attempt = 0; attempt < MAX_API_FETCH_ATTEMPTS; attempt += 1) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
     const response = await fetch(url, {
-      ...init,
+      ...fetchInit,
       headers,
     });
 
@@ -150,10 +155,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
       return payload as T;
     }
 
-    if (
-      attempt < MAX_API_FETCH_ATTEMPTS - 1 &&
-      RETRY_STATUSES.has(response.status)
-    ) {
+    if (attempt < attempts - 1 && RETRY_STATUSES.has(response.status)) {
       const delayMs = getRetryDelayMs(response, bodyText, attempt);
       await sleep(delayMs);
       continue;

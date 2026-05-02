@@ -75,6 +75,24 @@ type UkrPoshtaSettlement = {
   katottg: string | null;
 };
 
+const CITY_SUGGESTIONS_LIMIT = '8';
+
+const NOVA_POSHTA_CITY_CACHE = new Map<string, NovaPoshtaSettlement[]>();
+const UKR_POSHTA_CITY_CACHE = new Map<string, UkrPoshtaSettlement[]>();
+
+function getSearchCacheKey(value: string) {
+  return value.trim().toLocaleLowerCase('uk-UA');
+}
+
+function isAbortError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    (error as { name?: string }).name === 'AbortError'
+  );
+}
+
 const DELIVERY_LABELS: Record<
   DeliveryMethod,
   { label: string; sub: string; badge?: string; badgeFree?: boolean }
@@ -193,7 +211,7 @@ export default function CheckoutPage() {
   const filteredNpOptions = npOptions;
 
   useEffect(() => {
-    if (!isNovaPoshtaDelivery) {
+    if (!isNovaPoshtaDelivery || npCityConfirmed) {
       setNpCityOptions([]);
       setNpCityError(null);
       setNpCityIsLoading(false);
@@ -209,28 +227,48 @@ export default function CheckoutPage() {
       return;
     }
 
+    const cacheKey = getSearchCacheKey(query);
+    const cachedItems = NOVA_POSHTA_CITY_CACHE.get(cacheKey);
+
+    if (cachedItems) {
+      setNpCityOptions(cachedItems);
+      setNpCityError(null);
+      setNpCityIsLoading(false);
+      return;
+    }
+
     let isCancelled = false;
+    let controller: AbortController | null = null;
 
     const timeoutId = window.setTimeout(async () => {
+      controller = new AbortController();
+
       setNpCityIsLoading(true);
       setNpCityError(null);
 
       try {
         const params = new URLSearchParams({
           q: query,
-          limit: '8',
+          limit: CITY_SUGGESTIONS_LIMIT,
         });
 
         const data = (await apiFetch(
           `/api/shipping/nova-poshta/settlements?${params.toString()}`,
-          { method: 'GET' },
+          {
+            method: 'GET',
+            signal: controller.signal,
+            retry: false,
+          },
         )) as { items?: NovaPoshtaSettlement[] };
 
         if (isCancelled) return;
 
-        setNpCityOptions(Array.isArray(data?.items) ? data.items : []);
+        const nextItems = Array.isArray(data?.items) ? data.items : [];
+
+        NOVA_POSHTA_CITY_CACHE.set(cacheKey, nextItems);
+        setNpCityOptions(nextItems);
       } catch (error) {
-        if (isCancelled) return;
+        if (isCancelled || isAbortError(error)) return;
 
         setNpCityOptions([]);
         setNpCityError(
@@ -243,16 +281,17 @@ export default function CheckoutPage() {
           setNpCityIsLoading(false);
         }
       }
-    }, 500);
+    }, 350);
 
     return () => {
       isCancelled = true;
+      controller?.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [form.city, isNovaPoshtaDelivery]);
+  }, [form.city, isNovaPoshtaDelivery, npCityConfirmed]);
 
   useEffect(() => {
-    if (!isUkrPoshtaDelivery) {
+    if (!isUkrPoshtaDelivery || upCityConfirmed) {
       setUpCityOptions([]);
       setUpCityError(null);
       setUpCityIsLoading(false);
@@ -268,28 +307,48 @@ export default function CheckoutPage() {
       return;
     }
 
+    const cacheKey = getSearchCacheKey(query);
+    const cachedItems = UKR_POSHTA_CITY_CACHE.get(cacheKey);
+
+    if (cachedItems) {
+      setUpCityOptions(cachedItems);
+      setUpCityError(null);
+      setUpCityIsLoading(false);
+      return;
+    }
+
     let isCancelled = false;
+    let controller: AbortController | null = null;
 
     const timeoutId = window.setTimeout(async () => {
+      controller = new AbortController();
+
       setUpCityIsLoading(true);
       setUpCityError(null);
 
       try {
         const params = new URLSearchParams({
           q: query,
-          limit: '8',
+          limit: CITY_SUGGESTIONS_LIMIT,
         });
 
         const data = (await apiFetch(
           `/api/shipping/ukrposhta/settlements?${params.toString()}`,
-          { method: 'GET' },
+          {
+            method: 'GET',
+            signal: controller.signal,
+            retry: false,
+          },
         )) as { items?: UkrPoshtaSettlement[] };
 
         if (isCancelled) return;
 
-        setUpCityOptions(Array.isArray(data?.items) ? data.items : []);
+        const nextItems = Array.isArray(data?.items) ? data.items : [];
+
+        UKR_POSHTA_CITY_CACHE.set(cacheKey, nextItems);
+        setUpCityOptions(nextItems);
       } catch (error) {
-        if (isCancelled) return;
+        if (isCancelled || isAbortError(error)) return;
 
         setUpCityOptions([]);
         setUpCityError(
@@ -302,13 +361,14 @@ export default function CheckoutPage() {
           setUpCityIsLoading(false);
         }
       }
-    }, 500);
+    }, 350);
 
     return () => {
       isCancelled = true;
+      controller?.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [form.city, isUkrPoshtaDelivery]);
+  }, [form.city, isUkrPoshtaDelivery, upCityConfirmed]);
 
   useEffect(() => {
     if (!isNovaPoshtaDelivery) {
@@ -789,7 +849,7 @@ export default function CheckoutPage() {
                   />
                 </label>
 
-                {isNovaPoshtaDelivery && form.city.trim().length >= 2 && npCityIsLoading ? (
+                {isNovaPoshtaDelivery && form.city.trim().length >= 3 && npCityIsLoading ? (
                   <div className={styles.options}>
                     <div className={styles.option}>
                       <span className={styles.optionContent}>
@@ -808,7 +868,7 @@ export default function CheckoutPage() {
                 ) : null}
 
                 {isNovaPoshtaDelivery &&
-                form.city.trim().length >= 2 &&
+                form.city.trim().length >= 3 &&
                 npCityOptions.length > 0 ? (
                   <div className={styles.options}>
                     {npCityOptions.map((city) => (
