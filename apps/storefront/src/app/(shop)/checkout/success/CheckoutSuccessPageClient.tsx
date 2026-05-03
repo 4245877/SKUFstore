@@ -15,7 +15,7 @@ import type { StoreOrder } from '../../../../lib/demo-store';
 const TELEGRAM_URL = 'https://t.me/SKUFnya_ua';
 
 // ВАЖНО: замени на ссылку именно на твой профиль OLX.
-const OLX_PROFILE_URL = 'https://www.olx.ua/uk/';
+const OLX_PROFILE_URL = 'https://www.olx.ua/uk/list/user/15L7LS/?tab=ratings';
 
 type CardShellProps = {
   badge: string;
