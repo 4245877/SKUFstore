@@ -366,6 +366,23 @@
   color: var(--deep-rose);
 }
 
+.paymentNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-soft);
+  background: var(--lace);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.paymentNotice strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 /* ── Form actions ────────────────────────── */
 .actions {
   padding: 24px 32px;

@@ -150,7 +150,7 @@
 
 .infoGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
   margin-bottom: 36px;
   border: 1px solid var(--border-soft);
@@ -292,8 +292,27 @@
   transform: translateY(-1px);
 }
 
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  color: var(--mauve);
+  text-decoration: none;
+  font-size: 13px;
+  border-bottom: 1px solid var(--blush);
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.ghostButton:hover {
+  color: var(--deep-rose);
+  border-color: var(--deep-rose);
+}
+
 .primaryButton:focus-visible,
 .secondaryButton:focus-visible,
+.ghostButton:focus-visible,
 .helpLink:focus-visible {
   outline: 2px solid var(--rose);
   outline-offset: 3px;

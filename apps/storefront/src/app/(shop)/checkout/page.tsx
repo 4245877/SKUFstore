@@ -24,7 +24,7 @@ const initialForm: CheckoutFormValues = {
   city: '',
   address: '',
   deliveryMethod: 'nova-poshta-branch',
-  paymentMethod: 'card',
+  paymentMethod: 'partial-prepayment',
   comment: '',
 };
 
@@ -127,8 +127,14 @@ const NOVA_POSHTA_POINT_TYPE_LABELS: Record<
 };
 
 const PAYMENT_LABELS: Record<PaymentMethod, { label: string; sub: string }> = {
-  card: { label: 'Оплата карткою', sub: 'Онлайн під час оформлення' },
-  'cash-on-delivery': { label: 'Післяплата', sub: 'Оплата при отриманні' },
+  'partial-prepayment': {
+    label: 'Передплата 60%',
+    sub: '60% — для закупівлі матеріалів, решта — при отриманні',
+  },
+  'full-prepayment': {
+    label: 'Повна передплата',
+    sub: '100% після узгодження деталей замовлення',
+  },
 };
 
 // Placeholder emoji for items without images
@@ -527,6 +533,12 @@ export default function CheckoutPage() {
   const subtotal = getCartSubtotal(items);
   const deliveryPrice = getDeliveryPrice(form.deliveryMethod, items);
   const total = subtotal + deliveryPrice;
+
+  const prepaymentAmount =
+    form.paymentMethod === 'partial-prepayment' ? Math.ceil(total * 0.6) : total;
+
+  const remainingAmount =
+    form.paymentMethod === 'partial-prepayment' ? total - prepaymentAmount : 0;
 
   function handleChange<K extends keyof CheckoutFormValues>(
     field: K,
@@ -1208,8 +1220,8 @@ export default function CheckoutPage() {
             {/* 3. Payment */}
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>💳</span>
-                Оплата
+                <span className={styles.sectionIcon}>🤝</span>
+                Передплата
               </h2>
               <div className={styles.options}>
                 {paymentMethods.map((value) => {
@@ -1229,6 +1241,14 @@ export default function CheckoutPage() {
                     </label>
                   );
                 })}
+              </div>
+
+              <div className={styles.paymentNotice}>
+                <strong>Оплата не проводиться на сайті.</strong>
+                <span>
+                  Після оформлення заявки ми узгодимо деталі через OLX або Telegram.
+                  Передплата вноситься тільки після підтвердження замовлення.
+                </span>
               </div>
             </section>
 
@@ -1256,7 +1276,7 @@ export default function CheckoutPage() {
                 ← Назад до кошика
               </Link>
               <button type="submit" className={styles.primaryButton} disabled={isSubmitting}>
-                {isSubmitting ? 'Створюємо замовлення…' : 'Підтвердити замовлення →'}
+                {isSubmitting ? 'Створюємо заявку…' : 'Оформити заявку →'}
               </button>
             </div>
 
@@ -1333,13 +1353,28 @@ export default function CheckoutPage() {
                 <span>Разом</span>
                 <span>{formatPrice(total)}</span>
               </div>
+              <div className={styles.summaryRow}>
+                <span>
+                  {form.paymentMethod === 'partial-prepayment'
+                    ? 'Передплата 60%'
+                    : 'До передплати'}
+                </span>
+                <span>{formatPrice(prepaymentAmount)}</span>
+              </div>
+
+              {remainingAmount > 0 ? (
+                <div className={styles.summaryRow}>
+                  <span>Залишок при отриманні</span>
+                  <span>{formatPrice(remainingAmount)}</span>
+                </div>
+              ) : null}
             </div>
 
             {/* Trust badges */}
             <div className={styles.trustRow}>
               <div className={styles.trustBadge}>
                 <span>🔒</span>
-                <span>Захищена оплата</span>
+                <span>Підтвердження через OLX або Telegram</span>
               </div>
               <div className={styles.trustBadge}>
                 <span>↩️</span>

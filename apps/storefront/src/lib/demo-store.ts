@@ -17,7 +17,7 @@ export type DeliveryMethod =
   | 'ukrposhta-branch'
   | 'courier'
   | 'pickup';
-export type PaymentMethod = 'card' | 'cash-on-delivery';
+export type PaymentMethod = 'partial-prepayment' | 'full-prepayment';
 
 export type CheckoutFormValues = {
   fullName: string;
@@ -120,7 +120,7 @@ const DEFAULT_CUSTOMER: CheckoutFormValues = {
   city: 'Київ',
   address: 'Відділення №12',
   deliveryMethod: 'nova-poshta-branch',
-  paymentMethod: 'card',
+  paymentMethod: 'partial-prepayment',
   comment: '',
 };
 
@@ -152,7 +152,7 @@ const DEMO_ORDERS: StoreOrder[] = [
       ...DEFAULT_CUSTOMER,
       fullName: 'Михайло Пларов',
       address: 'Нова пошта, відділення №18',
-      paymentMethod: 'card',
+      paymentMethod: 'full-prepayment',
     },
     subtotal: 3730,
     deliveryPrice: 120,
@@ -178,7 +178,7 @@ const DEMO_ORDERS: StoreOrder[] = [
       fullName: 'Михайло Пларов',
       address: 'Курʼєрська доставка',
       deliveryMethod: 'courier',
-      paymentMethod: 'cash-on-delivery',
+      paymentMethod: 'partial-prepayment',
     },
     subtotal: 4990,
     deliveryPrice: 120,
@@ -214,19 +214,19 @@ export function formatDate(value: string) {
 export function getStatusLabel(status: OrderStatus) {
   switch (status) {
     case 'pending':
-      return 'Ожидает подтверждения';
+      return 'Очікує підтвердження';
     case 'paid':
-      return 'Оплачен';
+      return 'Оплачено';
     case 'processing':
-      return 'В работе';
+      return 'В роботі';
     case 'shipped':
-      return 'Отправлен';
+      return 'Відправлено';
     case 'delivered':
-      return 'Доставлен';
+      return 'Доставлено';
     case 'cancelled':
-      return 'Отменён';
+      return 'Скасовано';
     default:
-      return 'Неизвестно';
+      return 'Невідомо';
   }
 }
 
@@ -356,7 +356,7 @@ export function createOrderFromCart(
     id: generateId(),
     number: buildOrderNumber(),
     createdAt: new Date().toISOString(),
-    status: customer.paymentMethod === 'card' ? 'paid' : 'pending',
+    status: 'pending',
     items,
     customer,
     subtotal,

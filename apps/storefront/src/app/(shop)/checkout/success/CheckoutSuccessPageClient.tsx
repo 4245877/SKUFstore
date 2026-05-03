@@ -12,12 +12,28 @@ import {
 } from '../../../../lib/demo-store';
 import type { StoreOrder } from '../../../../lib/demo-store';
 
+const TELEGRAM_URL = 'https://t.me/SKUFnya_ua';
+
+// ВАЖНО: замени на ссылку именно на твой профиль OLX.
+const OLX_PROFILE_URL = 'https://www.olx.ua/uk/';
+
 type CardShellProps = {
   badge: string;
   title: string;
   subtitle: string;
   children?: ReactNode;
 };
+
+function getPaymentMethodLabel(value?: string) {
+  switch (value) {
+    case 'partial-prepayment':
+      return 'Передплата 60%';
+    case 'full-prepayment':
+      return 'Повна передплата';
+    default:
+      return 'Узгодження після заявки';
+  }
+}
 
 function CardShell({ badge, title, subtitle, children }: CardShellProps) {
   return (
@@ -135,9 +151,9 @@ function CheckoutSuccessContent() {
 
   return (
     <CardShell
-      badge="Замовлення оформлено"
-      title="Дякуємо, замовлення прийнято"
-      subtitle="Ми зберегли замовлення і незабаром почнемо його обробку. Очікуй підтвердження на пошті."
+      badge="Заявку створено"
+      title="Дякуємо, заявку прийнято"
+      subtitle="Ми зберегли заявку. Для підтвердження замовлення напиши нам в OLX або Telegram — там узгодимо деталі та спосіб передплати."
     >
       <div className={styles.infoGrid}>
         <div className={styles.infoItem}>
@@ -160,25 +176,48 @@ function CheckoutSuccessContent() {
             {order ? formatPrice(order.total) : 'Уточнюється'}
           </strong>
         </div>
+
+        <div className={styles.infoItem}>
+          <span className={styles.infoLabel}>Передплата</span>
+          <strong className={styles.infoValue}>
+            {getPaymentMethodLabel(order?.customer.paymentMethod)}
+          </strong>
+        </div>
       </div>
 
       <div className={styles.divider}>Наступний крок</div>
 
       <div className={styles.actions}>
-        <Link href={detailsHref} className={styles.primaryButton}>
-          Переглянути замовлення
+        <a
+          href={OLX_PROFILE_URL}
+          className={styles.primaryButton}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Написати в OLX
+        </a>
+
+        <a
+          href={TELEGRAM_URL}
+          className={styles.secondaryButton}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Написати в Telegram
+        </a>
+
+        <Link href={detailsHref} className={styles.ghostButton}>
+          Переглянути заявку
         </Link>
-        <Link href="/catalog" className={styles.secondaryButton}>
+
+        <Link href="/catalog" className={styles.ghostButton}>
           Повернутися до каталогу
         </Link>
       </div>
 
       <p className={styles.helpNote}>
-        Маєш питання?{' '}
-        <Link href="/contacts" className={styles.helpLink}>
-          Напиши нам
-        </Link>{' '}
-        — відповімо протягом дня.
+        Оплата не проводиться автоматично на сайті. Передплата вноситься тільки
+        після узгодження деталей замовлення.
       </p>
     </CardShell>
   );
