@@ -1,0 +1,798 @@
+/* ═══════════════════════════════════════════
+   SKUFNYA — Returns & Exchange Module CSS
+   Maid-aesthetic anime figure shop
+   ═══════════════════════════════════════════ */
+
+/* ── Page Wrapper ────────────────────────── */
+.page {
+  background: var(--cream);
+  min-height: 100vh;
+}
+
+/* ── Hero Banner ─────────────────────────── */
+.hero {
+  position: relative;
+  background: var(--parchment);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  padding: clamp(48px, 7vw, 88px) var(--gutter) clamp(40px, 6vw, 72px);
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.heroBgCircle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+}
+
+.heroBgCircle:nth-child(1) {
+  width: 480px;
+  height: 480px;
+  top: -160px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(242,201,201,0.38) 0%, transparent 70%);
+  animation: floatY 9s ease-in-out infinite;
+}
+
+.heroBgCircle:nth-child(2) {
+  width: 320px;
+  height: 320px;
+  bottom: -100px;
+  left: 5%;
+  background: radial-gradient(circle, rgba(201,169,110,0.14) 0%, transparent 70%);
+  animation: floatY 11s ease-in-out infinite reverse;
+}
+
+/* Lace scallop bottom edge */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background:
+    radial-gradient(ellipse 14px 18px at 7px 18px, var(--cream) 50%, transparent 50%) 0 0,
+    radial-gradient(ellipse 14px 18px at 7px 0px, transparent 50%, var(--parchment) 50%) 0 0;
+  background-size: 14px 18px;
+  background-repeat: repeat-x;
+  z-index: 2;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.heroText {
+  flex: 1;
+  min-width: 280px;
+  animation: fadeUp 0.8s var(--ease-out-expo) 0.05s both;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-jp);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--mauve);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.breadcrumb a {
+  color: var(--mauve);
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--deep-rose);
+}
+
+.breadcrumbSep {
+  opacity: 0.4;
+  font-size: 9px;
+}
+
+.heroEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-jp);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--mauve);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.heroEyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--rose);
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5vw, 58px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+
+.heroTitleAccent {
+  font-style: italic;
+  color: var(--deep-rose);
+}
+
+.heroLead {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  max-width: 520px;
+}
+
+/* Hero decorative badge panel */
+.heroBadgeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeUp 0.8s var(--ease-out-expo) 0.2s both;
+  flex-shrink: 0;
+}
+
+.heroBadge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s;
+  min-width: 220px;
+}
+
+.heroBadge:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.heroBadgeIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.heroBadgeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heroBadgeLabel {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.heroBadgeValue {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── Main Content Layout ─────────────────── */
+.main {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: clamp(48px, 6vw, 80px) var(--gutter);
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+}
+
+/* ── Content Column ──────────────────────── */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Section Cards ───────────────────────── */
+.sectionCard {
+  position: relative;
+  padding: 32px 36px;
+  border-bottom: 1px solid var(--border-soft);
+  animation: fadeUp 0.7s var(--ease-out-expo) both;
+  transition: background 0.2s;
+}
+
+.sectionCard:first-child {
+  border-top: 1px solid var(--border-soft);
+}
+
+.sectionCard:hover {
+  background: rgba(254, 244, 244, 0.4);
+}
+
+.sectionCard:nth-child(1) { animation-delay: 0.08s; }
+.sectionCard:nth-child(2) { animation-delay: 0.14s; }
+.sectionCard:nth-child(3) { animation-delay: 0.20s; }
+.sectionCard:nth-child(4) { animation-delay: 0.26s; }
+.sectionCard:nth-child(5) { animation-delay: 0.32s; }
+.sectionCard:nth-child(6) { animation-delay: 0.38s; }
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.sectionIcon {
+  width: 40px;
+  height: 40px;
+  background: var(--lace);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.sectionCard:hover .sectionIcon {
+  background: var(--blush);
+  border-color: var(--rose);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.sectionBody {
+  font-size: 15px;
+  line-height: 1.78;
+  color: var(--text-secondary);
+  padding-left: 54px;
+}
+
+.sectionBody p + p {
+  margin-top: 12px;
+}
+
+/* ── Highlight callout inside section ─────── */
+.infoBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--rose);
+  border-radius: 2px;
+}
+
+.infoBoxIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.infoBoxText {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.infoBoxText strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ── Ordered steps list ──────────────────── */
+.stepsList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stepsItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.stepsNum {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: background 0.2s;
+}
+
+.sectionCard:hover .stepsNum {
+  background: var(--deep-rose);
+}
+
+.stepsText {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  padding-top: 3px;
+}
+
+.stepsText a {
+  color: var(--mauve);
+  border-bottom: 1px solid var(--blush);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.stepsText a:hover {
+  color: var(--deep-rose);
+  border-color: var(--deep-rose);
+}
+
+/* ── Conditions tag pills ────────────────── */
+.conditionsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.conditionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.conditionPill:hover {
+  background: var(--lace);
+  border-color: var(--rose);
+  color: var(--ink);
+}
+
+.conditionPillCheck {
+  font-size: 10px;
+  color: var(--deep-rose);
+}
+
+/* ── Sidebar ─────────────────────────────── */
+.sidebar {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeUp 0.8s var(--ease-out-expo) 0.25s both;
+}
+
+/* ── Contact Card ────────────────────────── */
+.contactCard {
+  background: var(--ink);
+  border-radius: 2px;
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.contactCard::before {
+  content: '';
+  position: absolute;
+  top: -48px;
+  right: -48px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(242,201,201,0.14) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.contactCardLabel {
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contactCardLabel::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(201,169,110,0.3);
+}
+
+.contactCardTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.contactCardTitle em {
+  color: var(--gold-light);
+  font-style: italic;
+}
+
+.contactCardDesc {
+  font-size: 13px;
+  color: rgba(253,248,243,0.5);
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+
+.contactLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contactLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 2px;
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s var(--ease-spring);
+  cursor: pointer;
+}
+
+.contactLink:hover {
+  background: rgba(242,201,201,0.12);
+  border-color: rgba(242,201,201,0.25);
+  transform: translateX(3px);
+}
+
+.contactLinkIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.contactLinkText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contactLinkArrow {
+  font-size: 11px;
+  opacity: 0.4;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.contactLink:hover .contactLinkArrow {
+  opacity: 0.8;
+  transform: translateX(2px);
+}
+
+/* ── Timeline card ───────────────────────── */
+.timelineCard {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+  padding: 22px 20px;
+  box-shadow: var(--shadow-xs);
+}
+
+.timelineCardLabel {
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--mauve);
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timelineCardLabel::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--blush);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 14px;
+  position: relative;
+}
+
+.timelineItem:not(:last-child) {
+  padding-bottom: 18px;
+}
+
+.timelineItem:not(:last-child) .timelineTrack::after {
+  content: '';
+  position: absolute;
+  top: 26px;
+  left: 11px;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.timelineTrack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.timelineDot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--lace);
+  border: 1.5px solid var(--rose);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--mauve);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.timelineDotActive {
+  background: var(--deep-rose);
+  border-color: var(--deep-rose);
+  color: #fff;
+}
+
+.timelineContent {
+  padding-top: 1px;
+}
+
+.timelineStep {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.timelineDesc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ── Policy Note Card ────────────────────── */
+.policyNote {
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 18px 20px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.policyNoteIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.policyNoteText {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.policyNoteText strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ── Footer strip ────────────────────────── */
+.pageFooter {
+  border-top: 1px solid var(--border-soft);
+  background: var(--parchment);
+  padding: clamp(32px, 4vw, 48px) var(--gutter);
+}
+
+.pageFooterInner {
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.pageFooterText {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+.pageFooterText strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.pageFooterNav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.pageFooterLink {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mauve);
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--blush);
+  padding-bottom: 1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.pageFooterLink:hover {
+  color: var(--deep-rose);
+  border-color: var(--deep-rose);
+}
+
+/* ── Section body inline link ────────────── */
+.inlineLink {
+  color: var(--mauve);
+  border-bottom: 1px solid var(--blush);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.inlineLink:hover {
+  color: var(--deep-rose);
+  border-color: var(--deep-rose);
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 1024px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .contactCard {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .heroInner {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .heroBadgeGroup {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .heroBadge {
+    min-width: 160px;
+    flex: 1;
+  }
+
+  .sectionCard {
+    padding: 24px 20px;
+  }
+
+  .sectionBody {
+    padding-left: 0;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .pageFooterInner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroBadgeGroup {
+    flex-direction: column;
+  }
+
+  .heroBadge {
+    min-width: unset;
+  }
+
+  .sectionCard {
+    padding: 20px 16px;
+  }
+
+  .conditionsList {
+    gap: 6px;
+  }
+
+  .pageFooterNav {
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+}
