@@ -40,7 +40,7 @@
   margin: 0 auto;
   padding: 56px var(--gutter) 48px;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr repeat(3, 1fr);
   gap: 40px 32px;
   position: relative;
   z-index: 1;
@@ -333,10 +333,6 @@
     flex-wrap: wrap;
     gap: 32px;
     align-items: flex-start;
-  }
-
-  .brandMain {
-    flex: 1 1 260px;
   }
 
   .brandDesc {
