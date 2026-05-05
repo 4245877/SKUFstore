@@ -1,6 +1,5 @@
 /* ═══════════════════════════════════════════
    SKUFNYA — Returns & Exchange Module CSS
-   Maid-aesthetic anime figure shop
    ═══════════════════════════════════════════ */
 
 /* ── Page Wrapper ────────────────────────── */
@@ -360,17 +359,6 @@
   padding-top: 3px;
 }
 
-.stepsText a {
-  color: var(--mauve);
-  border-bottom: 1px solid var(--blush);
-  transition: color 0.2s, border-color 0.2s;
-}
-
-.stepsText a:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
-}
-
 /* ── Conditions tag pills ────────────────── */
 .conditionsList {
   display: flex;
@@ -470,7 +458,7 @@
 
 .contactCardDesc {
   font-size: 13px;
-  color: rgba(253,248,243,0.5);
+  color: rgba(253, 248, 243, 0.68);
   line-height: 1.65;
   margin-bottom: 24px;
 }
@@ -494,7 +482,6 @@
   font-weight: 500;
   letter-spacing: 0.03em;
   transition: background 0.2s, border-color 0.2s, transform 0.2s var(--ease-spring);
-  cursor: pointer;
 }
 
 .contactLink:hover {
@@ -721,6 +708,14 @@
   border-color: var(--deep-rose);
 }
 
+.breadcrumb a:focus-visible,
+.inlineLink:focus-visible,
+.contactLink:focus-visible,
+.pageFooterLink:focus-visible {
+  outline: 2px solid var(--deep-rose);
+  outline-offset: 3px;
+}
+
 /* ── Responsive ──────────────────────────── */
 @media (max-width: 1024px) {
   .main {
@@ -794,5 +789,58 @@
   .pageFooterNav {
     flex-wrap: wrap;
     gap: 12px 20px;
+  }
+}
+
+/* ── Animations ──────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* ── Accessibility ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .heroBgCircle,
+  .heroText,
+  .heroBadgeGroup,
+  .sectionCard,
+  .sidebar {
+    animation: none;
+  }
+
+  .heroBadge,
+  .sectionCard,
+  .sectionIcon,
+  .stepsNum,
+  .conditionPill,
+  .contactLink,
+  .contactLinkArrow,
+  .pageFooterLink,
+  .inlineLink {
+    transition: none;
+  }
+
+  .heroBadge:hover,
+  .contactLink:hover,
+  .contactLink:hover .contactLinkArrow {
+    transform: none;
   }
 }
