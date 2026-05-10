@@ -18,6 +18,7 @@ const footerLinks = {
     links: [
       { href: '/delivery', label: 'Доставка' },
       { href: '/payment', label: 'Оплата' },
+      { href: '/faq', label: 'FAQ' },
       { href: '/contacts', label: 'Контакти' },
     ],
   },
