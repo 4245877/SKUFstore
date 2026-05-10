@@ -1,370 +1,264 @@
-/* ============================================================
-   TermsPage.module.css
-   Aesthetic direction: Maid Café Editorial
-   Cream pages · Auburn ink · Lace-trim ornaments · Serif warmth
-   Light, trustworthy, unmistakably otaku-boutique.
-   ============================================================ */
+/* ═══════════════════════════════════════════
+   SKUFNYA — TermsPage Module CSS
+   Maid-aesthetic anime figure shop
+   ═══════════════════════════════════════════ */
 
-/* ── Page Shell ─────────────────────────────────────────────── */
+/* ── Page shell ──────────────────────────── */
 .page {
   min-height: 100vh;
-  background: var(--bg);
-
-  /* Subtle dot-grid texture (like parchment / manga tone paper) */
-  background-image:
-    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(178, 86, 52, 0.06) 0%, transparent 65%),
-    radial-gradient(circle, rgba(178, 86, 52, 0.055) 1px, transparent 1px);
-  background-size: 100%, 24px 24px;
-
-  padding-block: var(--space-xl) calc(var(--space-xl) * 3);
-  animation: pageFade 0.5s ease both;
+  background-color: var(--bg);
 }
 
-@keyframes pageFade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ── Container ──────────────────────────────────────────────── */
 .container {
-  width: 100%;
-  max-width: 780px;
-  margin-inline: auto;
-  padding-inline: var(--space-xl);
+  max-width: 820px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 96px) var(--gutter) clamp(64px, 10vw, 120px);
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding-inline: var(--pad);
-  }
-}
-
-/* ── Hero ───────────────────────────────────────────────────── */
+/* ── Hero block ──────────────────────────── */
 .hero {
-  text-align: center;
-  padding-block: calc(var(--space-xl) * 1.5) calc(var(--space-xl) * 2);
   position: relative;
-
-  /* Bottom lace divider — a row of tiny diamonds */
-  padding-bottom: calc(var(--space-xl) * 2 + 24px);
+  margin-bottom: clamp(48px, 6vw, 72px);
+  padding-bottom: clamp(40px, 5vw, 56px);
+  animation: fadeUp 0.8s var(--ease-out-expo) both;
 }
 
-/* Decorative top ornament */
-.hero::before {
-  content: '✦  ◇  ✦';
-  display: block;
-  font-size: 0.625rem;
-  letter-spacing: 0.55em;
-  color: var(--primary);
-  opacity: 0.45;
-  margin-bottom: var(--space-lg);
-  user-select: none;
-  animation: riseIn 0.6s 0.1s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-/* Lace-like bottom border */
+/* Decorative bottom rule with lace dots */
 .hero::after {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% + 4px);
-  height: 24px;
-
-  /* SVG lace pattern inline */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='24' viewBox='0 0 40 24'%3E%3Cpath d='M0 0 Q10 12 20 0 Q30 12 40 0' fill='none' stroke='%23B25634' stroke-opacity='0.18' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  background-size: 40px 24px;
-  pointer-events: none;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--blush) 20%,
+    var(--rose) 50%,
+    var(--blush) 80%,
+    transparent 100%
+  );
 }
 
 .eyebrow {
-  display: inline-block;
-  font-size: 0.6875rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-jp);
+  font-size: 12px;
   letter-spacing: 0.2em;
+  color: var(--mauve);
   text-transform: uppercase;
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 9%, transparent);
-  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
-  border-radius: 999px;
-  padding: 0.25rem 0.875rem;
-  margin-bottom: var(--space-md);
-  animation: riseIn 0.5s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
+  margin-bottom: 20px;
+}
+
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--mauve);
+  flex-shrink: 0;
+}
+
+.eyebrow::after {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--mauve);
+  flex-shrink: 0;
 }
 
 .title {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(2rem, 5vw, 3.25rem);
-  font-weight: 400;
-  color: var(--text);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  margin-bottom: var(--space-md);
-  animation: riseIn 0.55s 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-/* Italic accent on last word via generated pseudo — use span in JSX if desired */
-.title em {
-  font-style: italic;
-  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5vw, 56px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 20px;
 }
 
 .lead {
-  font-size: 1.0625rem;
+  font-size: clamp(14px, 1.8vw, 16px);
+  color: var(--text-secondary);
   line-height: 1.75;
-  color: var(--text-muted);
-  max-width: 56ch;
-  margin-inline: auto;
-  animation: riseIn 0.55s 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+  max-width: 600px;
 }
 
-/* ── Sections ───────────────────────────────────────────────── */
+/* ── Section block ───────────────────────── */
 .section {
-  margin-top: calc(var(--space-xl) * 1.75);
-  padding: var(--space-lg) var(--space-xl);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-
-  /* Staggered entrance */
-  opacity: 0;
-  animation: sectionIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  padding: clamp(28px, 4vw, 40px) 0;
+  border-bottom: 1px solid var(--border-soft);
+  animation: fadeUp 0.6s var(--ease-out-expo) both;
+  animation-delay: calc(var(--section-index, 0) * 0.05s);
 }
 
-/* Stagger each section */
-.section:nth-child(1)  { animation-delay: 0.30s; }
-.section:nth-child(2)  { animation-delay: 0.36s; }
-.section:nth-child(3)  { animation-delay: 0.42s; }
-.section:nth-child(4)  { animation-delay: 0.48s; }
-.section:nth-child(5)  { animation-delay: 0.54s; }
-.section:nth-child(6)  { animation-delay: 0.60s; }
-.section:nth-child(7)  { animation-delay: 0.66s; }
-.section:nth-child(8)  { animation-delay: 0.72s; }
-.section:nth-child(9)  { animation-delay: 0.78s; }
-.section:nth-child(10) { animation-delay: 0.84s; }
-.section:nth-child(n+11){ animation-delay: 0.90s; }
-
-@keyframes sectionIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.section:last-child {
+  border-bottom: none;
 }
 
-/* Accent bar on the left side */
-.section::before {
-  content: '';
-  position: absolute;
-  top: var(--space-md);
-  left: 0;
-  bottom: var(--space-md);
-  width: 3px;
-  background: var(--gradient-hair);
-  border-radius: 0 2px 2px 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+/* Staggered entrance per section */
+.section:nth-child(1)  { --section-index: 1; }
+.section:nth-child(2)  { --section-index: 2; }
+.section:nth-child(3)  { --section-index: 3; }
+.section:nth-child(4)  { --section-index: 4; }
+.section:nth-child(5)  { --section-index: 5; }
+.section:nth-child(6)  { --section-index: 6; }
+.section:nth-child(7)  { --section-index: 7; }
+.section:nth-child(8)  { --section-index: 8; }
+.section:nth-child(9)  { --section-index: 9; }
+.section:nth-child(10) { --section-index: 10; }
 
-.section:hover::before {
-  opacity: 1;
-}
-
-/* Subtle corner ornament */
-.section::after {
-  content: '✦';
-  position: absolute;
-  top: var(--space-sm);
-  right: var(--space-md);
-  font-size: 0.5rem;
-  color: var(--primary);
-  opacity: 0.15;
-  user-select: none;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-.section:hover::after {
-  opacity: 0.35;
-}
-
-.section:hover {
-  border-color: color-mix(in srgb, var(--primary) 20%, var(--border));
-  box-shadow: var(--shadow-md);
-}
-
-@media (max-width: 768px) {
-  .section {
-    padding: var(--space-md) var(--space-md);
-    margin-top: var(--space-xl);
-  }
-}
-
-/* ── Section Title ──────────────────────────────────────────── */
 .sectionTitle {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(1.1rem, 2.5vw, 1.375rem);
-  font-weight: 400;
-  color: var(--text);
-  letter-spacing: -0.01em;
-  line-height: 1.3;
-  margin-bottom: var(--space-md);
-
-  /* Number prefix styling via counters (visual only) */
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2.2vw, 22px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 16px;
   display: flex;
-  align-items: baseline;
-  gap: 0.625rem;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Number badge — the digit at the start of each title */
+/* Accent dot before each section title */
 .sectionTitle::before {
-  /* empty — the number is already in the text */
-  content: none;
-}
-
-/* ── Body Text ──────────────────────────────────────────────── */
-.text {
-  font-size: 0.9375rem;
-  line-height: 1.8;
-  color: var(--neutral-600);
-}
-
-.text + .text {
-  margin-top: var(--space-sm);
-}
-
-/* ── List ───────────────────────────────────────────────────── */
-.list {
-  list-style: none;
-  padding: 0;
-  margin: var(--space-xs) 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: var(--neutral-600);
-}
-
-/* Custom bullet: small auburn diamond */
-.list li::before {
-  content: '◆';
-  font-size: 0.4375rem;
-  color: var(--primary);
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--deep-rose);
   flex-shrink: 0;
-  margin-top: 0.55em;
   opacity: 0.7;
 }
 
-/* ── Links ──────────────────────────────────────────────────── */
+/* ── Body text ───────────────────────────── */
+.text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.text + .text {
+  margin-top: 12px;
+}
+
+/* ── List ────────────────────────────────── */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list li {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  padding-left: 20px;
+  position: relative;
+}
+
+/* Custom lace-style bullet */
+.list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1.5px solid var(--rose);
+}
+
+/* Nested links in list items */
+.list li a {
+  color: var(--mauve);
+  border-bottom: 1px solid var(--blush);
+  padding-bottom: 1px;
+  transition: color 0.18s, border-color 0.18s;
+}
+
+.list li a:hover {
+  color: var(--deep-rose);
+  border-color: var(--deep-rose);
+}
+
+/* ── Inline link ─────────────────────────── */
 .link {
-  color: var(--link);
-  font-weight: 600;
-  text-decoration-line: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  transition:
-    color var(--transition-fast),
-    text-decoration-color var(--transition-fast);
+  color: var(--mauve);
+  border-bottom: 1px solid var(--blush);
+  padding-bottom: 1px;
+  transition: color 0.18s, border-color 0.18s;
 }
 
 .link:hover {
-  color: var(--link-hover);
-  text-decoration-style: solid;
+  color: var(--deep-rose);
+  border-color: var(--deep-rose);
 }
 
-/* ── Note ───────────────────────────────────────────────────── */
+/* ── Note / disclaimer ───────────────────── */
 .note {
-  margin-top: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: color-mix(in srgb, var(--primary) 6%, var(--bg));
-  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  line-height: 1.65;
-  color: var(--neutral-600);
-  font-style: italic;
-
-  /* Small seal icon before the note */
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: var(--lace);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--rose);
+  border-radius: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-family: var(--font-jp);
+  letter-spacing: 0.02em;
 }
 
-.note::before {
-  content: '✿';
-  font-size: 0.75rem;
-  color: var(--primary);
-  opacity: 0.6;
-  flex-shrink: 0;
-  margin-top: 0.15em;
-  user-select: none;
+/* ── Spacing helpers between adjacent elements ── */
+.text + .list,
+.list + .text,
+.text + .note {
+  margin-top: 14px;
 }
 
-/* ── Animations ─────────────────────────────────────────────── */
-@keyframes riseIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 768px) {
+  .container {
+    padding-left: clamp(16px, 5vw, 24px);
+    padding-right: clamp(16px, 5vw, 24px);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-/* ── Reduced Motion ─────────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .page,
-  .hero::before,
-  .eyebrow,
-  .title,
-  .lead,
-  .section {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+  .sectionTitle {
+    font-size: 16px;
+  }
+
+  .text,
+  .list li {
+    font-size: 14px;
   }
 }
 
-/* ── Print ──────────────────────────────────────────────────── */
-@media print {
-  .page {
-    background: white;
-    background-image: none;
-    padding: 0;
+@media (max-width: 480px) {
+  .hero {
+    margin-bottom: 36px;
+    padding-bottom: 32px;
   }
 
-  .section {
-    border: 1px solid #ddd;
-    box-shadow: none;
-    break-inside: avoid;
-    animation: none;
-    opacity: 1;
+  .title {
+    font-size: 28px;
   }
 
-  .section::before,
-  .section::after {
-    display: none;
+  .eyebrow::before,
+  .eyebrow::after {
+    width: 16px;
   }
 
-  .hero::before,
-  .hero::after {
-    display: none;
+  .note {
+    font-size: 12px;
+    padding: 14px 16px;
   }
 }
