@@ -76,12 +76,38 @@ type UkrPoshtaSettlement = {
 };
 
 const CITY_SUGGESTIONS_LIMIT = '8';
+const CITY_REQUEST_TIMEOUT_MS = 6000;
+
+const GENERIC_CITY_QUERIES = new Set([
+  'місто',
+  'мiсто',
+  'город',
+  'city',
+  'населений пункт',
+  'населенный пункт',
+  'село',
+  'селище',
+  'смт',
+  'область',
+  'район',
+  'україна',
+  'украина',
+]);
 
 const NOVA_POSHTA_CITY_CACHE = new Map<string, NovaPoshtaSettlement[]>();
 const UKR_POSHTA_CITY_CACHE = new Map<string, UkrPoshtaSettlement[]>();
 
+function normalizeCityQuery(value: string) {
+  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('uk-UA');
+}
+
+function shouldSkipCitySearch(value: string, minLength = 3) {
+  const query = normalizeCityQuery(value);
+  return query.length < minLength || GENERIC_CITY_QUERIES.has(query);
+}
+
 function getSearchCacheKey(value: string) {
-  return value.trim().toLocaleLowerCase('uk-UA');
+  return normalizeCityQuery(value);
 }
 
 function isAbortError(error: unknown) {
@@ -226,7 +252,7 @@ export default function CheckoutPage() {
 
     const query = form.city.trim();
 
-    if (query.length < 3) {
+    if (shouldSkipCitySearch(query, 3)) {
       setNpCityOptions([]);
       setNpCityError(null);
       setNpCityIsLoading(false);
@@ -245,9 +271,13 @@ export default function CheckoutPage() {
 
     let isCancelled = false;
     let controller: AbortController | null = null;
+    let requestTimeoutId: number | null = null;
 
     const timeoutId = window.setTimeout(async () => {
       controller = new AbortController();
+      requestTimeoutId = window.setTimeout(() => {
+        controller?.abort();
+      }, CITY_REQUEST_TIMEOUT_MS);
 
       setNpCityIsLoading(true);
       setNpCityError(null);
@@ -283,6 +313,10 @@ export default function CheckoutPage() {
             : 'Не вдалося отримати список населених пунктів.',
         );
       } finally {
+        if (requestTimeoutId !== null) {
+          window.clearTimeout(requestTimeoutId);
+        }
+
         if (!isCancelled) {
           setNpCityIsLoading(false);
         }
@@ -292,6 +326,11 @@ export default function CheckoutPage() {
     return () => {
       isCancelled = true;
       controller?.abort();
+
+      if (requestTimeoutId !== null) {
+        window.clearTimeout(requestTimeoutId);
+      }
+
       window.clearTimeout(timeoutId);
     };
   }, [form.city, isNovaPoshtaDelivery, npCityConfirmed]);
@@ -306,7 +345,7 @@ export default function CheckoutPage() {
 
     const query = form.city.trim();
 
-    if (query.length < 2) {
+    if (shouldSkipCitySearch(query, 3)) {
       setUpCityOptions([]);
       setUpCityError(null);
       setUpCityIsLoading(false);
@@ -325,9 +364,13 @@ export default function CheckoutPage() {
 
     let isCancelled = false;
     let controller: AbortController | null = null;
+    let requestTimeoutId: number | null = null;
 
     const timeoutId = window.setTimeout(async () => {
       controller = new AbortController();
+      requestTimeoutId = window.setTimeout(() => {
+        controller?.abort();
+      }, CITY_REQUEST_TIMEOUT_MS);
 
       setUpCityIsLoading(true);
       setUpCityError(null);
@@ -363,6 +406,10 @@ export default function CheckoutPage() {
             : 'Не вдалося отримати список населених пунктів Укрпошта.',
         );
       } finally {
+        if (requestTimeoutId !== null) {
+          window.clearTimeout(requestTimeoutId);
+        }
+
         if (!isCancelled) {
           setUpCityIsLoading(false);
         }
@@ -372,6 +419,11 @@ export default function CheckoutPage() {
     return () => {
       isCancelled = true;
       controller?.abort();
+
+      if (requestTimeoutId !== null) {
+        window.clearTimeout(requestTimeoutId);
+      }
+
       window.clearTimeout(timeoutId);
     };
   }, [form.city, isUkrPoshtaDelivery, upCityConfirmed]);
@@ -422,7 +474,10 @@ export default function CheckoutPage() {
 
         const data = (await apiFetch(
           `/api/shipping/nova-poshta/divisions?${params.toString()}`,
-          { method: 'GET' },
+          {
+            method: 'GET',
+            retry: false,
+          },
         )) as { items?: NovaPoshtaDivision[] };
 
         if (isCancelled) return;
@@ -493,7 +548,10 @@ export default function CheckoutPage() {
 
         const data = (await apiFetch(
           `/api/shipping/ukrposhta/offices?${params.toString()}`,
-          { method: 'GET' },
+          {
+            method: 'GET',
+            retry: false,
+          },
         )) as { items?: UkrPoshtaOffice[] };
 
         if (isCancelled) return;
