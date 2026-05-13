@@ -73,6 +73,19 @@ jobs:
             --retry-delay 3 \
             "https://api.skufnya.com/health"
 
+      - name: Pin API DNS temporarily
+        run: |
+          echo "176.36.255.118 api.skufnya.com" | sudo tee -a /etc/hosts
+
+          echo "Resolved api.skufnya.com:"
+          getent ahostsv4 api.skufnya.com
+
+          echo "API health:"
+          curl --fail --show-error --location \
+            --connect-timeout 10 \
+            --max-time 20 \
+            "https://api.skufnya.com/health"
+
       - name: Build Storefront
         run: pnpm --filter storefront build
 
