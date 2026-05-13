@@ -1,24 +1,20 @@
+import { Suspense } from 'react';
+
 import VerifyAgeClient from './VerifyAgeClient';
+import styles from './Verify.module.css';
 
-function getSafeReturnTo(value: string | undefined) {
-  if (!value) return '/catalog';
-
-  if (!value.startsWith('/') || value.startsWith('//')) {
-    return '/catalog';
-  }
-
-  return value;
-}
-
-export default async function AgeVerificationPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{
-    returnTo?: string;
-  }>;
-}) {
-  const params = await searchParams;
-  const returnTo = getSafeReturnTo(params?.returnTo);
- 
-  return <VerifyAgeClient returnTo={returnTo} />;
+export default function VerifyAgePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <section className={styles.card}>
+            <p>Завантаження...</p>
+          </section>
+        </main>
+      }
+    >
+      <VerifyAgeClient />
+    </Suspense>
+  );
 }

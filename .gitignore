@@ -7,3 +7,6 @@ coverage
 .env
 .env.*
 !.env.example
+
+# Next.js static export
+apps/storefront/out/

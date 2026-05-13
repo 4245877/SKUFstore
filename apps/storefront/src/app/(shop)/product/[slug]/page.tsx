@@ -27,21 +27,42 @@ function buildBuildApiUrl(path: string) {
 }
 
 async function fetchBuildJson<T>(path: string): Promise<T> {
-  const response = await fetch(buildBuildApiUrl(path), {
-    cache: 'force-cache',
-  });
+  const url = buildBuildApiUrl(path);
+  let lastError: unknown;
 
-  if (!response.ok) {
-    const error = new Error(`Build fetch failed for ${path}: ${response.status}`) as Error & {
-      status?: number;
-    };
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
 
-    error.status = response.status;
+    try {
+      const response = await fetch(url, {
+        cache: 'force-cache',
+        signal: controller.signal,
+      });
 
-    throw error;
+      if (!response.ok) {
+        const error = new Error(`Build fetch failed for ${path}: ${response.status}`) as Error & {
+          status?: number;
+        };
+
+        error.status = response.status;
+
+        throw error;
+      }
+
+      return (await response.json()) as T;
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 2_000));
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  return (await response.json()) as T;
+  throw lastError;
 }
 
 function hasAdultMarker(value: unknown) {
@@ -147,20 +168,29 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   const result: Array<{ slug: string }> = [];
   let page = 1;
 
-  while (true) {
-    const response = await fetchBuildJson<CatalogProductsResponse>(
-      `/api/catalog/products?page=${page}&limit=100`,
+  try {
+    while (true) {
+      const response = await fetchBuildJson<CatalogProductsResponse>(
+        `/api/catalog/products?page=${page}&limit=100`,
+      );
+
+      result.push(
+        ...response.items
+          .filter((item) => item.slug)
+          .map((item) => ({ slug: item.slug })),
+      );
+
+      if (page >= response.meta.pageCount) break;
+
+      page += 1;
+    }
+  } catch (error) {
+    console.warn(
+      'Failed to generate product static params during pages build:',
+      error,
     );
 
-    result.push(
-      ...response.items
-        .filter((item) => item.slug)
-        .map((item) => ({ slug: item.slug })),
-    );
-
-    if (page >= response.meta.pageCount) break;
-
-    page += 1;
+    return [];
   }
 
   return result;

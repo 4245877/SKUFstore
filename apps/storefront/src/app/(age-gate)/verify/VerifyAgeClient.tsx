@@ -1,11 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './Verify.module.css';
 
-export default function VerifyAgeClient({ returnTo }: { returnTo: string }) {
+export default function VerifyAgeClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const returnTo = useMemo(() => {
+    const value = searchParams.get('returnTo');
+
+    if (!value || !value.startsWith('/')) {
+      return '/';
+    }
+
+    return value;
+  }, [searchParams]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +42,7 @@ export default function VerifyAgeClient({ returnTo }: { returnTo: string }) {
 
       const data = await response.json();
 
-      router.replace(data.returnTo || '/catalog');
+      router.replace(data.returnTo || returnTo);
       router.refresh();
     } catch {
       setError('Не вдалося підтвердити вік. Будь ласка, спробуйте ще раз.');
