@@ -18,6 +18,8 @@ export const dynamicParams = false;
 const BUILD_API_BASE =
   (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 
+const BUILD_PRODUCTS_PAGE_SIZE = 100;
+
 function buildBuildApiUrl(path: string) {
   if (!BUILD_API_BASE) {
     throw new Error('Set API_INTERNAL_URL or NEXT_PUBLIC_API_URL for pages static export builds');
@@ -32,7 +34,7 @@ async function fetchBuildJson<T>(path: string): Promise<T> {
   const url = buildBuildApiUrl(path);
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
 
@@ -56,8 +58,14 @@ async function fetchBuildJson<T>(path: string): Promise<T> {
     } catch (error) {
       lastError = error;
 
-      if (attempt < 2) {
-        await new Promise((resolve) => setTimeout(resolve, 1_500));
+      if (attempt < 8) {
+        const status = (error as Error & { status?: number }).status;
+        const delayMs =
+          status === 429
+            ? Math.min(5_000 * attempt, 30_000)
+            : Math.min(1_500 * attempt, 10_000);
+
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     } finally {
       clearTimeout(timeout);
@@ -174,17 +182,23 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   try {
     do {
       const response = await fetchBuildJson<CatalogProductsResponse>(
-        `/api/catalog/products?page=${page}&limit=20`,
+        `/api/catalog/products?page=${page}&limit=${BUILD_PRODUCTS_PAGE_SIZE}`,
       );
 
       for (const item of response.items) {
-        if (item.slug?.trim()) {
-          slugs.add(item.slug);
+        const slug = item.slug?.trim();
+
+        if (slug) {
+          slugs.add(slug);
         }
       }
 
       pageCount = Math.max(1, response.meta.pageCount ?? 1);
       page += 1;
+
+      if (page <= pageCount) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     } while (page <= pageCount);
   } catch (error) {
     console.warn(
