@@ -1,41 +1,135 @@
-'use client'; // Эта директива нужна, т.к. мы будем работать с onClick и документом
+'use client';
 
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import styles from './Verify.module.css';
+
+function getSafeReturnTo(value: string | null) {
+  if (!value) return '/catalog';
+
+  if (!value.startsWith('/') || value.startsWith('//')) {
+    return '/catalog';
+  }
+
+  return value;
+}
 
 export default function AgeVerificationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const handleVerify = () => {
-    // Ставим куку на 30 дней
-    document.cookie = "age_verified=true; path=/; max-age=" + 60 * 60 * 24 * 30;
-    // Возвращаем на главную
-    router.push('/');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const returnTo = getSafeReturnTo(searchParams.get('returnTo'));
+
+  const handleVerify = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/age-gate/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ returnTo }),
+      });
+
+      if (!response.ok) {
+        throw new Error('AGE_CONFIRM_FAILED');
+      }
+
+      const data = await response.json();
+
+      router.replace(data.returnTo || '/catalog');
+      router.refresh();
+    } catch {
+      setError('Не вдалося підтвердити вік. Будь ласка, спробуйте ще раз.');
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDecline = () => {
+    router.replace('/catalog');
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 p-8 rounded-xl text-center">
-        <h1 className="text-3xl font-bold text-primary mb-4">Внимание: 18+</h1>
-        <p className="text-gray-400 mb-8">
-          Этот сайт содержит материалы для взрослых. Пожалуйста, подтвердите, что вам исполнилось 18 лет.
-        </p>
-        
-        <div className="flex flex-col gap-4">
-          <button 
-            onClick={handleVerify}
-            className="w-full bg-primary hover:bg-rose-700 text-white font-bold py-3 px-4 rounded transition-colors"
-          >
-            Мне есть 18 лет
-          </button>
-          
-          <a 
-            href="https://google.com" 
-            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-4 rounded transition-colors"
-          >
-            Мне нет 18 лет (Уйти)
-          </a>
+    <div className={styles.page}>
+      <div className={`${styles.laceBorder} ${styles.laceBorderTop}`} aria-hidden="true" />
+      <div className={`${styles.laceBorder} ${styles.laceBorderBottom}`} aria-hidden="true" />
+
+      <span className={styles.petalA} aria-hidden="true">🌸</span>
+      <span className={styles.petalB} aria-hidden="true">✿</span>
+      <span className={styles.petalC} aria-hidden="true">🌸</span>
+      <span className={styles.petalD} aria-hidden="true">✿</span>
+
+      <main className={styles.card}>
+        <div className={styles.brandMark}>
+          <span className={styles.brandIcon} aria-hidden="true">🎀</span>
+          <span className={styles.brandName}>Skufnya</span>
+          <span className={styles.brandSub}>アニメフィギュア</span>
         </div>
-      </div>
+
+        <div className={styles.divider} aria-hidden="true">
+          <span className={styles.dividerLine} />
+          <span className={styles.dividerDot} />
+          <span className={styles.dividerLine} />
+        </div>
+
+        <div className={styles.ageBadge}>
+          18+
+        </div>
+
+        <h1 className={styles.title}>
+          Підтвердіть{' '}
+          <span className={styles.titleAccent}>вік</span>
+        </h1>
+
+        <p className={styles.text}>
+          Цей розділ може містити товари з позначкою 18+. Вони призначені лише
+          для повнолітніх користувачів.
+        </p>
+
+        <p className={styles.text}>
+          Будь ласка, підтвердьте, що вам виповнилось <strong>18 років</strong>
+          або більше, щоб продовжити перегляд.
+        </p>
+
+        {error ? (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={handleVerify}
+            className={styles.primaryButton}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Підтвердження…' : 'Мені є 18 років'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDecline}
+            className={styles.secondaryButton}
+            aria-label="Мені ще немає 18 років — повернутися до каталогу"
+          >
+            Мені ще немає 18
+          </button>
+        </div>
+
+        <div className={styles.footerNote} aria-hidden="true">
+          <span className={styles.footerNoteDot} />
+          <span>Магазин аніме фігурок · Київ</span>
+          <span className={styles.footerNoteDot} />
+        </div>
+      </main>
     </div>
   );
 }

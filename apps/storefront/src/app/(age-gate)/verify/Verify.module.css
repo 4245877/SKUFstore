@@ -1,0 +1,498 @@
+/* ═══════════════════════════════════════════
+   SKUFNYA — Age Gate / Verify Module CSS
+   Maid-aesthetic anime figure shop
+   ═══════════════════════════════════════════ */
+
+/* ── Page wrapper ────────────────────────── */
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--parchment);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Ambient background blobs */
+.page::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  right: -180px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(242, 201, 201, 0.45) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  animation: floatY 9s ease-in-out infinite;
+}
+
+.page::after {
+  content: '';
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  bottom: -100px;
+  left: -80px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(201, 169, 110, 0.18) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  animation: floatY 12s ease-in-out infinite reverse;
+}
+
+/* ── Decorative lace dots (top & bottom) ── */
+.laceBorder {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 32px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 14px 18px at 7px 18px, rgba(242, 201, 201, 0.5) 50%, transparent 50%) 0 0,
+    radial-gradient(ellipse 14px 18px at 7px 0px, transparent 50%, var(--parchment) 50%) 0 0;
+  background-size: 14px 18px;
+  background-repeat: repeat-x;
+  z-index: 0;
+}
+
+.laceBorderTop {
+  top: 0;
+}
+
+.laceBorderBottom {
+  bottom: 0;
+  transform: scaleY(-1);
+}
+
+/* ── Card ────────────────────────────────── */
+.card {
+  position: relative;
+  isolation: isolate;
+  z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: clamp(40px, 6vw, 64px) clamp(32px, 5vw, 56px);
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.7s var(--ease-out-expo) 0.1s both;
+}
+
+/* Decorative offset border */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -10px -10px -10px 10px;
+  border: 1.5px solid var(--rose);
+  border-radius: 2px;
+  opacity: 0.4;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Soft glow behind card */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 10px -10px -20px -10px;
+  background: var(--blush);
+  opacity: 0.2;
+  z-index: -2;
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+/* ── Brand mark ──────────────────────────── */
+.brandMark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 32px;
+}
+
+.brandIcon {
+  font-size: 40px;
+  line-height: 1;
+  display: block;
+  animation: floatY 5s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(201, 107, 107, 0.3));
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.brandSub {
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--mauve);
+  text-transform: uppercase;
+}
+
+/* ── Divider ─────────────────────────────── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 auto 28px;
+  max-width: 200px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.dividerDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--rose);
+  flex-shrink: 0;
+}
+
+/* ── Title ───────────────────────────────── */
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.titleAccent {
+  font-style: italic;
+  color: var(--deep-rose);
+}
+
+/* ── Age badge ───────────────────────────── */
+.ageBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--gold-light);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+
+/* ── Body text ───────────────────────────── */
+.text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  max-width: 360px;
+  margin: 0 auto 36px;
+}
+
+/* ── Actions ─────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* ── Primary button ──────────────────────── */
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 15px 28px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
+}
+
+.primaryButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-position: -200% center;
+  transition: background-position 0.55s;
+}
+
+@media (hover: hover) {
+  .primaryButton:hover {
+    background: var(--charcoal);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .primaryButton:hover::before {
+    background-position: 200% center;
+  }
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.primaryButton:focus-visible {
+  outline: 2px solid var(--deep-rose);
+  outline-offset: 3px;
+}
+
+/* Decorative sparkle inside button */
+.primaryButton::after {
+  content: '✦';
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+/* ── Secondary button / link ─────────────── */
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  padding: 12px 20px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+@media (hover: hover) {
+  .secondaryButton:hover {
+    color: var(--charcoal);
+    border-color: var(--rose);
+    background: var(--lace);
+  }
+}
+
+.secondaryButton:focus-visible {
+  outline: 2px solid var(--deep-rose);
+  outline-offset: 3px;
+}
+
+/* ── Footer note ─────────────────────────── */
+.footerNote {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.footerNoteDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--rose);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* ── Petal decorations ───────────────────── */
+.petalA,
+.petalB,
+.petalC,
+.petalD {
+  position: absolute;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  animation: petalDrift linear infinite;
+}
+
+.petalA {
+  left: 8%;
+  top: -20px;
+  animation-duration: 12s;
+  animation-delay: 0s;
+}
+
+.petalB {
+  left: 28%;
+  top: -20px;
+  animation-duration: 15s;
+  animation-delay: 3s;
+}
+
+.petalC {
+  left: 62%;
+  top: -20px;
+  animation-duration: 10s;
+  animation-delay: 6s;
+}
+
+.petalD {
+  left: 82%;
+  top: -20px;
+  animation-duration: 13s;
+  animation-delay: 1.5s;
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 480px) {
+  .card {
+    padding: 36px 24px 32px;
+    /* Hide decorative card layers on very small screens */
+    margin: 12px;
+  }
+
+  .card::before {
+    display: none;
+  }
+
+  .card::after {
+    display: none;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .brandName {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page::before,
+  .page::after,
+  .brandIcon,
+  .petalA,
+  .petalB,
+  .petalC,
+  .petalD,
+  .card {
+    animation: none;
+  }
+
+  .primaryButton,
+  .primaryButton::before,
+  .secondaryButton {
+    transition: none;
+  }
+
+  .primaryButton:hover,
+  .primaryButton:active {
+    transform: none;
+  }
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes petalDrift {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0) rotate(0deg);
+  }
+
+  10% {
+    opacity: 0.65;
+  }
+
+  90% {
+    opacity: 0.65;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(24px, 110vh, 0) rotate(240deg);
+  }
+}
+
+
+.error {
+  max-width: 360px;
+  margin: -18px auto 24px;
+  color: var(--deep-rose);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+  box-shadow: none;
+}
+
+.secondaryButton {
+  cursor: pointer;
+}
