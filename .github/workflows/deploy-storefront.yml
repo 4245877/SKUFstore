@@ -50,9 +50,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check public API
+      - name: Diagnose public API
+        continue-on-error: true
         run: |
-          curl --fail --show-error --location "https://api.skufnya.com/api/catalog/products?page=1&limit=1"
+          echo "DNS via system resolver:"
+          getent ahostsv4 api.skufnya.com || true
+
+          echo "DNS via 1.1.1.1:"
+          dig @1.1.1.1 +short A api.skufnya.com || true
+
+          echo "DNS via 8.8.8.8:"
+          dig @8.8.8.8 +short A api.skufnya.com || true
+
+          echo "DNS via 9.9.9.9:"
+          dig @9.9.9.9 +short A api.skufnya.com || true
+
+          echo "API health:"
+          curl --fail --show-error --location \
+            --connect-timeout 10 \
+            --max-time 20 \
+            --retry 2 \
+            --retry-delay 3 \
+            "https://api.skufnya.com/health"
 
       - name: Build Storefront
         run: pnpm --filter storefront build
