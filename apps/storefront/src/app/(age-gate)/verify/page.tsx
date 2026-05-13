@@ -19,6 +19,6 @@ export default async function AgeVerificationPage({
 }) {
   const params = await searchParams;
   const returnTo = getSafeReturnTo(params?.returnTo);
-
+ 
   return <VerifyAgeClient returnTo={returnTo} />;
 }
