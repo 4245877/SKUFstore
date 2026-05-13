@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+
 import {
   AGE_GATE_COOKIE,
   AGE_GATE_MAX_AGE,
   isSafeReturnTo,
-} from '@/lib/age-gate';
+} from '../../../../lib/age-gate';
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
