@@ -272,4 +272,4 @@ export default async function ProductPage({
 
     throw error;
   }
-}
+} 
