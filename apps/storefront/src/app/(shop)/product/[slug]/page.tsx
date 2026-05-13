@@ -13,6 +13,8 @@ import styles from './ProductDetails.module.css';
 
 const isPagesBuild = process.env.DEPLOY_TARGET === 'pages';
 
+export const dynamicParams = false;
+
 const BUILD_API_BASE =
   (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 
@@ -30,9 +32,9 @@ async function fetchBuildJson<T>(path: string): Promise<T> {
   const url = buildBuildApiUrl(path);
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15_000);
+    const timeout = setTimeout(() => controller.abort(), 8_000);
 
     try {
       const response = await fetch(url, {
@@ -54,8 +56,8 @@ async function fetchBuildJson<T>(path: string): Promise<T> {
     } catch (error) {
       lastError = error;
 
-      if (attempt < 3) {
-        await new Promise((resolve) => setTimeout(resolve, attempt * 2_000));
+      if (attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 1_500));
       }
     } finally {
       clearTimeout(timeout);
@@ -171,7 +173,7 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   try {
     while (true) {
       const response = await fetchBuildJson<CatalogProductsResponse>(
-        `/api/catalog/products?page=${page}&limit=100`,
+        `/api/catalog/products?page=${page}&limit=20`,
       );
 
       result.push(
@@ -180,6 +182,7 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
           .map((item) => ({ slug: item.slug })),
       );
 
+      if (result.length >= 20) break;
       if (page >= response.meta.pageCount) break;
 
       page += 1;
@@ -193,7 +196,7 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
     return [];
   }
 
-  return result;
+  return result.slice(0, 20);
 }
 
 export default async function ProductPage({
