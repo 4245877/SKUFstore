@@ -167,36 +167,37 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
     return [];
   }
 
-  const result: Array<{ slug: string }> = [];
+  const slugs = new Set<string>();
   let page = 1;
+  let pageCount = 1;
 
   try {
-    while (true) {
+    do {
       const response = await fetchBuildJson<CatalogProductsResponse>(
         `/api/catalog/products?page=${page}&limit=20`,
       );
 
-      result.push(
-        ...response.items
-          .filter((item) => item.slug)
-          .map((item) => ({ slug: item.slug })),
-      );
+      for (const item of response.items) {
+        if (item.slug?.trim()) {
+          slugs.add(item.slug);
+        }
+      }
 
-      if (result.length >= 20) break;
-      if (page >= response.meta.pageCount) break;
-
+      pageCount = Math.max(1, response.meta.pageCount ?? 1);
       page += 1;
-    }
+    } while (page <= pageCount);
   } catch (error) {
     console.warn(
       'Failed to generate product static params during pages build:',
       error,
     );
 
-    return [];
+    throw error;
   }
 
-  return result.slice(0, 20);
+  return Array.from(slugs)
+    .sort()
+    .map((slug) => ({ slug }));
 }
 
 export default async function ProductPage({
