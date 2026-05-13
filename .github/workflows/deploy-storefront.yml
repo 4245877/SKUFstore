@@ -28,6 +28,7 @@ jobs:
       DEPLOY_TARGET: pages
       NEXT_PUBLIC_API_URL: https://api.skufnya.com
       API_INTERNAL_URL: https://api.skufnya.com
+      NODE_OPTIONS: --dns-result-order=ipv4first
 
     steps:
       - name: Checkout
@@ -50,6 +51,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Pin API DNS temporarily
+        run: |
+          sudo sed -i '/api\.skufnya\.com/d' /etc/hosts
+          echo "176.36.255.118 api.skufnya.com" | sudo tee -a /etc/hosts
+
+          echo "Resolved api.skufnya.com from /etc/hosts:"
+          getent ahostsv4 api.skufnya.com
+
       - name: Diagnose public API
         continue-on-error: true
         run: |
@@ -65,25 +74,13 @@ jobs:
           echo "DNS via 9.9.9.9:"
           dig @9.9.9.9 +short A api.skufnya.com || true
 
-          echo "API health:"
-          curl --fail --show-error --location \
+          echo "API health with forced IP:"
+          curl --ipv4 --fail --show-error --location \
+            --resolve api.skufnya.com:443:176.36.255.118 \
             --connect-timeout 10 \
             --max-time 20 \
             --retry 2 \
             --retry-delay 3 \
-            "https://api.skufnya.com/health"
-
-      - name: Pin API DNS temporarily
-        run: |
-          echo "176.36.255.118 api.skufnya.com" | sudo tee -a /etc/hosts
-
-          echo "Resolved api.skufnya.com:"
-          getent ahostsv4 api.skufnya.com
-
-          echo "API health:"
-          curl --fail --show-error --location \
-            --connect-timeout 10 \
-            --max-time 20 \
             "https://api.skufnya.com/health"
 
       - name: Build Storefront
