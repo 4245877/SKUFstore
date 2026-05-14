@@ -3,6 +3,18 @@
    Магазин аніме-фігурок у maid-естетиці
    ═══════════════════════════════════════════ */
 
+/* ── Обгортка сторінки ─────────────────── */
+.page {
+  width: 100%;
+  padding: clamp(24px, 4vw, 56px) var(--gutter) clamp(56px, 7vw, 96px);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
 /* ── Хлібні крихти ──────────────────────── */
 .breadcrumb {
   display: flex;
@@ -38,9 +50,10 @@
 /* ── Розмітка товару ────────────────────── */
 .productGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
   gap: clamp(32px, 5vw, 72px);
   align-items: start;
+  width: 100%;
 }
 
 /* ── Колонка галереї ────────────────────── */
@@ -50,6 +63,8 @@
   gap: 12px;
   position: sticky;
   top: 24px;
+  min-width: 0;
+  width: 100%;
   animation: fadeUp 0.7s var(--ease-out-expo) 0.05s both;
 }
 
@@ -224,6 +239,8 @@
 .info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  width: 100%;
   animation: fadeUp 0.7s var(--ease-out-expo) 0.15s both;
 }
 
@@ -346,6 +363,8 @@
 }
 
 .variantCard {
+  width: 100%;
+  text-align: left;
   border-radius: 2px;
   border: 1.5px solid var(--border-soft);
   background: var(--surface);
@@ -776,6 +795,10 @@
 }
 
 @media (max-width: 768px) {
+  .page {
+    padding: 24px 16px 56px;
+  }
+
   .productGrid {
     grid-template-columns: 1fr;
     gap: 28px;

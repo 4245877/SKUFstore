@@ -1134,28 +1134,32 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
   }, [product.images, selectedVariant, selectedFinish, selectedColor]);
 
   return (
-    <div className={styles.productGrid}>
-      <Gallery
-        images={galleryImages}
-        title={selectedVariant?.name || product.title}
-        isAdult={product.isAdult}
-        isAgeVerified={isAgeVerified}
-        verifyHref={verifyHref}
-      />
+    <main className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.productGrid}>
+          <Gallery
+            images={galleryImages}
+            title={selectedVariant?.name || product.title}
+            isAdult={product.isAdult}
+            isAgeVerified={isAgeVerified}
+            verifyHref={verifyHref}
+          />
 
-      <ProductInfo
-        product={product}
-        selectedVariant={selectedVariant}
-        onSelectVariant={setSelectedVariant}
-        selectedFinish={selectedFinish}
-        onSelectFinish={(value) => {
-          if (!isFinishDisabled(value)) setSelectedFinish(value);
-        }}
-        selectedColor={selectedColor}
-        onSelectColor={setSelectedColor}
-        isAgeVerified={isAgeVerified}
-        verifyHref={verifyHref}
-      />
-    </div>
+          <ProductInfo
+            product={product}
+            selectedVariant={selectedVariant}
+            onSelectVariant={setSelectedVariant}
+            selectedFinish={selectedFinish}
+            onSelectFinish={(value) => {
+              if (!isFinishDisabled(value)) setSelectedFinish(value);
+            }}
+            selectedColor={selectedColor}
+            onSelectColor={setSelectedColor}
+            isAgeVerified={isAgeVerified}
+            verifyHref={verifyHref}
+          />
+        </div>
+      </div>
+    </main>
   );
 }
