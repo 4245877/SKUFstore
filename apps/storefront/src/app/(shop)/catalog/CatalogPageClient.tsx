@@ -59,10 +59,10 @@ function formatPriceRange(minPrice?: number, maxPrice?: number) {
 
 function formatAdultFilter(isAdult?: boolean) {
   if (isAdult === undefined) {
-    return 'будь-який';
+    return 'усі товари';
   }
 
-  return isAdult ? 'лише 18+' : 'без 18+';
+  return isAdult ? 'тільки 18+' : 'без 18+';
 }
 
 function LaceDivider() {
@@ -71,7 +71,8 @@ function LaceDivider() {
       viewBox="0 0 120 8"
       xmlns="http://www.w3.org/2000/svg"
       className={styles.laceDivider}
-      aria-hidden
+      aria-hidden="true"
+      focusable="false"
     >
       <path
         d="M0 4 Q10 0 20 4 Q30 8 40 4 Q50 0 60 4 Q70 8 80 4 Q90 0 100 4 Q110 8 120 4"
@@ -80,6 +81,42 @@ function LaceDivider() {
         fill="none"
       />
     </svg>
+  );
+}
+
+type CatalogStateMessageProps = {
+  icon: string;
+  title: string;
+  text: string;
+  href?: string;
+  action?: string;
+};
+
+function CatalogStateMessage({
+  icon,
+  title,
+  text,
+  href,
+  action,
+}: CatalogStateMessageProps) {
+  return (
+    <div className={styles.grid}>
+      <div className={styles.empty}>
+        <span className={styles.emptyIcon} aria-hidden="true">
+          {icon}
+        </span>
+
+        <h2 className={styles.emptyTitle}>{title}</h2>
+
+        <p className={styles.emptyText}>{text}</p>
+
+        {href && action ? (
+          <Link href={href} className={styles.emptyBtn}>
+            {action}
+          </Link>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -377,19 +414,13 @@ export default function CatalogPageClient() {
 
         <div className={styles.main}>
           <div className={styles.content}>
-            <div className={styles.grid}>
-              <div className={styles.empty}>
-                <span className={styles.emptyIcon}>⚠️</span>
-                <h2 className={styles.emptyTitle}>Не вдалося завантажити каталог</h2>
-                <p className={styles.emptyText}>
-                  Сталася помилка під час завантаження категорій. Спробуй оновити сторінку трохи
-                  пізніше.
-                </p>
-                <Link href="/catalog" className={styles.emptyBtn}>
-                  Оновити каталог →
-                </Link>
-              </div>
-            </div>
+            <CatalogStateMessage
+              icon="!"
+              title="Не вдалося завантажити каталог"
+              text="Сталася помилка під час завантаження категорій. Спробуй оновити сторінку трохи пізніше."
+              href="/catalog"
+              action="Оновити каталог →"
+            />
           </div>
         </div>
       </div>
@@ -429,13 +460,11 @@ export default function CatalogPageClient() {
           />
 
           <div className={styles.content}>
-            <div className={styles.grid}>
-              <div className={styles.empty}>
-                <span className={styles.emptyIcon}>⏳</span>
-                <h2 className={styles.emptyTitle}>Завантаження товарів…</h2>
-                <p className={styles.emptyText}>Будь ласка, зачекай кілька секунд.</p>
-              </div>
-            </div>
+            <CatalogStateMessage
+              icon="…"
+              title="Завантаження товарів…"
+              text="Завантажуємо товари…"
+            />
           </div>
         </div>
       </div>
@@ -475,18 +504,13 @@ export default function CatalogPageClient() {
           />
 
           <div className={styles.content}>
-            <div className={styles.grid}>
-              <div className={styles.empty}>
-                <span className={styles.emptyIcon}>🫧</span>
-                <h2 className={styles.emptyTitle}>Категорію не знайдено</h2>
-                <p className={styles.emptyText}>
-                  Схоже, що обрана категорія більше не існує або має іншу адресу.
-                </p>
-                <Link href="/catalog" className={styles.emptyBtn}>
-                  Повернутися до каталогу →
-                </Link>
-              </div>
-            </div>
+            <CatalogStateMessage
+              icon="?"
+              title="Категорію не знайдено"
+              text="Схоже, що обрана категорія більше не існує або має іншу адресу."
+              href="/catalog"
+              action="Повернутися до каталогу →"
+            />
           </div>
         </div>
       </div>
@@ -526,19 +550,13 @@ export default function CatalogPageClient() {
           />
 
           <div className={styles.content}>
-            <div className={styles.grid}>
-              <div className={styles.empty}>
-                <span className={styles.emptyIcon}>⚠️</span>
-                <h2 className={styles.emptyTitle}>Не вдалося завантажити товари</h2>
-                <p className={styles.emptyText}>
-                  Сталася помилка під час запиту до каталогу. Спробуй оновити сторінку або змінити
-                  фільтри.
-                </p>
-                <Link href="/catalog" className={styles.emptyBtn}>
-                  Скинути фільтри →
-                </Link>
-              </div>
-            </div>
+            <CatalogStateMessage
+              icon="!"
+              title="Не вдалося завантажити товари"
+              text="Сталася помилка під час запиту до каталогу. Спробуй оновити сторінку або змінити фільтри."
+              href="/catalog"
+              action="Скинути фільтри →"
+            />
           </div>
         </div>
       </div>
@@ -596,7 +614,7 @@ export default function CatalogPageClient() {
         <div className={styles.content}>
           <div className={styles.toolbar}>
             <div className={styles.toolbarLeft}>
-              <span className={styles.sortLabel}>
+              <span className={styles.pageCountLabel}>
                 Сторінка {safePage} з {pageCount}
               </span>
             </div>
@@ -608,7 +626,7 @@ export default function CatalogPageClient() {
                   excludeKeys={['sort', 'page']}
                 />
 
-                <span className={styles.sortLabel}>Сортування:</span>
+                <span className={styles.sortTextLabel}>Сортування:</span>
 
                 <select
                   name="sort"
@@ -638,11 +656,14 @@ export default function CatalogPageClient() {
           {data.items.length === 0 ? (
             <div className={styles.grid}>
               <div className={styles.empty}>
-                <span className={styles.emptyIcon}>📦</span>
+                <span className={styles.emptyIcon} aria-hidden="true">
+                  0
+                </span>
+
                 <h2 className={styles.emptyTitle}>Нічого не знайдено</h2>
 
                 <p className={styles.emptyText}>
-                  За поточними параметрами товари не знайдені. Спробуй змінити фільтри або скинути
+                  За поточними параметрами товарів не знайдено. Спробуй змінити фільтри або скинути
                   пошук.
                 </p>
 
