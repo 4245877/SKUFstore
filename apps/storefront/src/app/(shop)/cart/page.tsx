@@ -8,7 +8,7 @@ import {
   resolveMediaUrl,
   type HomeProductItem,
 } from "../../../lib/api";
-import { buildAgeVerifyPath } from "../../../lib/age-gate";
+import { buildAgeVerifyPath, isAgeVerifiedClient } from "../../../lib/age-gate";
 import {
   FREE_DELIVERY_THRESHOLD,
   clearCart,
@@ -458,31 +458,7 @@ export default function CartPage() {
       return;
     }
 
-    let active = true;
-
-    async function checkAgeGate() {
-      try {
-        const response = await fetch("/api/age-gate/status", {
-          cache: "no-store",
-        });
-
-        const data = (await response.json()) as { verified?: boolean };
-
-        if (!active) return;
-
-        setIsAgeVerified(response.ok && data.verified === true);
-      } catch {
-        if (!active) return;
-
-        setIsAgeVerified(false);
-      }
-    }
-
-    void checkAgeGate();
-
-    return () => {
-      active = false;
-    };
+    setIsAgeVerified(isAgeVerifiedClient());
   }, [hasAdultItems]);
 
   const recommended = useMemo(() => {

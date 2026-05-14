@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { isSafeReturnTo, setAgeVerifiedClient } from '../../../lib/age-gate';
 import styles from './Verify.module.css';
 
 export default function VerifyAgeClient() {
@@ -11,8 +12,8 @@ export default function VerifyAgeClient() {
   const returnTo = useMemo(() => {
     const value = searchParams.get('returnTo');
 
-    if (!value || !value.startsWith('/')) {
-      return '/';
+    if (!isSafeReturnTo(value)) {
+      return '/catalog';
     }
 
     return value;
@@ -21,28 +22,16 @@ export default function VerifyAgeClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleVerify = async () => {
+  const handleVerify = () => {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
     setError('');
 
     try {
-      const response = await fetch('/api/age-gate/confirm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ returnTo }),
-      });
+      setAgeVerifiedClient();
 
-      if (!response.ok) {
-        throw new Error('AGE_CONFIRM_FAILED');
-      }
-
-      const data = await response.json();
-
-      router.replace(data.returnTo || returnTo);
+      router.replace(returnTo);
       router.refresh();
     } catch {
       setError('Не вдалося підтвердити вік. Будь ласка, спробуйте ще раз.');

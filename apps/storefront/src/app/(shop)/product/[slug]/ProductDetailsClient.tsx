@@ -16,7 +16,7 @@ import {
   isFavorite,
   removeFavorite,
 } from '../../../../lib/demo-store';
-import { buildAgeVerifyPath } from '../../../../lib/age-gate';
+import { buildAgeVerifyPath, isAgeVerifiedClient } from '../../../../lib/age-gate';
 import styles from './ProductDetails.module.css';
 
 type Product = Awaited<ReturnType<typeof getCatalogProductBySlug>>;
@@ -1075,37 +1075,13 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
       return;
     }
 
-    let active = true;
+    const verified = isAgeVerifiedClient();
 
-    async function checkAgeGate() {
-      try {
-        const response = await fetch('/api/age-gate/status', {
-          cache: 'no-store',
-        });
+    setIsAgeVerified(verified);
 
-        const data = (await response.json()) as { verified?: boolean };
-        const verified = response.ok && data.verified === true;
-
-        if (!active) return;
-
-        setIsAgeVerified(verified);
-
-        if (!verified) {
-          router.replace(verifyHref);
-        }
-      } catch {
-        if (!active) return;
-
-        setIsAgeVerified(false);
-        router.replace(verifyHref);
-      }
+    if (!verified) {
+      router.replace(verifyHref);
     }
-
-    void checkAgeGate();
-
-    return () => {
-      active = false;
-    };
   }, [product.isAdult, router, verifyHref]);
 
   const galleryImages = useMemo(() => {

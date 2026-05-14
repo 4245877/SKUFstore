@@ -1,16 +1,9 @@
-import { cookies } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import {
   getCatalogProductBySlug,
   type CatalogProductsResponse,
 } from '../../../../lib/api';
-
-import {
-  AGE_GATE_COOKIE,
-  buildAgeVerifyPath,
-  isAgeVerifiedCookieValue,
-} from '../../../../lib/age-gate';
 
 import ProductDetailsClient from './ProductDetailsClient';
 
@@ -134,15 +127,6 @@ export default async function ProductPage({
 
     if (!product) {
       notFound();
-    }
-
-    const cookieStore = await cookies();
-    const isAgeVerified = isAgeVerifiedCookieValue(
-      cookieStore.get(AGE_GATE_COOKIE)?.value,
-    );
-
-    if (product.isAdult && !isAgeVerified) {
-      redirect(buildAgeVerifyPath(`/product/${product.slug}`));
     }
 
     return <ProductDetailsClient product={product} />;

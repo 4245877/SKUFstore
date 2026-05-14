@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-
-
 import {
   getHomeProducts,
   resolveMediaUrl,
   type HomeProductItem,
 } from "../../../lib/api";
-import { buildAgeVerifyPath } from "../../../lib/age-gate";
+import { buildAgeVerifyPath, isAgeVerifiedClient } from "../../../lib/age-gate";
 import {
   FREE_DELIVERY_THRESHOLD,
   clearCart,
@@ -25,7 +23,7 @@ import {
   updateCartItemQuantity,
 } from "../../../lib/demo-store";
 
-import styles from './CheckoutPage.module.css';
+import styles from "./CheckoutPage.module.css";
 
 type RecommendedItem = {
   id: string;
@@ -460,39 +458,19 @@ export default function CartPage() {
       return;
     }
 
-    let active = true;
-
-    async function checkAgeGate() {
-      try {
-        const response = await fetch("/api/age-gate/status", {
-          cache: "no-store",
-        });
-
-        const data = (await response.json()) as { verified?: boolean };
-
-        if (!active) return;
-
-        setIsAgeVerified(response.ok && data.verified === true);
-      } catch {
-        if (!active) return;
-
-        setIsAgeVerified(false);
-      }
-    }
-
-    void checkAgeGate();
-
-    return () => {
-      active = false;
-    };
+    setIsAgeVerified(isAgeVerifiedClient());
   }, [hasAdultItems]);
 
   const recommended = useMemo(() => {
-    const cartProductIds = new Set(items.map((item) => item.productId ?? item.id));
+    const cartProductIds = new Set(
+      items.map((item) => item.productId ?? item.id),
+    );
     const cartSlugs = new Set(items.map((item) => item.slug));
 
     return catalogItems
-      .filter((item) => !cartProductIds.has(item.id) && !cartSlugs.has(item.slug))
+      .filter(
+        (item) => !cartProductIds.has(item.id) && !cartSlugs.has(item.slug),
+      )
       .slice(0, 3)
       .map((item): RecommendedItem => ({
         id: item.id,
@@ -577,7 +555,9 @@ export default function CartPage() {
                 <span className={styles.emptyCartIcon}>
                   {PAGE_COPY.empty.icon}
                 </span>
-                <h2 className={styles.emptyCartTitle}>{PAGE_COPY.empty.title}</h2>
+                <h2 className={styles.emptyCartTitle}>
+                  {PAGE_COPY.empty.title}
+                </h2>
                 <p className={styles.emptyCartText}>{PAGE_COPY.empty.text}</p>
                 <Link href="/catalog" className={styles.emptyCartCta}>
                   {PAGE_COPY.empty.cta}
