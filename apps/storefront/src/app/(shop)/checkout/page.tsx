@@ -23,7 +23,7 @@ import {
   updateCartItemQuantity,
 } from "../../../lib/demo-store";
 
-import styles from "./CartPage.module.css";
+import styles from "./CheckoutPage.module.css";
 
 type RecommendedItem = {
   id: string;
