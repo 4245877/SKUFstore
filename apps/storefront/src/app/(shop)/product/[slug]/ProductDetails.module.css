@@ -81,7 +81,27 @@
   cursor: default;
 }
 
+.mainImageBackdrop {
+  position: absolute;
+  inset: -24px;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  object-fit: cover;
+  filter: blur(24px) saturate(0.95);
+  transform: scale(1.04);
+  opacity: 0.65;
+  pointer-events: none;
+  user-select: none;
+}
+
+.mainImageBackdropBlurred {
+  filter: blur(34px) saturate(0.85);
+  opacity: 0.45;
+}
+
 .mainImage {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;

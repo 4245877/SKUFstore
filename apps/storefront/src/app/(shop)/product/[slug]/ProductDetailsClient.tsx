@@ -293,6 +293,7 @@ function Gallery({
 
   const main = images[active] ?? images[0];
   const shouldHideAdultImage = isAdult && !isAgeVerified;
+  const mainImageSrc = main ? resolveMediaUrl(main.url) || '' : '';
 
   return (
     <div className={styles.gallery}>
@@ -306,7 +307,16 @@ function Gallery({
         {main ? (
           <>
             <img
-              src={resolveMediaUrl(main.url) || ''}
+              src={mainImageSrc}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.mainImageBackdrop} ${
+                shouldHideAdultImage ? styles.mainImageBackdropBlurred : ''
+              }`}
+            />
+
+            <img
+              src={mainImageSrc}
               alt={main.alt || title}
               loading="eager"
               decoding="async"
