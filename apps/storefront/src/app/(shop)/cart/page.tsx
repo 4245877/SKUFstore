@@ -51,7 +51,7 @@ type OrderSummaryProps = {
 
 const PAGE_COPY = {
   breadcrumb: {
-    ariaLabel: "Хлібні крихти",
+    ariaLabel: "Навігація по сторінці",
     home: "Головна",
     catalog: "Каталог",
     current: "Кошик",
@@ -77,7 +77,7 @@ const PAGE_COPY = {
     columns: {
       product: "Товар",
       price: "Ціна",
-      quantity: "К-сть",
+      quantity: "Кількість",
       subtotal: "Сума",
     },
   },
@@ -86,10 +86,10 @@ const PAGE_COPY = {
     paymentMethods: "Способи оплати",
   },
   recommendations: {
-    title: "Разом із цим товаром часто купують",
+    title: "Також може сподобатися",
   },
   placeholders: {
-    image: "Фото",
+    image: "Без фото",
   },
 };
 
@@ -112,11 +112,11 @@ const SUMMARY_COPY = {
   notes: {
     savedTitle: "Товари вже збережені у кошику",
     savedText:
-      "на наступному кроці залишиться лише вказати контакти та спосіб доставки",
+      "На наступному кроці залишиться лише вказати контакти та спосіб доставки.",
     reviewTitle: "Перевірка перед оплатою",
-    reviewText: "кількість можна змінити, а каталог залишається доступним",
+    reviewText: "Кількість можна змінити, а каталог залишається доступним.",
     shippingTitle: "Попередній розрахунок доставки",
-    shippingText: "точну суму буде показано під час оформлення",
+    shippingText: "Точну суму буде показано під час оформлення.",
   },
 };
 
@@ -375,7 +375,7 @@ function OrderSummary({
             <div key={note.title} className={styles.trustItem}>
               <span className={styles.trustIcon}>{note.icon}</span>
               <p className={styles.trustText}>
-                <strong>{note.title}</strong> — {note.text}
+                <strong>{note.title}.</strong> {note.text}
               </p>
             </div>
           ))}
@@ -462,11 +462,15 @@ export default function CartPage() {
   }, [hasAdultItems]);
 
   const recommended = useMemo(() => {
-    const cartProductIds = new Set(items.map((item) => item.productId ?? item.id));
+    const cartProductIds = new Set(
+      items.map((item) => item.productId ?? item.id),
+    );
     const cartSlugs = new Set(items.map((item) => item.slug));
 
     return catalogItems
-      .filter((item) => !cartProductIds.has(item.id) && !cartSlugs.has(item.slug))
+      .filter(
+        (item) => !cartProductIds.has(item.id) && !cartSlugs.has(item.slug),
+      )
       .slice(0, 3)
       .map((item): RecommendedItem => ({
         id: item.id,
@@ -479,7 +483,7 @@ export default function CartPage() {
       }));
   }, [catalogItems, items]);
 
-  const handleQty = useCallback((id: string, qty: number) => {
+  const handleQuantityChange = useCallback((id: string, qty: number) => {
     setItems(updateCartItemQuantity(id, qty));
   }, []);
 
@@ -551,7 +555,9 @@ export default function CartPage() {
                 <span className={styles.emptyCartIcon}>
                   {PAGE_COPY.empty.icon}
                 </span>
-                <h2 className={styles.emptyCartTitle}>{PAGE_COPY.empty.title}</h2>
+                <h2 className={styles.emptyCartTitle}>
+                  {PAGE_COPY.empty.title}
+                </h2>
                 <p className={styles.emptyCartText}>{PAGE_COPY.empty.text}</p>
                 <Link href="/catalog" className={styles.emptyCartCta}>
                   {PAGE_COPY.empty.cta}
@@ -579,7 +585,7 @@ export default function CartPage() {
                   <CartItemRow
                     key={item.id}
                     item={item}
-                    onQtyChange={handleQty}
+                    onQtyChange={handleQuantityChange}
                     onRemove={handleRemove}
                   />
                 ))}

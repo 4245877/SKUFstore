@@ -110,11 +110,6 @@
   line-height: 1.1;
 }
 
-.pageTitleAccent {
-  font-style: italic;
-  color: var(--deep-rose);
-}
-
 .pageHeaderMeta {
   display: flex;
   align-items: center;
@@ -131,6 +126,15 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 1px;
+}
+
+.clearBtn,
+.qtyBtn,
+.removeBtn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
 }
 
 .clearBtn {
@@ -570,6 +574,17 @@
   transition: transform 0.4s var(--ease-out-expo);
 }
 
+.recommendThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  background: linear-gradient(160deg, var(--lace), var(--parchment));
+  color: var(--text-muted);
+}
+
 .recommendCard:hover .recommendThumbImg {
   transform: scale(1.03);
 }
@@ -617,10 +632,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.summaryHeadIcon {
-  font-size: 16px;
 }
 
 .summaryTitle {
@@ -759,11 +770,6 @@
   transform: translateY(0);
 }
 
-.checkoutBtnIcon {
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
 .checkoutBtnAlt {
   width: 100%;
   background: var(--parchment);
@@ -888,6 +894,21 @@
   font-weight: 500;
 }
 
+.breadcrumbLink:focus-visible,
+.cartItemName:focus-visible,
+.cartItemLink:focus-visible,
+.continueShopping:focus-visible,
+.recommendCard:focus-visible,
+.emptyCartCta:focus-visible,
+.checkoutBtn:focus-visible,
+.checkoutBtnAlt:focus-visible,
+.clearBtn:focus-visible,
+.qtyBtn:focus-visible,
+.removeBtn:focus-visible {
+  outline: 2px solid var(--deep-rose);
+  outline-offset: 3px;
+}
+
 /* Responsive */
 @media (max-width: 1100px) {
   .cartMain {
@@ -926,7 +947,32 @@
 
   .cartItemPrice,
   .cartItemSubtotal {
-    display: none;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .cartItemPrice {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .cartItemSubtotal {
+    justify-content: flex-end;
+  }
+
+  .cartItemPrice::before {
+    content: 'Ціна: ';
+    margin-right: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .cartItemSubtotal::before {
+    content: 'Сума: ';
+    margin-right: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
   }
 
   .cartItemQtyWrap {
@@ -942,7 +988,10 @@
 
 @media (max-width: 600px) {
   .pageHeaderMeta {
-    display: none;
+    width: 100%;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
   }
 
   .recommendGrid {
@@ -957,5 +1006,26 @@
   .cartItemThumb {
     width: 60px;
     height: 74px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pageTitleWrap,
+  .pageHeaderMeta,
+  .cartItems,
+  .recommendations,
+  .orderSummary,
+  .emptyCart,
+  .emptyCartIcon {
+    animation: none;
+  }
+
+  .cartItemThumbImg,
+  .recommendThumbImg,
+  .checkoutBtn,
+  .emptyCartCta,
+  .recommendCard,
+  .continueArrow {
+    transition: none;
   }
 }

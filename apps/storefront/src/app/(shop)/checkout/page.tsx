@@ -23,7 +23,7 @@ import {
   updateCartItemQuantity,
 } from "../../../lib/demo-store";
 
-import styles from "./CheckoutPage.module.css";
+import styles from "./CartPage.module.css";
 
 type RecommendedItem = {
   id: string;
@@ -77,7 +77,7 @@ const PAGE_COPY = {
     columns: {
       product: "Товар",
       price: "Ціна",
-      quantity: "К-сть",
+      quantity: "Кількість",
       subtotal: "Сума",
     },
   },
@@ -86,7 +86,7 @@ const PAGE_COPY = {
     paymentMethods: "Способи оплати",
   },
   recommendations: {
-    title: "Разом із цим товаром часто купують",
+    title: "До вашого замовлення також пасують",
   },
   placeholders: {
     image: "Фото",
@@ -244,6 +244,7 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
           type="button"
           className={styles.removeBtn}
           aria-label={PAGE_COPY.cart.remove}
+          title={PAGE_COPY.cart.remove}
           onClick={() => onRemove(item.id)}
         >
           ×
@@ -492,6 +493,9 @@ export default function CartPage() {
   }, []);
 
   const handleClear = useCallback(() => {
+    const confirmed = window.confirm("Очистити кошик?");
+    if (!confirmed) return;
+
     clearCart();
     setItems([]);
   }, []);
