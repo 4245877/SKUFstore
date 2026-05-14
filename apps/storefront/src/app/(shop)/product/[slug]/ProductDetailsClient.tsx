@@ -308,6 +308,8 @@ function Gallery({
             <img
               src={resolveMediaUrl(main.url) || ''}
               alt={main.alt || title}
+              loading="eager"
+              decoding="async"
               className={`${styles.mainImage} ${
                 shouldHideAdultImage ? styles.blurred : ''
               }`}
@@ -340,6 +342,8 @@ function Gallery({
               <img
                 src={resolveMediaUrl(img.url) || ''}
                 alt={img.alt || title}
+                loading="lazy"
+                decoding="async"
                 className={`${styles.thumbImg} ${
                   shouldHideAdultImage ? styles.thumbBlurred : ''
                 }`}
@@ -392,6 +396,8 @@ function VariantSelector({
                   <img
                     src={resolveMediaUrl(cover.url) || ''}
                     alt={cover.alt || v.name}
+                    loading="lazy"
+                    decoding="async"
                     className={styles.variantThumbImg}
                   />
                 ) : (

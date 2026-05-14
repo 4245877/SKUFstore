@@ -50,9 +50,10 @@
 /* ── Розмітка товару ────────────────────── */
 .productGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
-  gap: clamp(32px, 5vw, 72px);
+  grid-template-columns: minmax(280px, 560px) minmax(320px, 520px);
+  gap: clamp(28px, 4vw, 56px);
   align-items: start;
+  justify-content: center;
   width: 100%;
 }
 
@@ -60,17 +61,19 @@
 .gallery {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   position: sticky;
-  top: 24px;
+  top: clamp(16px, 2.5vw, 28px);
   min-width: 0;
-  width: 100%;
+  width: min(100%, 560px);
+  max-width: 560px;
+  justify-self: center;
   animation: fadeUp 0.7s var(--ease-out-expo) 0.05s both;
 }
 
 .mainImageWrap {
   position: relative;
-  aspect-ratio: 3 / 4;
+  height: clamp(380px, 58vh, 620px);
   border-radius: 2px;
   overflow: hidden;
   background: var(--parchment);
@@ -81,13 +84,13 @@
 .mainImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.6s var(--ease-out-expo);
   display: block;
 }
 
 .mainImageWrap:hover .mainImage {
-  transform: scale(1.04);
+  transform: scale(1.02);
 }
 
 .mainImagePlaceholder {
@@ -197,7 +200,8 @@
 /* Сітка мініатюр */
 .thumbGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(64px, 80px));
+  justify-content: center;
   gap: 8px;
 }
 
@@ -228,7 +232,7 @@
 }
 
 .thumb:hover .thumbImg {
-  transform: scale(1.08);
+  transform: scale(1.04);
 }
 
 .thumbBlurred {
@@ -256,11 +260,11 @@
 
 .productTitle {
   font-family: var(--font-display);
-  font-size: clamp(26px, 3.5vw, 40px);
+  font-size: clamp(24px, 3vw, 36px);
   font-weight: 600;
   color: var(--ink);
-  line-height: 1.1;
-  margin-bottom: 20px;
+  line-height: 1.12;
+  margin-bottom: 16px;
 }
 
 /* Рядок рейтингу */
@@ -268,7 +272,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .ratingCount {
@@ -281,8 +285,8 @@
   display: flex;
   align-items: baseline;
   gap: 10px;
-  margin-bottom: 28px;
-  padding: 20px 24px;
+  margin-bottom: 22px;
+  padding: 16px 20px;
   background: var(--surface-alt);
   border: 1px solid var(--border-soft);
   border-radius: 2px;
@@ -303,7 +307,7 @@
 
 .priceMain {
   font-family: var(--font-display);
-  font-size: 34px;
+  font-size: clamp(28px, 3vw, 34px);
   font-weight: 600;
   color: var(--deep-rose);
   line-height: 1;
@@ -327,15 +331,15 @@
 .shortDesc {
   font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.75;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--border-soft);
 }
 
 /* ── Варіанти ───────────────────────────── */
 .variantsSection {
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
 
 .variantsTitle {
@@ -368,7 +372,7 @@
   border-radius: 2px;
   border: 1.5px solid var(--border-soft);
   background: var(--surface);
-  padding: 14px 16px;
+  padding: 12px 14px;
   cursor: pointer;
   transition:
     border-color 0.2s,
@@ -376,15 +380,15 @@
     transform 0.2s var(--ease-spring),
     box-shadow 0.2s;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .variantMedia {
-  width: 72px;
-  min-width: 72px;
-  height: 72px;
+  width: 60px;
+  min-width: 60px;
+  height: 60px;
   border-radius: 2px;
   overflow: hidden;
   border: 1px solid var(--border-soft);
@@ -600,7 +604,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
 
 .btnPrimary {
@@ -692,9 +696,9 @@
 
 /* ── Вкладки опису ──────────────────────── */
 .tabs {
-  margin-top: 48px;
+  margin-top: 36px;
   border-top: 1px solid var(--border);
-  padding-top: 48px;
+  padding-top: 36px;
   animation: fadeUp 0.7s var(--ease-out-expo) 0.25s both;
 }
 
@@ -786,11 +790,17 @@
 /* ── Адаптивність ───────────────────────── */
 @media (max-width: 1024px) {
   .productGrid {
-    gap: 40px;
+    grid-template-columns: minmax(260px, 480px) minmax(320px, 1fr);
+    gap: 36px;
   }
 
   .gallery {
     position: static;
+    max-width: 480px;
+  }
+
+  .mainImageWrap {
+    height: clamp(340px, 52vh, 560px);
   }
 }
 
@@ -801,15 +811,18 @@
 
   .productGrid {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 26px;
   }
 
   .gallery {
     position: static;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
   }
 
-  .priceMain {
-    font-size: 28px;
+  .mainImageWrap {
+    height: clamp(320px, 62vh, 520px);
   }
 
   .tabNav {
@@ -827,13 +840,21 @@
 }
 
 @media (max-width: 480px) {
+  .mainImageWrap {
+    height: clamp(280px, 58vh, 440px);
+  }
+
   .thumbGrid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
   }
 
   .breadcrumb {
     margin-bottom: 24px;
+  }
+
+  .priceBlock {
+    padding: 14px 16px;
   }
 
   .btnRow {
@@ -850,9 +871,9 @@
   }
 
   .variantMedia {
-    width: 56px;
-    min-width: 56px;
-    height: 56px;
+    width: 52px;
+    min-width: 52px;
+    height: 52px;
   }
 
   .variantPrice {
