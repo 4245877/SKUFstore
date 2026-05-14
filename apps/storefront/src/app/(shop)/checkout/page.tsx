@@ -1,1451 +1,684 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import styles from './CheckoutPage.module.css';
-import { apiFetch, createOrder, resolveMediaUrl } from '../../../lib/api';
+
+
 import {
+  getHomeProducts,
+  resolveMediaUrl,
+  type HomeProductItem,
+} from "../../../lib/api";
+import { buildAgeVerifyPath } from "../../../lib/age-gate";
+import {
+  FREE_DELIVERY_THRESHOLD,
   clearCart,
   formatPrice,
+  getCartItemsCount,
   getCartSubtotal,
   getDeliveryPrice,
   readCart,
-  writeLastOrder,
-} from '../../../lib/demo-store';
-import type { CheckoutFormValues, CartItem } from '../../../lib/demo-store';
+  removeCartItem,
+  subscribeToCartChange,
+  type CartItem,
+  updateCartItemQuantity,
+} from "../../../lib/demo-store";
 
-const initialForm: CheckoutFormValues = {
-  fullName: '',
-  email: '',
-  phone: '',
-  city: '',
-  address: '',
-  deliveryMethod: 'nova-poshta-branch',
-  paymentMethod: 'partial-prepayment',
-  comment: '',
-};
+import styles from './CheckoutPage.module.css';
 
-type DeliveryMethod = CheckoutFormValues['deliveryMethod'];
-type PaymentMethod = CheckoutFormValues['paymentMethod'];
-
-type CheckoutCartItem = CartItem & {
-  imageUrl?: string | null;
-  image?: string | null;
-  imageAlt?: string | null;
-};
-
-type NovaPoshtaPointType = 'branch' | 'postomat';
-
-type NovaPoshtaDivision = {
+type RecommendedItem = {
   id: string;
+  slug: string;
   name: string;
-  address: string;
-  settlementName: string;
-  number: string | null;
-  fullLabel: string;
-  latitude: number | null;
-  longitude: number | null;
+  price: number;
+  currency: string;
+  imageUrl: string | null;
+  imageAlt: string | null;
 };
 
-type NovaPoshtaSettlement = {
-  name: string;
-  label: string;
+type CartItemRowProps = {
+  item: CartItem;
+  onQtyChange: (id: string, qty: number) => void;
+  onRemove: (id: string) => void;
 };
 
-type UkrPoshtaOffice = {
-  id: string;
-  name: string;
-  address: string;
-  settlementName: string;
-  postcode: string | null;
-  fullLabel: string;
-  latitude: number | null;
-  longitude: number | null;
-  typeLabel: string | null;
+type OrderSummaryProps = {
+  items: CartItem[];
+  subtotal: number;
+  currency: string;
+  checkoutHref: string;
+  checkoutLabel: string;
 };
 
-type UkrPoshtaSettlement = {
-  id: string;
-  name: string;
-  label: string;
-  koatuu: string | null;
-  katottg: string | null;
-};
-
-const CITY_SUGGESTIONS_LIMIT = '8';
-const CITY_REQUEST_TIMEOUT_MS = 6000;
-
-const GENERIC_CITY_QUERIES = new Set([
-  'місто',
-  'мiсто',
-  'город',
-  'city',
-  'населений пункт',
-  'населенный пункт',
-  'село',
-  'селище',
-  'смт',
-  'область',
-  'район',
-  'україна',
-  'украина',
-]);
-
-const NOVA_POSHTA_CITY_CACHE = new Map<string, NovaPoshtaSettlement[]>();
-const UKR_POSHTA_CITY_CACHE = new Map<string, UkrPoshtaSettlement[]>();
-
-function normalizeCityQuery(value: string) {
-  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('uk-UA');
-}
-
-function shouldSkipCitySearch(value: string, minLength = 3) {
-  const query = normalizeCityQuery(value);
-  return query.length < minLength || GENERIC_CITY_QUERIES.has(query);
-}
-
-function getSearchCacheKey(value: string) {
-  return normalizeCityQuery(value);
-}
-
-function isAbortError(error: unknown) {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'name' in error &&
-    (error as { name?: string }).name === 'AbortError'
-  );
-}
-
-const DELIVERY_LABELS: Record<
-  DeliveryMethod,
-  { label: string; sub: string; badge?: string; badgeFree?: boolean }
-> = {
-  'nova-poshta-branch': {
-    label: 'Нова пошта, відділення / поштомат',
-    sub: 'Стандартна доставка по Україні',
+const PAGE_COPY = {
+  breadcrumb: {
+    ariaLabel: "Хлібні крихти",
+    home: "Головна",
+    catalog: "Каталог",
+    current: "Кошик",
   },
-  'ukrposhta-branch': {
-    label: 'Укрпошта, відділення',
-    sub: 'Доставка до відділення за індексом',
+  header: {
+    eyebrow: "Кошик",
+    title: "Ваш кошик",
+    clear: "Очистити кошик",
+    loading: "Завантаження кошика…",
   },
-  courier: {
-    label: "Кур'єр",
-    sub: 'Доставка за адресою',
-    badge: 'Швидко',
+  empty: {
+    icon: "🛒",
+    title: "Кошик порожній",
+    text: "Схоже, у кошику поки нічого немає. Загляньте до каталогу.",
+    cta: "Перейти до каталогу →",
   },
-  pickup: {
-    label: 'Самовивіз',
-    sub: 'Без доплати за доставку',
-    badge: 'Безкоштовно',
-    badgeFree: true,
+  cart: {
+    productLink: "До товару",
+    continueShopping: "Продовжити покупки",
+    quantityDecrease: "Зменшити",
+    quantityIncrease: "Збільшити",
+    remove: "Видалити з кошика",
+    columns: {
+      product: "Товар",
+      price: "Ціна",
+      quantity: "К-сть",
+      subtotal: "Сума",
+    },
+  },
+  actions: {
+    checkout: "Оформити замовлення",
+    paymentMethods: "Способи оплати",
+  },
+  recommendations: {
+    title: "Разом із цим товаром часто купують",
+  },
+  placeholders: {
+    image: "Фото",
   },
 };
 
-const NOVA_POSHTA_POINT_TYPE_LABELS: Record<
-  NovaPoshtaPointType,
-  { label: string; sub: string }
-> = {
-  branch: { label: 'Відділення', sub: 'Класичне відділення Нова Пошта' },
-  postomat: { label: 'Поштомат', sub: 'Автоматична комірка для отримання' },
+const SUMMARY_COPY = {
+  title: "Підсумок кошика",
+  itemsInCartSuffix: "у кошику",
+  labels: {
+    subtotal: "Сума товарів",
+    shipping: "Доставка",
+    total: "Разом",
+  },
+  shipping: {
+    free: "Безкоштовно",
+    tooltip:
+      "Попередня вартість доставки. Точну суму буде показано під час оформлення.",
+    freeReached: "Безкоштовна доставка вже доступна",
+    remainingPrefix: "Додайте ще",
+    remainingSuffix: "для безкоштовної доставки",
+  },
+  notes: {
+    savedTitle: "Товари вже збережені у кошику",
+    savedText:
+      "на наступному кроці залишиться лише вказати контакти та спосіб доставки",
+    reviewTitle: "Перевірка перед оплатою",
+    reviewText: "кількість можна змінити, а каталог залишається доступним",
+    shippingTitle: "Попередній розрахунок доставки",
+    shippingText: "точну суму буде показано під час оформлення",
+  },
 };
 
-const PAYMENT_LABELS: Record<PaymentMethod, { label: string; sub: string }> = {
-  'partial-prepayment': {
-    label: 'Передплата 60%',
-    sub: '60% — для закупівлі матеріалів, решта — при отриманні',
+const TRUST_BADGES = [
+  { icon: "✓", label: "Ручна перевірка" },
+  { icon: "✓", label: "Надійне пакування" },
+  { icon: "✓", label: "Безпечна оплата" },
+] as const;
+
+const SUMMARY_NOTES = [
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.savedTitle,
+    text: SUMMARY_COPY.notes.savedText,
   },
-  'full-prepayment': {
-    label: 'Повна передплата',
-    sub: '100% після узгодження деталей замовлення',
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.reviewTitle,
+    text: SUMMARY_COPY.notes.reviewText,
   },
-};
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.shippingTitle,
+    text: SUMMARY_COPY.notes.shippingText,
+  },
+] as const;
 
-// Placeholder emoji for items without images
-const FIGURE_EMOJI = ['🎎', '⛩️', '🌸', '🎀', '✨', '🗡️', '🌙', '🎐'];
+const DEFAULT_SERIES_LABEL = "Фігурка з каталогу";
 
-function getEmoji(id: string) {
-  let n = 0;
-  for (let i = 0; i < id.length; i++) n += id.charCodeAt(i);
-  return FIGURE_EMOJI[n % FIGURE_EMOJI.length];
-}
-
-function formatItemCount(count: number) {
+function pluralizeProducts(count: number) {
   const mod10 = count % 10;
   const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return `${count} позиція`;
+
+  if (mod10 === 1 && mod100 !== 11) return "товар";
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-    return `${count} позиції`;
+    return "товари";
   }
-  return `${count} позицій`;
+
+  return "товарів";
 }
 
-function formatNovaPoshtaPointType(value: NovaPoshtaPointType) {
-  return value === 'postomat' ? 'Поштомат' : 'Відділення';
-}
+function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
+  const currency = item.currency ?? "UAH";
+  const subtotal = item.price * item.quantity;
+  const seriesLabel = item.series || item.subtitle || DEFAULT_SERIES_LABEL;
+  const imageSrc = item.imageUrl ? resolveMediaUrl(item.imageUrl) : null;
+  const productHref = `/product/${item.slug}`;
 
-export default function CheckoutPage() {
-  const router = useRouter();
-  const [items, setItems] = useState<CheckoutCartItem[]>([]);
-  const [isReady, setIsReady] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [form, setForm] = useState<CheckoutFormValues>(initialForm);
-  const [npPointType, setNpPointType] = useState<NovaPoshtaPointType>('branch');
-  const [npOptions, setNpOptions] = useState<NovaPoshtaDivision[]>([]);
-  const [npCityOptions, setNpCityOptions] = useState<NovaPoshtaSettlement[]>([]);
-  const [npCityIsLoading, setNpCityIsLoading] = useState(false);
-  const [npCityError, setNpCityError] = useState<string | null>(null);
-  const [npCityConfirmed, setNpCityConfirmed] = useState(false);
-  const [npIsLoading, setNpIsLoading] = useState(false);
-  const [npError, setNpError] = useState<string | null>(null);
-  const [npSelectedId, setNpSelectedId] = useState<string | null>(null);
-  const [npDivisionQuery, setNpDivisionQuery] = useState('');
-  const [upOptions, setUpOptions] = useState<UkrPoshtaOffice[]>([]);
-  const [upCityOptions, setUpCityOptions] = useState<UkrPoshtaSettlement[]>([]);
-  const [upCityIsLoading, setUpCityIsLoading] = useState(false);
-  const [upCityError, setUpCityError] = useState<string | null>(null);
-  const [upCityConfirmed, setUpCityConfirmed] = useState(false);
-  const [upSelectedCityId, setUpSelectedCityId] = useState<string | null>(null);
-  const [upIsLoading, setUpIsLoading] = useState(false);
-  const [upError, setUpError] = useState<string | null>(null);
-  const [upSelectedId, setUpSelectedId] = useState<string | null>(null);
-  const [upOfficeQuery, setUpOfficeQuery] = useState('');
-
-  const deliveryMethods = Object.keys(DELIVERY_LABELS) as DeliveryMethod[];
-  const paymentMethods = Object.keys(PAYMENT_LABELS) as PaymentMethod[];
-  const novaPoshtaPointTypes = Object.keys(
-    NOVA_POSHTA_POINT_TYPE_LABELS,
-  ) as NovaPoshtaPointType[];
-
-  useEffect(() => {
-    setItems(readCart());
-    setIsReady(true);
-  }, []);
-
-  const isNovaPoshtaDelivery = form.deliveryMethod === 'nova-poshta-branch';
-  const isUkrPoshtaDelivery = form.deliveryMethod === 'ukrposhta-branch';
-  const isCarrierReadonlyAddress = isNovaPoshtaDelivery || isUkrPoshtaDelivery;
-
-  const selectedNpDivision = useMemo(
-    () => npOptions.find((division) => division.id === npSelectedId) ?? null,
-    [npOptions, npSelectedId],
-  );
-
-  const selectedUpOffice = useMemo(
-    () => upOptions.find((office) => office.id === upSelectedId) ?? null,
-    [upOptions, upSelectedId],
-  );
-
-  const filteredNpOptions = npOptions;
-
-  useEffect(() => {
-    if (!isNovaPoshtaDelivery || npCityConfirmed) {
-      setNpCityOptions([]);
-      setNpCityError(null);
-      setNpCityIsLoading(false);
-      return;
-    }
-
-    const query = form.city.trim();
-
-    if (shouldSkipCitySearch(query, 3)) {
-      setNpCityOptions([]);
-      setNpCityError(null);
-      setNpCityIsLoading(false);
-      return;
-    }
-
-    const cacheKey = getSearchCacheKey(query);
-    const cachedItems = NOVA_POSHTA_CITY_CACHE.get(cacheKey);
-
-    if (cachedItems) {
-      setNpCityOptions(cachedItems);
-      setNpCityError(null);
-      setNpCityIsLoading(false);
-      return;
-    }
-
-    let isCancelled = false;
-    let controller: AbortController | null = null;
-    let requestTimeoutId: number | null = null;
-
-    const timeoutId = window.setTimeout(async () => {
-      controller = new AbortController();
-      requestTimeoutId = window.setTimeout(() => {
-        controller?.abort();
-      }, CITY_REQUEST_TIMEOUT_MS);
-
-      setNpCityIsLoading(true);
-      setNpCityError(null);
-
-      try {
-        const params = new URLSearchParams({
-          q: query,
-          limit: CITY_SUGGESTIONS_LIMIT,
-        });
-
-        const data = (await apiFetch(
-          `/api/shipping/nova-poshta/settlements?${params.toString()}`,
-          {
-            method: 'GET',
-            signal: controller.signal,
-            retry: false,
-          },
-        )) as { items?: NovaPoshtaSettlement[] };
-
-        if (isCancelled) return;
-
-        const nextItems = Array.isArray(data?.items) ? data.items : [];
-
-        NOVA_POSHTA_CITY_CACHE.set(cacheKey, nextItems);
-        setNpCityOptions(nextItems);
-      } catch (error) {
-        if (isCancelled || isAbortError(error)) return;
-
-        setNpCityOptions([]);
-        setNpCityError(
-          error instanceof Error
-            ? error.message
-            : 'Не вдалося отримати список населених пунктів.',
-        );
-      } finally {
-        if (requestTimeoutId !== null) {
-          window.clearTimeout(requestTimeoutId);
-        }
-
-        if (!isCancelled) {
-          setNpCityIsLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      isCancelled = true;
-      controller?.abort();
-
-      if (requestTimeoutId !== null) {
-        window.clearTimeout(requestTimeoutId);
-      }
-
-      window.clearTimeout(timeoutId);
-    };
-  }, [form.city, isNovaPoshtaDelivery, npCityConfirmed]);
-
-  useEffect(() => {
-    if (!isUkrPoshtaDelivery || upCityConfirmed) {
-      setUpCityOptions([]);
-      setUpCityError(null);
-      setUpCityIsLoading(false);
-      return;
-    }
-
-    const query = form.city.trim();
-
-    if (shouldSkipCitySearch(query, 3)) {
-      setUpCityOptions([]);
-      setUpCityError(null);
-      setUpCityIsLoading(false);
-      return;
-    }
-
-    const cacheKey = getSearchCacheKey(query);
-    const cachedItems = UKR_POSHTA_CITY_CACHE.get(cacheKey);
-
-    if (cachedItems) {
-      setUpCityOptions(cachedItems);
-      setUpCityError(null);
-      setUpCityIsLoading(false);
-      return;
-    }
-
-    let isCancelled = false;
-    let controller: AbortController | null = null;
-    let requestTimeoutId: number | null = null;
-
-    const timeoutId = window.setTimeout(async () => {
-      controller = new AbortController();
-      requestTimeoutId = window.setTimeout(() => {
-        controller?.abort();
-      }, CITY_REQUEST_TIMEOUT_MS);
-
-      setUpCityIsLoading(true);
-      setUpCityError(null);
-
-      try {
-        const params = new URLSearchParams({
-          q: query,
-          limit: CITY_SUGGESTIONS_LIMIT,
-        });
-
-        const data = (await apiFetch(
-          `/api/shipping/ukrposhta/settlements?${params.toString()}`,
-          {
-            method: 'GET',
-            signal: controller.signal,
-            retry: false,
-          },
-        )) as { items?: UkrPoshtaSettlement[] };
-
-        if (isCancelled) return;
-
-        const nextItems = Array.isArray(data?.items) ? data.items : [];
-
-        UKR_POSHTA_CITY_CACHE.set(cacheKey, nextItems);
-        setUpCityOptions(nextItems);
-      } catch (error) {
-        if (isCancelled || isAbortError(error)) return;
-
-        setUpCityOptions([]);
-        setUpCityError(
-          error instanceof Error
-            ? error.message
-            : 'Не вдалося отримати список населених пунктів Укрпошта.',
-        );
-      } finally {
-        if (requestTimeoutId !== null) {
-          window.clearTimeout(requestTimeoutId);
-        }
-
-        if (!isCancelled) {
-          setUpCityIsLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      isCancelled = true;
-      controller?.abort();
-
-      if (requestTimeoutId !== null) {
-        window.clearTimeout(requestTimeoutId);
-      }
-
-      window.clearTimeout(timeoutId);
-    };
-  }, [form.city, isUkrPoshtaDelivery, upCityConfirmed]);
-
-  useEffect(() => {
-    if (!isNovaPoshtaDelivery) {
-      setNpOptions([]);
-      setNpError(null);
-      setNpIsLoading(false);
-      return;
-    }
-
-    const city = form.city.trim();
-    const divisionQuery = npDivisionQuery.trim();
-
-    if (city.length < 2) {
-      setNpOptions([]);
-      setNpError(null);
-      setNpIsLoading(false);
-      return;
-    }
-
-    // Если город не выбран из подсказки, всё равно даём искать по номеру/улице вручную.
-    // Иначе пользователь вообще не может найти 335 / 40712.
-    if (!npCityConfirmed && divisionQuery.length < 2) {
-      setNpOptions([]);
-      setNpError(null);
-      setNpIsLoading(false);
-      return;
-    }
-
-    let isCancelled = false;
-
-    const timeoutId = window.setTimeout(async () => {
-      setNpIsLoading(true);
-      setNpError(null);
-
-      try {
-        const params = new URLSearchParams({
-          city,
-          type: npPointType,
-          limit: '100',
-        });
-
-        if (divisionQuery.length >= 1) {
-          params.set('q', divisionQuery);
-        }
-
-        const data = (await apiFetch(
-          `/api/shipping/nova-poshta/divisions?${params.toString()}`,
-          {
-            method: 'GET',
-            retry: false,
-          },
-        )) as { items?: NovaPoshtaDivision[] };
-
-        if (isCancelled) return;
-
-        const nextItems = Array.isArray(data?.items) ? data.items : [];
-        setNpOptions(nextItems);
-
-        if (nextItems.length === 0) {
-          setNpError(
-            divisionQuery.length >= 1
-              ? 'Нічого не знайдено за цим запитом. Спробуй номер відділення, поштомату або вулицю.'
-              : 'За цим містом нічого не знайдено. Спробуй уточнити назву міста або введи номер / вулицю нижче.',
-          );
-        }
-      } catch (error) {
-        if (isCancelled) return;
-
-        setNpOptions([]);
-        setNpError(
-          error instanceof Error
-            ? error.message
-            : 'Не вдалося отримати список точок видачі Нова Пошта.',
-        );
-      } finally {
-        if (!isCancelled) {
-          setNpIsLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      isCancelled = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [form.city, isNovaPoshtaDelivery, npPointType, npDivisionQuery, npCityConfirmed]);
-
-  useEffect(() => {
-    if (!isUkrPoshtaDelivery) {
-      setUpOptions([]);
-      setUpError(null);
-      setUpIsLoading(false);
-      return;
-    }
-
-    if (!upCityConfirmed || !upSelectedCityId) {
-      setUpOptions([]);
-      setUpError(null);
-      setUpIsLoading(false);
-      return;
-    }
-
-    const officeQuery = upOfficeQuery.trim();
-    let isCancelled = false;
-
-    const timeoutId = window.setTimeout(async () => {
-      setUpIsLoading(true);
-      setUpError(null);
-
-      try {
-        const params = new URLSearchParams({
-          cityId: upSelectedCityId,
-          limit: '100',
-        });
-
-        if (officeQuery.length >= 1) {
-          params.set('q', officeQuery);
-        }
-
-        const data = (await apiFetch(
-          `/api/shipping/ukrposhta/offices?${params.toString()}`,
-          {
-            method: 'GET',
-            retry: false,
-          },
-        )) as { items?: UkrPoshtaOffice[] };
-
-        if (isCancelled) return;
-
-        const nextItems = Array.isArray(data?.items) ? data.items : [];
-        setUpOptions(nextItems);
-
-        if (nextItems.length === 0) {
-          setUpError(
-            officeQuery.length >= 1
-              ? 'Нічого не знайдено за цим запитом. Спробуй індекс або назву вулиці.'
-              : 'У цьому місті не знайдено доступних відділень Укрпошта.',
-          );
-        }
-      } catch (error) {
-        if (isCancelled) return;
-
-        setUpOptions([]);
-        setUpError(
-          error instanceof Error
-            ? error.message
-            : 'Не вдалося отримати список відділень Укрпошта.',
-        );
-      } finally {
-        if (!isCancelled) {
-          setUpIsLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      isCancelled = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [isUkrPoshtaDelivery, upCityConfirmed, upSelectedCityId, upOfficeQuery]);
-
-  const subtotal = getCartSubtotal(items);
-  const deliveryPrice = getDeliveryPrice(form.deliveryMethod, items);
-  const total = subtotal + deliveryPrice;
-
-  const prepaymentAmount =
-    form.paymentMethod === 'partial-prepayment' ? Math.ceil(total * 0.6) : total;
-
-  const remainingAmount =
-    form.paymentMethod === 'partial-prepayment' ? total - prepaymentAmount : 0;
-
-  function handleChange<K extends keyof CheckoutFormValues>(
-    field: K,
-    value: CheckoutFormValues[K],
-  ) {
-    setForm((prev) => {
-      if (
-        field === 'city' &&
-        (prev.deliveryMethod === 'nova-poshta-branch' ||
-          prev.deliveryMethod === 'ukrposhta-branch')
-      ) {
-        return {
-          ...prev,
-          city: value as CheckoutFormValues['city'],
-          address: '',
-        };
-      }
-
-      if (
-        field === 'deliveryMethod' &&
-        (value === 'nova-poshta-branch' || value === 'ukrposhta-branch')
-      ) {
-        return {
-          ...prev,
-          deliveryMethod: value as CheckoutFormValues['deliveryMethod'],
-          address: '',
-        };
-      }
-
-      return { ...prev, [field]: value };
-    });
-
-    if (field === 'city') {
-      setNpCityConfirmed(false);
-      setNpDivisionQuery('');
-      setNpOptions([]);
-      setNpError(null);
-      setNpSelectedId(null);
-
-      setUpCityConfirmed(false);
-      setUpSelectedCityId(null);
-      setUpOfficeQuery('');
-      setUpOptions([]);
-      setUpError(null);
-      setUpSelectedId(null);
-    }
-
-    if (field === 'city' || field === 'address') {
-      setNpSelectedId(null);
-      setUpSelectedId(null);
-    }
-
-    if (field === 'deliveryMethod') {
-      setNpCityConfirmed(false);
-      setNpCityOptions([]);
-      setNpCityError(null);
-      setNpOptions([]);
-      setNpError(null);
-      setNpSelectedId(null);
-      setNpDivisionQuery('');
-
-      setUpCityConfirmed(false);
-      setUpCityOptions([]);
-      setUpCityError(null);
-      setUpSelectedCityId(null);
-      setUpOptions([]);
-      setUpError(null);
-      setUpSelectedId(null);
-      setUpOfficeQuery('');
-    }
-  }
-
-  function handleSelectNovaPoshtaDivision(division: NovaPoshtaDivision) {
-    setForm((prev) => ({
-      ...prev,
-      city: division.settlementName,
-      address: division.fullLabel,
-    }));
-    setNpCityOptions([]);
-    setNpCityError(null);
-    setNpDivisionQuery(division.fullLabel);
-    setNpSelectedId(division.id);
-    setSubmitError(null);
-  }
-
-  function handleSelectNovaPoshtaCity(city: NovaPoshtaSettlement) {
-    setForm((prev) => ({
-      ...prev,
-      city: city.name,
-      address: '',
-    }));
-    setNpCityConfirmed(true);
-    setNpCityOptions([]);
-    setNpCityError(null);
-    setNpDivisionQuery('');
-    setNpOptions([]);
-    setNpError(null);
-    setNpSelectedId(null);
-    setSubmitError(null);
-  }
-
-  function handleSelectUkrPoshtaCity(city: UkrPoshtaSettlement) {
-    setForm((prev) => ({
-      ...prev,
-      city: city.name,
-      address: '',
-    }));
-    setUpCityConfirmed(true);
-    setUpSelectedCityId(city.id);
-    setUpCityOptions([]);
-    setUpCityError(null);
-    setUpOfficeQuery('');
-    setUpOptions([]);
-    setUpError(null);
-    setUpSelectedId(null);
-    setSubmitError(null);
-  }
-
-  function handleSelectUkrPoshtaOffice(office: UkrPoshtaOffice) {
-    setForm((prev) => ({
-      ...prev,
-      city: office.settlementName,
-      address: office.fullLabel,
-    }));
-    setUpOptions([]);
-    setUpError(null);
-    setUpOfficeQuery(office.fullLabel);
-    setUpSelectedId(office.id);
-    setSubmitError(null);
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (items.length === 0 || isSubmitting) return;
-
-    setSubmitError(null);
-    setIsSubmitting(true);
-
-    const requiredFields = [
-      form.fullName.trim(),
-      form.email.trim(),
-      form.phone.trim(),
-      form.city.trim(),
-      form.address.trim(),
-    ];
-
-    if (requiredFields.some((value) => value.length === 0)) {
-      setSubmitError('Заповни, будь ласка, усі обовʼязкові поля.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (isNovaPoshtaDelivery && !npSelectedId) {
-      setSubmitError('Оберіть, будь ласка, відділення або поштомат Нова Пошта зі списку.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (isUkrPoshtaDelivery && !upSelectedId) {
-      setSubmitError('Оберіть, будь ласка, відділення Укрпошта зі списку.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const response = await createOrder({
-        email: form.email.trim(),
-        fullName: form.fullName.trim(),
-        phone: form.phone.trim(),
-        city: form.city.trim(),
-        address: form.address.trim(),
-        deliveryMethod: form.deliveryMethod,
-        paymentMethod: form.paymentMethod,
-        currency: 'UAH',
-        comment: form.comment.trim() || undefined,
-        items: items.map((item) => {
-          const cartItem = item as CheckoutCartItem & { variantId?: string };
-
-          return {
-            variantId: cartItem.variantId ?? item.id,
-            productId: item.productId ?? undefined,
-            qty: item.quantity,
-          };
-        }),
-      });
-
-      writeLastOrder(response.order as any);
-      clearCart();
-
-      router.push(
-        `/checkout/success?order=${encodeURIComponent(response.order.number)}&id=${encodeURIComponent(response.order.id)}`,
-      );
-    } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : 'Не вдалося створити замовлення.',
-      );
-      setIsSubmitting(false);
-    }
-  }
-
-  /* ── Loading ── */
-  if (!isReady) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.container}>
-          <p className={styles.loading}>Завантаження оформлення…</p>
-        </div>
-      </main>
-    );
-  }
-
-  /* ── Empty cart ── */
-  if (items.length === 0) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.container}>
-          <section className={styles.emptyState}>
-            <span className={styles.emptyIcon}>🛍️</span>
-            <h1 className={styles.title}>Оформлювати поки що нічого</h1>
-            <p className={styles.emptyText}>
-              Кошик порожній. Спочатку додай фігурки, будь ласка.
-            </p>
-            <Link href="/catalog" className={styles.primaryButton}>
-              Перейти до каталогу
-            </Link>
-          </section>
-        </div>
-      </main>
-    );
-  }
-
-  /* ── Main ── */
   return (
-    <main className={styles.page}>
-      <div className={styles.container}>
-        {/* Heading */}
-        <div className={styles.heading}>
-          <p className={styles.eyebrow}>SKUFnya</p>
-          <h1 className={styles.title}>Оформлення замовлення</h1>
-          <p className={styles.subtitle}>
-            Заповни контактні дані та перевір вміст замовлення.
-          </p>
-        </div>
-
-        {/* Progress steps */}
-        <div className={styles.steps} role="list" aria-label="Кроки оформлення">
-          <div className={`${styles.step} ${styles.stepDone}`} role="listitem">
-            <div className={styles.stepDot}>✓</div>
-            <span className={styles.stepLabel}>Кошик</span>
-          </div>
-          <div className={`${styles.stepLine} ${styles.stepLineFilled}`} />
-          <div className={`${styles.step} ${styles.stepActive}`} role="listitem">
-            <div className={styles.stepDot}>2</div>
-            <span className={styles.stepLabel}>Оформлення</span>
-          </div>
-          <div className={styles.stepLine} />
-          <div className={styles.step} role="listitem">
-            <div className={styles.stepDot}>3</div>
-            <span className={styles.stepLabel}>Підтвердження</span>
-          </div>
-        </div>
-
-        {/* Two-column layout */}
-        <div className={styles.layout}>
-          {/* ── Left: form ── */}
-          <form className={styles.formCard} onSubmit={handleSubmit} noValidate>
-            {/* 1. Contact */}
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>👤</span>
-                Контактні дані
-              </h2>
-              <div className={styles.grid}>
-                <label className={styles.field}>
-                  <span className={`${styles.label} ${styles.labelRequired}`}>
-                    Ім'я та прізвище
-                  </span>
-                  <input
-                    className={styles.input}
-                    value={form.fullName}
-                    onChange={(e) => handleChange('fullName', e.target.value)}
-                    placeholder="Наприклад, Михайло Пларов"
-                    required
-                    autoComplete="name"
-                  />
-                </label>
-                <label className={styles.field}>
-                  <span className={`${styles.label} ${styles.labelRequired}`}>Телефон</span>
-                  <input
-                    className={styles.input}
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    placeholder="+380 XX XXX XX XX"
-                    required
-                    autoComplete="tel"
-                  />
-                </label>
-                <label className={styles.field}>
-                  <span className={`${styles.label} ${styles.labelRequired}`}>Email</span>
-                  <input
-                    type="email"
-                    className={styles.input}
-                    value={form.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
-                    placeholder="name@example.com"
-                    required
-                    autoComplete="email"
-                  />
-                </label>
-                <label className={styles.field}>
-                  <span className={`${styles.label} ${styles.labelRequired}`}>Місто</span>
-                  <input
-                    className={styles.input}
-                    value={form.city}
-                    onChange={(e) => handleChange('city', e.target.value)}
-                    placeholder="Київ"
-                    required
-                    autoComplete="off"
-                  />
-                </label>
-
-                {isNovaPoshtaDelivery && form.city.trim().length >= 3 && npCityIsLoading ? (
-                  <div className={styles.options}>
-                    <div className={styles.option}>
-                      <span className={styles.optionContent}>
-                        <strong className={styles.optionLabel}>
-                          Шукаємо населений пункт…
-                        </strong>
-                      </span>
-                    </div>
-                  </div>
-                ) : null}
-
-                {isNovaPoshtaDelivery && npCityError ? (
-                  <p role="alert" className={styles.emptyText}>
-                    {npCityError}
-                  </p>
-                ) : null}
-
-                {isNovaPoshtaDelivery &&
-                form.city.trim().length >= 3 &&
-                npCityOptions.length > 0 ? (
-                  <div className={styles.options}>
-                    {npCityOptions.map((city) => (
-                      <button
-                        key={`${city.name}-${city.label}`}
-                        type="button"
-                        onClick={() => handleSelectNovaPoshtaCity(city)}
-                        style={{
-                          width: '100%',
-                          textAlign: 'left',
-                          padding: '12px 14px',
-                          borderRadius: 14,
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          background: 'rgba(255,255,255,0.03)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <strong>{city.label}</strong>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-
-                {isUkrPoshtaDelivery && form.city.trim().length >= 2 && upCityIsLoading ? (
-                  <div className={styles.options}>
-                    <div className={styles.option}>
-                      <span className={styles.optionContent}>
-                        <strong className={styles.optionLabel}>
-                          Шукаємо населений пункт…
-                        </strong>
-                      </span>
-                    </div>
-                  </div>
-                ) : null}
-
-                {isUkrPoshtaDelivery && upCityError ? (
-                  <p role="alert" className={styles.emptyText}>
-                    {upCityError}
-                  </p>
-                ) : null}
-
-                {isUkrPoshtaDelivery &&
-                form.city.trim().length >= 2 &&
-                upCityOptions.length > 0 ? (
-                  <div className={styles.options}>
-                    {upCityOptions.map((city) => (
-                      <button
-                        key={city.id}
-                        type="button"
-                        onClick={() => handleSelectUkrPoshtaCity(city)}
-                        style={{
-                          width: '100%',
-                          textAlign: 'left',
-                          padding: '12px 14px',
-                          borderRadius: 14,
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          background: 'rgba(255,255,255,0.03)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <strong>{city.label}</strong>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </section>
-
-            {/* 2. Delivery */}
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>📦</span>
-                Доставка
-              </h2>
-              <div className={styles.options}>
-                {deliveryMethods.map((value) => {
-                  const { label, sub, badge, badgeFree } = DELIVERY_LABELS[value];
-                  return (
-                    <label key={value} className={styles.option}>
-                      <input
-                        type="radio"
-                        name="deliveryMethod"
-                        checked={form.deliveryMethod === value}
-                        onChange={() => handleChange('deliveryMethod', value)}
-                      />
-                      <span className={styles.optionContent}>
-                        <strong className={styles.optionLabel}>{label}</strong>
-                        <small className={styles.optionSub}>{sub}</small>
-                      </span>
-                      {badge && (
-                        <span
-                          className={`${styles.optionBadge} ${badgeFree ? styles.optionBadgeFree : ''}`}
-                        >
-                          {badge}
-                        </span>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-
-              {isNovaPoshtaDelivery ? (
-                <>
-                  <div className={styles.options}>
-                    {novaPoshtaPointTypes.map((value) => {
-                      const { label, sub } = NOVA_POSHTA_POINT_TYPE_LABELS[value];
-
-                      return (
-                        <label key={value} className={styles.option}>
-                          <input
-                            type="radio"
-                            name="novaPoshtaPointType"
-                            checked={npPointType === value}
-                            onChange={() => {
-                              setNpPointType(value);
-                              setNpDivisionQuery('');
-                              setNpOptions([]);
-                              setNpError(null);
-                              setNpSelectedId(null);
-                              setSubmitError(null);
-                              handleChange('address', '');
-                            }}
-                          />
-                          <span className={styles.optionContent}>
-                            <strong className={styles.optionLabel}>{label}</strong>
-                            <small className={styles.optionSub}>{sub}</small>
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-
-                  <div className={`${styles.field} ${styles.gridFull}`}>
-                    <span className={styles.label}>Точка видачі Нова Пошта</span>
-                    <small className={styles.optionSub}>
-                      {form.city.trim().length < 2
-                        ? 'Спочатку вкажи місто вище.'
-                        : !npCityConfirmed
-                          ? 'Можна вибрати місто зі списку підказок або просто ввести його вручну та знайти точку за номером чи вулицею.'
-                          : 'Список точок видачі оновлюється автоматично.'}
-                    </small>
-                  </div>
-
-                  <label className={`${styles.field} ${styles.gridFull}`}>
-                    <span className={styles.label}>
-                      {npPointType === 'postomat' ? 'Пошук поштомату' : 'Пошук відділення'}
-                    </span>
-                    <input
-                      className={styles.input}
-                      value={npDivisionQuery}
-                      onChange={(e) => {
-                        setNpDivisionQuery(e.target.value);
-                        setNpSelectedId(null);
-                        handleChange('address', '');
-                      }}
-                      placeholder={
-                        npPointType === 'postomat'
-                          ? 'Наприклад, 245 або назва вулиці'
-                          : 'Наприклад, 12 або назва вулиці'
-                      }
-                      autoComplete="off"
-                      disabled={form.city.trim().length < 2}
-                    />
-                  </label>
-
-                  {npIsLoading ? (
-                    <p className={styles.emptyText}>Шукаємо доступні точки видачі…</p>
-                  ) : null}
-
-                  {npError ? (
-                    <p role="alert" className={styles.emptyText}>
-                      {npError}
-                    </p>
-                  ) : null}
-
-                  {filteredNpOptions.length > 0 ? (
-                    <div className={styles.options}>
-                      {filteredNpOptions.map((division) => (
-                        <label key={division.id} className={styles.option}>
-                          <input
-                            type="radio"
-                            name="novaPoshtaDivision"
-                            checked={npSelectedId === division.id}
-                            onChange={() => handleSelectNovaPoshtaDivision(division)}
-                          />
-                          <span className={styles.optionContent}>
-                            <strong className={styles.optionLabel}>{division.name}</strong>
-                            <small className={styles.optionSub}>{division.address}</small>
-                          </span>
-                          <span className={styles.optionBadge}>
-                            {formatNovaPoshtaPointType(npPointType)}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {selectedNpDivision?.latitude != null &&
-                  selectedNpDivision?.longitude != null ? (
-                    <div className={styles.gridFull} style={{ marginTop: 16 }}>
-                      <span className={styles.label}>Карта точки видачі</span>
-                      <div
-                        style={{
-                          overflow: 'hidden',
-                          borderRadius: 20,
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          minHeight: 320,
-                        }}
-                      >
-                        <iframe
-                          title="Карта точки видачі Нова Пошта"
-                          src={`https://www.google.com/maps?q=${selectedNpDivision.latitude},${selectedNpDivision.longitude}&z=16&output=embed`}
-                          loading="lazy"
-                          style={{ width: '100%', height: 320, border: 0 }}
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-
-              {isUkrPoshtaDelivery ? (
-                <>
-                  <div className={`${styles.field} ${styles.gridFull}`}>
-                    <span className={styles.label}>Відділення Укрпошта</span>
-                    <small className={styles.optionSub}>
-                      {!upCityConfirmed
-                        ? 'Спочатку обери місто зі списку підказок вище.'
-                        : 'Можна шукати відділення за індексом або назвою вулиці.'}
-                    </small>
-                  </div>
-
-                  <label className={`${styles.field} ${styles.gridFull}`}>
-                    <span className={styles.label}>Пошук відділення</span>
-                    <input
-                      className={styles.input}
-                      value={upOfficeQuery}
-                      onChange={(e) => {
-                        setUpOfficeQuery(e.target.value);
-                        setUpSelectedId(null);
-                        handleChange('address', '');
-                      }}
-                      placeholder="Наприклад, 01001 або Хрещатик"
-                      autoComplete="off"
-                      disabled={!upCityConfirmed || !upSelectedCityId}
-                    />
-                  </label>
-
-                  {upIsLoading ? (
-                    <p className={styles.emptyText}>Шукаємо доступні відділення…</p>
-                  ) : null}
-
-                  {upError ? (
-                    <p role="alert" className={styles.emptyText}>
-                      {upError}
-                    </p>
-                  ) : null}
-
-                  {upOptions.length > 0 ? (
-                    <div className={styles.options}>
-                      {upOptions.map((office) => (
-                        <label key={office.id} className={styles.option}>
-                          <input
-                            type="radio"
-                            name="ukrposhtaOffice"
-                            checked={upSelectedId === office.id}
-                            onChange={() => handleSelectUkrPoshtaOffice(office)}
-                          />
-                          <span className={styles.optionContent}>
-                            <strong className={styles.optionLabel}>{office.name}</strong>
-                            <small className={styles.optionSub}>{office.address}</small>
-                          </span>
-                          <span className={styles.optionBadge}>
-                            {office.postcode ?? 'Укрпошта'}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {selectedUpOffice?.latitude != null &&
-                  selectedUpOffice?.longitude != null ? (
-                    <div className={styles.gridFull} style={{ marginTop: 16 }}>
-                      <span className={styles.label}>Карта відділення</span>
-                      <div
-                        style={{
-                          overflow: 'hidden',
-                          borderRadius: 20,
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          minHeight: 320,
-                        }}
-                      >
-                        <iframe
-                          title="Карта відділення Укрпошта"
-                          src={`https://www.google.com/maps?q=${selectedUpOffice.latitude},${selectedUpOffice.longitude}&z=16&output=embed`}
-                          loading="lazy"
-                          style={{ width: '100%', height: 320, border: 0 }}
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-
-              <label className={`${styles.field} ${styles.gridFull}`}>
-                <span className={`${styles.label} ${styles.labelRequired}`}>
-                  {isNovaPoshtaDelivery ? (
-                    'Обрана точка видачі'
-                  ) : isUkrPoshtaDelivery ? (
-                    'Обране відділення'
-                  ) : (
-                    <>
-                      Адреса&nbsp;/&nbsp;відділення
-                    </>
-                  )}
-                </span>
-                <input
-                  className={styles.input}
-                  value={form.address}
-                  onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder={
-                    isNovaPoshtaDelivery
-                      ? 'Оберіть відділення або поштомат зі списку вище'
-                      : isUkrPoshtaDelivery
-                        ? 'Оберіть відділення Укрпошта зі списку вище'
-                        : 'Вулиця, будинок або номер відділення'
-                  }
-                  required
-                  autoComplete={isCarrierReadonlyAddress ? 'off' : 'street-address'}
-                  readOnly={isCarrierReadonlyAddress}
-                />
-              </label>
-            </section>
-
-            {/* 3. Payment */}
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>🤝</span>
-                Передплата
-              </h2>
-              <div className={styles.options}>
-                {paymentMethods.map((value) => {
-                  const { label, sub } = PAYMENT_LABELS[value];
-                  return (
-                    <label key={value} className={styles.option}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        checked={form.paymentMethod === value}
-                        onChange={() => handleChange('paymentMethod', value)}
-                      />
-                      <span className={styles.optionContent}>
-                        <strong className={styles.optionLabel}>{label}</strong>
-                        <small className={styles.optionSub}>{sub}</small>
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-
-              <div className={styles.paymentNotice}>
-                <strong>Оплата не проводиться на сайті.</strong>
-                <span>
-                  Після оформлення заявки ми узгодимо деталі через OLX або Telegram.
-                  Передплата вноситься тільки після підтвердження замовлення.
-                </span>
-              </div>
-            </section>
-
-            {/* 4. Comment */}
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <span className={styles.sectionIcon}>💬</span>
-                Коментар
-              </h2>
-              <label className={styles.field}>
-                <span className={styles.label}>Побажання до замовлення</span>
-                <textarea
-                  className={styles.textarea}
-                  value={form.comment}
-                  onChange={(e) => handleChange('comment', e.target.value)}
-                  placeholder="Наприклад, зателефонувати перед відправленням"
-                  rows={4}
-                />
-              </label>
-            </section>
-
-            {/* Actions */}
-            <div className={styles.actions}>
-              <Link href="/cart" className={styles.secondaryButton}>
-                ← Назад до кошика
-              </Link>
-              <button type="submit" className={styles.primaryButton} disabled={isSubmitting}>
-                {isSubmitting ? 'Створюємо заявку…' : 'Оформити заявку →'}
-              </button>
+    <div className={styles.cartItem}>
+      <div className={styles.cartItemInfo}>
+        <div className={styles.cartItemThumb}>
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={item.imageAlt || item.name}
+              className={styles.cartItemThumbImg}
+            />
+          ) : (
+            <div
+              className={styles.cartItemThumbPlaceholder}
+              aria-label={PAGE_COPY.placeholders.image}
+            >
+              {PAGE_COPY.placeholders.image}
             </div>
+          )}
+        </div>
 
-            {submitError ? (
-              <p role="alert" className={styles.emptyText}>
-                {submitError}
-              </p>
+        <div className={styles.cartItemDetails}>
+          <p className={styles.cartItemSeries}>{seriesLabel}</p>
+
+          <Link href={productHref} className={styles.cartItemName}>
+            {item.name}
+          </Link>
+
+          <div className={styles.cartItemMeta}>
+            {item.subtitle && item.subtitle !== item.series ? (
+              <span className={styles.cartItemTag}>{item.subtitle}</span>
             ) : null}
-          </form>
 
-          {/* ── Right: order summary ── */}
-          <aside className={styles.summaryCard} aria-label="Зміст замовлення">
-            <div className={styles.summaryHeader}>
-              <h2 className={styles.summaryTitle}>Твоє замовлення</h2>
-              <p className={styles.summarySubtitle}>{formatItemCount(items.length)}</p>
-            </div>
-
-            {/* Items */}
-            <div className={styles.summaryItems}>
-              {items.map((item) => {
-                const rawImage = item.imageUrl ?? item.image ?? null;
-                const imageSrc =
-                  rawImage && !brokenImages[item.id] ? resolveMediaUrl(rawImage) : null;
-
-                return (
-                  <div key={item.id} className={styles.summaryItem}>
-                    <div className={styles.summaryItemThumb}>
-                      {imageSrc ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={imageSrc}
-                          alt={item.imageAlt ?? item.name}
-                          onError={() =>
-                            setBrokenImages((prev) => ({ ...prev, [item.id]: true }))
-                          }
-                        />
-                      ) : (
-                        getEmoji(item.id)
-                      )}
-                    </div>
-                    <div className={styles.summaryItemInfo}>
-                      <p className={styles.summaryItemName}>{item.name}</p>
-                      <p className={styles.summaryItemMeta}>
-                        {item.quantity} × {formatPrice(item.price)}
-                      </p>
-                    </div>
-                    <p className={styles.summaryItemPrice}>
-                      {formatPrice(item.price * item.quantity)}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className={styles.laceDivider} />
-
-            {/* Totals */}
-            <div className={styles.summaryTotals}>
-              <div className={styles.summaryRow}>
-                <span>Підсумок</span>
-                <span>{formatPrice(subtotal)}</span>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Доставка</span>
-                <span>
-                  {deliveryPrice === 0 ? (
-                    <span className={styles.freePrice}>Безкоштовно</span>
-                  ) : (
-                    formatPrice(deliveryPrice)
-                  )}
-                </span>
-              </div>
-              <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
-                <span>Разом</span>
-                <span>{formatPrice(total)}</span>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>
-                  {form.paymentMethod === 'partial-prepayment'
-                    ? 'Передплата 60%'
-                    : 'До передплати'}
-                </span>
-                <span>{formatPrice(prepaymentAmount)}</span>
-              </div>
-
-              {remainingAmount > 0 ? (
-                <div className={styles.summaryRow}>
-                  <span>Залишок при отриманні</span>
-                  <span>{formatPrice(remainingAmount)}</span>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Trust badges */}
-            <div className={styles.trustRow}>
-              <div className={styles.trustBadge}>
-                <span>🔒</span>
-                <span>Підтвердження через OLX або Telegram</span>
-              </div>
-              <div className={styles.trustBadge}>
-                <span>↩️</span>
-                <span>Повернення протягом 14 днів</span>
-              </div>
-              <div className={styles.trustBadge}>
-                <span>📦</span>
-                <span>Акуратне пакування фігурок</span>
-              </div>
-            </div>
-          </aside>
+            <Link href={productHref} className={styles.cartItemLink}>
+              {PAGE_COPY.cart.productLink}
+            </Link>
+          </div>
         </div>
       </div>
-    </main>
+
+      <div className={styles.cartItemPrice}>
+        <span className={styles.cartItemPriceVal}>
+          {formatPrice(item.price, currency)}
+        </span>
+      </div>
+
+      <div className={styles.cartItemQtyWrap}>
+        <div className={styles.cartItemQty}>
+          <button
+            type="button"
+            className={styles.qtyBtn}
+            aria-label={PAGE_COPY.cart.quantityDecrease}
+            disabled={item.quantity <= 1}
+            onClick={() => onQtyChange(item.id, item.quantity - 1)}
+          >
+            −
+          </button>
+          <span className={styles.qtyValue}>{item.quantity}</span>
+          <button
+            type="button"
+            className={styles.qtyBtn}
+            aria-label={PAGE_COPY.cart.quantityIncrease}
+            onClick={() => onQtyChange(item.id, item.quantity + 1)}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.cartItemSubtotal}>
+        <span className={styles.cartItemSubtotalVal}>
+          {formatPrice(subtotal, currency)}
+        </span>
+      </div>
+
+      <div className={styles.cartItemRemove}>
+        <button
+          type="button"
+          className={styles.removeBtn}
+          aria-label={PAGE_COPY.cart.remove}
+          onClick={() => onRemove(item.id)}
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OrderSummary({
+  items,
+  subtotal,
+  currency,
+  checkoutHref,
+  checkoutLabel,
+}: OrderSummaryProps) {
+  const shipping = getDeliveryPrice("nova-poshta-branch", items);
+  const total = subtotal + shipping;
+  const progressPct = Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100);
+  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
+  const itemsCount = getCartItemsCount(items);
+
+  return (
+    <div className={styles.orderSummary}>
+      <div className={styles.summaryCard}>
+        <div className={styles.summaryHead}>
+          <div>
+            <h2 className={styles.summaryTitle}>{SUMMARY_COPY.title}</h2>
+            <p className={styles.summaryHint}>
+              {itemsCount} {pluralizeProducts(itemsCount)}{" "}
+              {SUMMARY_COPY.itemsInCartSuffix}
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.summaryBody}>
+          <div className={styles.summaryLines}>
+            <div className={styles.summaryLine}>
+              <span className={styles.summaryLineLabel}>
+                {SUMMARY_COPY.labels.subtotal}
+              </span>
+              <span className={styles.summaryLineVal}>
+                {formatPrice(subtotal, currency)}
+              </span>
+            </div>
+
+            <div className={styles.summaryLine}>
+              <span className={styles.summaryLineLabel}>
+                {SUMMARY_COPY.labels.shipping}
+                <span
+                  className={styles.summaryInfoTip}
+                  title={SUMMARY_COPY.shipping.tooltip}
+                  aria-label={SUMMARY_COPY.shipping.tooltip}
+                  tabIndex={0}
+                >
+                  ?
+                </span>
+              </span>
+
+              {shipping === 0 ? (
+                <span
+                  className={`${styles.summaryLineVal} ${styles.summaryLineFree}`}
+                >
+                  {SUMMARY_COPY.shipping.free}
+                </span>
+              ) : (
+                <span className={styles.summaryLineVal}>
+                  {formatPrice(shipping, currency)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.summaryTotal}>
+            <span className={styles.summaryTotalLabel}>
+              {SUMMARY_COPY.labels.total}
+            </span>
+            <span className={styles.summaryTotalVal}>
+              {formatPrice(total, currency)}
+            </span>
+          </div>
+
+          <Link href={checkoutHref} className={styles.checkoutBtn}>
+            {checkoutLabel}
+          </Link>
+
+          <Link href="/payment" className={styles.checkoutBtnAlt}>
+            {PAGE_COPY.actions.paymentMethods}
+          </Link>
+
+          <div className={styles.secureBadges}>
+            {TRUST_BADGES.map((badge) => (
+              <span key={badge.label} className={styles.secureBadge}>
+                <span className={styles.secureBadgeIcon}>{badge.icon}</span>
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.shippingProgress}>
+          <p className={styles.shippingProgressText}>
+            {shipping === 0 ? (
+              <strong>{SUMMARY_COPY.shipping.freeReached}</strong>
+            ) : (
+              <>
+                {SUMMARY_COPY.shipping.remainingPrefix}{" "}
+                <strong>{formatPrice(remaining, currency)}</strong>{" "}
+                {SUMMARY_COPY.shipping.remainingSuffix}
+              </>
+            )}
+          </p>
+
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+
+          <div className={styles.shippingProgressCap}>
+            <span>{formatPrice(0, currency)}</span>
+            <span>{formatPrice(FREE_DELIVERY_THRESHOLD, currency)}</span>
+          </div>
+        </div>
+
+        <div className={styles.trustBlock}>
+          {SUMMARY_NOTES.map((note) => (
+            <div key={note.title} className={styles.trustItem}>
+              <span className={styles.trustIcon}>{note.icon}</span>
+              <p className={styles.trustText}>
+                <strong>{note.title}</strong> — {note.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CartPage() {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isReady, setIsReady] = useState(false);
+  const [catalogItems, setCatalogItems] = useState<HomeProductItem[]>([]);
+  const [isAgeVerified, setIsAgeVerified] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const syncCart = () => {
+      setItems(readCart());
+      setIsReady(true);
+    };
+
+    syncCart();
+    const unsubscribe = subscribeToCartChange(syncCart);
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadRecommendations() {
+      try {
+        const response = await getHomeProducts();
+
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setCatalogItems(response.items);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.error("Не вдалося завантажити рекомендації для кошика", error);
+        setCatalogItems([]);
+      }
+    }
+
+    void loadRecommendations();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const subtotal = useMemo(() => getCartSubtotal(items), [items]);
+  const itemCount = useMemo(() => getCartItemsCount(items), [items]);
+
+  const hasAdultItems = useMemo(
+    () => items.some((item) => item.isAdult),
+    [items],
+  );
+
+  const checkoutHref =
+    hasAdultItems && isAgeVerified !== true
+      ? buildAgeVerifyPath("/checkout")
+      : "/checkout";
+
+  const checkoutLabel =
+    hasAdultItems && isAgeVerified !== true
+      ? "Підтвердити 18+ для оформлення"
+      : PAGE_COPY.actions.checkout;
+
+  const currency = items[0]?.currency ?? "UAH";
+
+  useEffect(() => {
+    if (!hasAdultItems) {
+      setIsAgeVerified(true);
+      return;
+    }
+
+    let active = true;
+
+    async function checkAgeGate() {
+      try {
+        const response = await fetch("/api/age-gate/status", {
+          cache: "no-store",
+        });
+
+        const data = (await response.json()) as { verified?: boolean };
+
+        if (!active) return;
+
+        setIsAgeVerified(response.ok && data.verified === true);
+      } catch {
+        if (!active) return;
+
+        setIsAgeVerified(false);
+      }
+    }
+
+    void checkAgeGate();
+
+    return () => {
+      active = false;
+    };
+  }, [hasAdultItems]);
+
+  const recommended = useMemo(() => {
+    const cartProductIds = new Set(items.map((item) => item.productId ?? item.id));
+    const cartSlugs = new Set(items.map((item) => item.slug));
+
+    return catalogItems
+      .filter((item) => !cartProductIds.has(item.id) && !cartSlugs.has(item.slug))
+      .slice(0, 3)
+      .map((item): RecommendedItem => ({
+        id: item.id,
+        slug: item.slug,
+        name: item.title,
+        price: item.defaultVariant?.price ?? item.priceFrom,
+        currency: item.defaultVariant?.currency ?? item.currency ?? "UAH",
+        imageUrl: item.coverImage?.url ?? null,
+        imageAlt: item.coverImage?.alt ?? item.title,
+      }));
+  }, [catalogItems, items]);
+
+  const handleQty = useCallback((id: string, qty: number) => {
+    setItems(updateCartItemQuantity(id, qty));
+  }, []);
+
+  const handleRemove = useCallback((id: string) => {
+    setItems(removeCartItem(id));
+  }, []);
+
+  const handleClear = useCallback(() => {
+    clearCart();
+    setItems([]);
+  }, []);
+
+  const isEmpty = isReady && items.length === 0;
+
+  return (
+    <div className={styles.cartPage}>
+      <nav
+        className={styles.breadcrumb}
+        aria-label={PAGE_COPY.breadcrumb.ariaLabel}
+      >
+        <div className={styles.breadcrumbInner}>
+          <Link href="/" className={styles.breadcrumbLink}>
+            {PAGE_COPY.breadcrumb.home}
+          </Link>
+          <span className={styles.breadcrumbSep}>›</span>
+          <Link href="/catalog" className={styles.breadcrumbLink}>
+            {PAGE_COPY.breadcrumb.catalog}
+          </Link>
+          <span className={styles.breadcrumbSep}>›</span>
+          <span className={styles.breadcrumbCurrent}>
+            {PAGE_COPY.breadcrumb.current}
+          </span>
+        </div>
+      </nav>
+
+      <div className={styles.pageHeader}>
+        <div className={styles.pageHeaderInner}>
+          <div className={styles.pageTitleWrap}>
+            <p className={styles.pageEyebrow}>{PAGE_COPY.header.eyebrow}</p>
+            <h1 className={styles.pageTitle}>{PAGE_COPY.header.title}</h1>
+          </div>
+
+          {isReady && !isEmpty ? (
+            <div className={styles.pageHeaderMeta}>
+              <span className={styles.itemCount}>
+                {itemCount} {pluralizeProducts(itemCount)}
+              </span>
+              <button
+                type="button"
+                className={styles.clearBtn}
+                onClick={handleClear}
+              >
+                {PAGE_COPY.header.clear}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {!isReady ? (
+        <div className={styles.loadingState}>{PAGE_COPY.header.loading}</div>
+      ) : (
+        <div
+          className={`${styles.cartMain} ${isEmpty ? styles.cartMainEmpty : ""}`}
+        >
+          <div>
+            {isEmpty ? (
+              <div className={styles.emptyCart}>
+                <span className={styles.emptyCartIcon}>
+                  {PAGE_COPY.empty.icon}
+                </span>
+                <h2 className={styles.emptyCartTitle}>{PAGE_COPY.empty.title}</h2>
+                <p className={styles.emptyCartText}>{PAGE_COPY.empty.text}</p>
+                <Link href="/catalog" className={styles.emptyCartCta}>
+                  {PAGE_COPY.empty.cta}
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.cartItems}>
+                <div className={styles.cartItemsHeader}>
+                  <span className={styles.cartItemsHeaderCol}>
+                    {PAGE_COPY.cart.columns.product}
+                  </span>
+                  <span className={styles.cartItemsHeaderCol}>
+                    {PAGE_COPY.cart.columns.price}
+                  </span>
+                  <span className={styles.cartItemsHeaderCol}>
+                    {PAGE_COPY.cart.columns.quantity}
+                  </span>
+                  <span className={styles.cartItemsHeaderCol}>
+                    {PAGE_COPY.cart.columns.subtotal}
+                  </span>
+                  <span className={styles.cartItemsHeaderCol}></span>
+                </div>
+
+                {items.map((item) => (
+                  <CartItemRow
+                    key={item.id}
+                    item={item}
+                    onQtyChange={handleQty}
+                    onRemove={handleRemove}
+                  />
+                ))}
+
+                <div className={styles.continueShoppingWrap}>
+                  <Link href="/catalog" className={styles.continueShopping}>
+                    <span className={styles.continueArrow}>←</span>
+                    {PAGE_COPY.cart.continueShopping}
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {!isEmpty && recommended.length > 0 ? (
+              <div className={styles.recommendations}>
+                <p className={styles.recommendLabel}>
+                  {PAGE_COPY.recommendations.title}
+                </p>
+
+                <div className={styles.recommendGrid}>
+                  {recommended.map((item) => {
+                    const imageSrc = item.imageUrl
+                      ? resolveMediaUrl(item.imageUrl)
+                      : null;
+
+                    return (
+                      <Link
+                        key={item.id}
+                        href={`/product/${item.slug}`}
+                        className={styles.recommendCard}
+                      >
+                        <div className={styles.recommendThumb}>
+                          {imageSrc ? (
+                            <img
+                              src={imageSrc}
+                              alt={item.imageAlt || item.name}
+                              className={styles.recommendThumbImg}
+                            />
+                          ) : (
+                            <div
+                              className={styles.recommendThumbPlaceholder}
+                              aria-label={PAGE_COPY.placeholders.image}
+                            >
+                              {PAGE_COPY.placeholders.image}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.recommendBody}>
+                          <p className={styles.recommendName}>{item.name}</p>
+                          <p className={styles.recommendPrice}>
+                            {formatPrice(item.price, item.currency)}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {!isEmpty ? (
+            <OrderSummary
+              items={items}
+              subtotal={subtotal}
+              currency={currency}
+              checkoutHref={checkoutHref}
+              checkoutLabel={checkoutLabel}
+            />
+          ) : null}
+        </div>
+      )}
+    </div>
   );
 }

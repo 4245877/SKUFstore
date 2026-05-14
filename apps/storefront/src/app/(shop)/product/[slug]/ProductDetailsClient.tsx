@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
   addAccountFavorite,
@@ -15,6 +16,7 @@ import {
   isFavorite,
   removeFavorite,
 } from '../../../../lib/demo-store';
+import { buildAgeVerifyPath } from '../../../../lib/age-gate';
 import styles from './ProductDetails.module.css';
 
 type Product = Awaited<ReturnType<typeof getCatalogProductBySlug>>;
@@ -274,23 +276,23 @@ function Gallery({
   images,
   title,
   isAdult,
+  isAgeVerified,
+  verifyHref,
 }: {
   images: ProductImage[];
   title: string;
   isAdult: boolean;
+  isAgeVerified: boolean;
+  verifyHref: string;
 }) {
   const [active, setActive] = useState(0);
-  const [adultRevealed, setAdultRevealed] = useState(false);
 
   useEffect(() => {
     setActive(0);
   }, [images]);
 
-  useEffect(() => {
-    setAdultRevealed(false);
-  }, [images]);
-
   const main = images[active] ?? images[0];
+  const shouldHideAdultImage = isAdult && !isAgeVerified;
 
   return (
     <div className={styles.gallery}>
@@ -307,20 +309,15 @@ function Gallery({
               src={resolveMediaUrl(main.url) || ''}
               alt={main.alt || title}
               className={`${styles.mainImage} ${
-                isAdult && !adultRevealed ? styles.blurred : ''
+                shouldHideAdultImage ? styles.blurred : ''
               }`}
             />
 
-            {isAdult && (
-              <button
-                type="button"
-                className={styles.adultHintButton}
-                onClick={() => setAdultRevealed((prev) => !prev)}
-                aria-pressed={adultRevealed}
-              >
-                {adultRevealed ? 'Приховати 18+' : 'Показати 18+'}
-              </button>
-            )}
+            {shouldHideAdultImage ? (
+              <Link href={verifyHref} className={styles.adultHintButton}>
+                Підтвердити 18+
+              </Link>
+            ) : null}
           </>
         ) : (
           <div className={styles.mainImagePlaceholder}>
@@ -343,7 +340,9 @@ function Gallery({
               <img
                 src={resolveMediaUrl(img.url) || ''}
                 alt={img.alt || title}
-                className={`${styles.thumbImg} ${isAdult ? styles.thumbBlurred : ''}`}
+                className={`${styles.thumbImg} ${
+                  shouldHideAdultImage ? styles.thumbBlurred : ''
+                }`}
               />
             </button>
           ))}
@@ -772,6 +771,8 @@ function ProductInfo({
   onSelectFinish,
   selectedColor,
   onSelectColor,
+  isAgeVerified,
+  verifyHref,
 }: {
   product: Product;
   selectedVariant: Variant | null;
@@ -780,7 +781,11 @@ function ProductInfo({
   onSelectFinish: (value: FinishType) => void;
   selectedColor: ColorType;
   onSelectColor: (value: ColorType) => void;
+  isAgeVerified: boolean;
+  verifyHref: string;
 }) {
+  const router = useRouter();
+
   const [quantity, setQuantity] = useState(1);
   const [wishAdded, setWishAdded] = useState(false);
   const [wishPending, setWishPending] = useState(false);
@@ -856,6 +861,11 @@ function ProductInfo({
     .join(' • ');
 
   function handleAddToCart() {
+    if (product.isAdult && !isAgeVerified) {
+      router.push(verifyHref);
+      return;
+    }
+
     const safeQuantity = Math.max(1, Math.min(quantity, maxQty));
     const cartTitle = selectedVariant
       ? `${product.title} — ${selectedVariant.name}`
@@ -891,6 +901,7 @@ function ProductInfo({
       series: product.series ?? product.franchise?.name ?? product.brand?.name ?? null,
       imageUrl: coverImage?.url ?? null,
       imageAlt: coverImage?.alt ?? cartTitle,
+      isAdult: product.isAdult,
     });
 
     setCartAdded(true);
@@ -1003,7 +1014,11 @@ function ProductInfo({
           className={styles.btnPrimary}
           onClick={handleAddToCart}
         >
-          {cartAdded ? '✓ Додано до кошика' : '🛍 Додати до кошика'}
+          {product.isAdult && !isAgeVerified
+            ? 'Підтвердити 18+ для покупки'
+            : cartAdded
+              ? '✓ Додано до кошика'
+              : '🛍 Додати до кошика'}
         </button>
 
         <div className={styles.btnRow}>
@@ -1045,6 +1060,54 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
   const [selectedFinish, setSelectedFinish] = useState<FinishType>('MONO');
   const [selectedColor, setSelectedColor] = useState<ColorType>('IVORY');
 
+  const router = useRouter();
+
+  const verifyHref = useMemo(
+    () => buildAgeVerifyPath(`/product/${product.slug}`),
+    [product.slug],
+  );
+
+  const [isAgeVerified, setIsAgeVerified] = useState(!product.isAdult);
+
+  useEffect(() => {
+    if (!product.isAdult) {
+      setIsAgeVerified(true);
+      return;
+    }
+
+    let active = true;
+
+    async function checkAgeGate() {
+      try {
+        const response = await fetch('/api/age-gate/status', {
+          cache: 'no-store',
+        });
+
+        const data = (await response.json()) as { verified?: boolean };
+        const verified = response.ok && data.verified === true;
+
+        if (!active) return;
+
+        setIsAgeVerified(verified);
+
+        if (!verified) {
+          router.replace(verifyHref);
+        }
+      } catch {
+        if (!active) return;
+
+        setIsAgeVerified(false);
+        router.replace(verifyHref);
+      }
+    }
+
+    void checkAgeGate();
+
+    return () => {
+      active = false;
+    };
+  }, [product.isAdult, router, verifyHref]);
+
   const galleryImages = useMemo(() => {
     return buildGalleryImages(
       product.images,
@@ -1060,6 +1123,8 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
         images={galleryImages}
         title={selectedVariant?.name || product.title}
         isAdult={product.isAdult}
+        isAgeVerified={isAgeVerified}
+        verifyHref={verifyHref}
       />
 
       <ProductInfo
@@ -1072,6 +1137,8 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
         }}
         selectedColor={selectedColor}
         onSelectColor={setSelectedColor}
+        isAgeVerified={isAgeVerified}
+        verifyHref={verifyHref}
       />
     </div>
   );

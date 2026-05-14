@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import {
   AGE_GATE_COOKIE,
+  AGE_GATE_COOKIE_VALUE,
   AGE_GATE_MAX_AGE,
   isSafeReturnTo,
 } from '../../../../lib/age-gate';
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
     returnTo,
   });
 
-  response.cookies.set(AGE_GATE_COOKIE, 'true', {
+  response.cookies.set(AGE_GATE_COOKIE, AGE_GATE_COOKIE_VALUE, {
     path: '/',
     maxAge: AGE_GATE_MAX_AGE,
     sameSite: 'lax',

@@ -10,6 +10,7 @@ export type CartItem = {
   series?: string | null;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  isAdult?: boolean;
 };
 
 export type DeliveryMethod =
