@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import {
   addAccountFavorite,
   getAccountFavorites,
@@ -335,7 +335,7 @@ function Gallery({
               type="button"
               className={`${styles.thumb} ${active === i ? styles.thumbActive : ''}`}
               onClick={() => setActive(i)}
-              aria-label={`Фото ${i + 1}`}
+              aria-label={`Показати фото ${i + 1}`}
             >
               <img
                 src={resolveMediaUrl(img.url) || ''}
@@ -443,11 +443,8 @@ function FinishSelector({
               key={item.code}
               type="button"
               className={`${styles.variantCard} ${isSelected ? styles.variantCardSelected : ''}`}
-              onClick={() => {
-                if (!isDisabled) onChange(item.code);
-              }}
+              onClick={() => onChange(item.code)}
               disabled={isDisabled}
-              aria-disabled={isDisabled}
               aria-pressed={isSelected}
             >
               <div className={styles.variantSelector}>
@@ -597,6 +594,43 @@ function TabPanel({
     { id: 'delivery', label: 'Доставка і оплата' },
   ];
 
+  function handleTabKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+  ) {
+    if (
+      event.key !== 'ArrowRight' &&
+      event.key !== 'ArrowLeft' &&
+      event.key !== 'Home' &&
+      event.key !== 'End'
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    let nextIndex = currentIndex;
+
+    if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = tabs.length - 1;
+    } else {
+      const direction = event.key === 'ArrowRight' ? 1 : -1;
+      nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
+    }
+
+    const nextTab = tabs[nextIndex];
+
+    setActive(nextTab.id);
+
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(`tab-${product.id}-${nextTab.id}`)
+        ?.focus();
+    });
+  }
+
   const variantMeta = [
     selectedVariant?.sizeLabel,
     selectedVariant?.outfitLabel,
@@ -659,7 +693,7 @@ function TabPanel({
   return (
     <div className={styles.tabs}>
       <nav className={styles.tabNav} role="tablist" aria-label="Інформація про товар">
-        {tabs.map((t) => (
+        {tabs.map((t, index) => (
           <button
             key={t.id}
             type="button"
@@ -667,8 +701,10 @@ function TabPanel({
             role="tab"
             aria-selected={active === t.id}
             aria-controls={`panel-${product.id}-${t.id}`}
+            tabIndex={active === t.id ? 0 : -1}
             className={`${styles.tabBtn} ${active === t.id ? styles.tabBtnActive : ''}`}
             onClick={() => setActive(t.id)}
+            onKeyDown={(event) => handleTabKeyDown(event, index)}
           >
             {t.label}
           </button>
@@ -978,9 +1014,13 @@ function ProductInfo({
         <span className={styles.priceMain}>{formatMoney(finalPrice, displayCurrency)}</span>
       </div>
 
-      <p className={styles.shortDesc}>Орієнтовне відправлення: {estimatedShippingLabel}</p>
+      <p className={styles.shippingNote}>
+        Орієнтовне відправлення: {estimatedShippingLabel}
+      </p>
 
-      {selectedMeta ? <p className={styles.shortDesc}>{selectedMeta}</p> : null}
+      {selectedMeta ? (
+        <p className={styles.selectedMetaNote}>{selectedMeta}</p>
+      ) : null}
 
       {product.shortDescription ? (
         <p className={styles.shortDesc}>{product.shortDescription}</p>
@@ -1028,7 +1068,7 @@ function ProductInfo({
             onClick={() => void handleWishlist()}
             disabled={wishPending}
           >
-            {wishAdded ? '❤ В обраному' : '♡ До обраного'}
+            {wishAdded ? '❤ В обраному' : '♡ Додати до обраного'}
           </button>
 
           <button

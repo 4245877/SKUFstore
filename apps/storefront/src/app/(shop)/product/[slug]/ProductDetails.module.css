@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════
-   SKUFNYA — Product Details Module CSS
-   Maid-aesthetic anime figure shop
+   SKUFNYA — CSS-модуль деталей товару
+   Магазин аніме-фігурок у maid-естетиці
    ═══════════════════════════════════════════ */
 
-/* ── Breadcrumb ─────────────────────────── */
+/* ── Хлібні крихти ──────────────────────── */
 .breadcrumb {
   display: flex;
   align-items: center;
@@ -35,14 +35,7 @@
   font-weight: 500;
 }
 
-/* ── Page wrapper ───────────────────────── */
-.page {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: clamp(32px, 5vw, 64px) var(--gutter);
-}
-
-/* ── Product layout ─────────────────────── */
+/* ── Розмітка товару ────────────────────── */
 .productGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -50,7 +43,7 @@
   align-items: start;
 }
 
-/* ── Gallery column ─────────────────────── */
+/* ── Колонка галереї ────────────────────── */
 .gallery {
   display: flex;
   flex-direction: column;
@@ -107,13 +100,13 @@
   text-transform: uppercase;
 }
 
-/* Adult blur */
+/* Розмиття 18+ */
 .blurred {
   filter: blur(20px);
   transition: filter 0.4s ease;
 }
 
-/* Image badges overlay */
+/* Бейджі на зображенні */
 .imageBadges {
   position: absolute;
   top: 12px;
@@ -142,12 +135,7 @@
   color: #fff;
 }
 
-.badgePreorder {
-  background: var(--gold);
-  color: var(--ink);
-}
-
-/* Adult unlock hint */
+/* Підказка для підтвердження 18+ */
 .adultHintButton {
   position: absolute;
   bottom: 12px;
@@ -172,7 +160,26 @@
   background: rgba(30, 20, 22, 0.9);
 }
 
-/* Thumbnail strip */
+/* Спільне скидання для інтерактивних елементів */
+.thumb,
+.variantCard,
+.quantityBtn,
+.btnPrimary,
+.btnSecondary,
+.tabBtn {
+  font: inherit;
+  appearance: none;
+  border: 0;
+}
+
+.quantityBtn,
+.btnPrimary,
+.btnSecondary,
+.tabBtn {
+  cursor: pointer;
+}
+
+/* Сітка мініатюр */
 .thumbGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -213,55 +220,14 @@
   filter: blur(8px);
 }
 
-/* ── Info column ────────────────────────── */
+/* ── Колонка інформації ─────────────────── */
 .info {
   display: flex;
   flex-direction: column;
   animation: fadeUp 0.7s var(--ease-out-expo) 0.15s both;
 }
 
-/* Sale type pill */
-.saleTypePill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 5px 12px;
-  border-radius: 1px;
-  margin-bottom: 16px;
-  width: fit-content;
-}
-
-.pillInStock {
-  background: rgba(158, 209, 159, 0.15);
-  color: #5a9e5b;
-  border: 1px solid rgba(90, 158, 91, 0.25);
-}
-
-.pillPreorder {
-  background: rgba(201, 169, 110, 0.15);
-  color: var(--gold);
-  border: 1px solid rgba(201, 169, 110, 0.25);
-}
-
-.pillBackorder {
-  background: rgba(155, 107, 122, 0.12);
-  color: var(--mauve);
-  border: 1px solid rgba(155, 107, 122, 0.25);
-}
-
-.pillDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse-soft 2s ease-in-out infinite;
-}
-
-/* Title block */
+/* Заголовок */
 .seriesLabel {
   font-family: var(--font-jp);
   font-size: 11px;
@@ -280,7 +246,7 @@
   margin-bottom: 20px;
 }
 
-/* Rating row */
+/* Рядок рейтингу */
 .ratingRow {
   display: flex;
   align-items: center;
@@ -293,7 +259,7 @@
   color: var(--text-muted);
 }
 
-/* Price block */
+/* Блок ціни */
 .priceBlock {
   display: flex;
   align-items: baseline;
@@ -326,7 +292,21 @@
   line-height: 1;
 }
 
-/* Short description */
+/* Нотатки товару */
+.shippingNote {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.selectedMetaNote {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
 .shortDesc {
   font-size: 14px;
   color: var(--text-secondary);
@@ -336,7 +316,7 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
-/* ── Variants ───────────────────────────── */
+/* ── Варіанти ───────────────────────────── */
 .variantsSection {
   margin-bottom: 28px;
 }
@@ -419,6 +399,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+.variantCard:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.variantCard:disabled:hover {
+  border-color: var(--border-soft);
+  background: var(--surface);
+  transform: none;
+  box-shadow: none;
+}
+
 .variantCardSelected {
   border-color: var(--deep-rose);
   background: var(--lace);
@@ -466,19 +460,6 @@
   font-weight: 600;
   color: var(--deep-rose);
   line-height: 1;
-}
-
-.variantStock {
-  font-size: 10px;
-  letter-spacing: 0.06em;
-}
-
-.inStock {
-  color: #5a9e5b;
-}
-
-.outOfStock {
-  color: var(--text-muted);
 }
 
 .variantSelector {
@@ -534,7 +515,7 @@
   transform: scale(1.02);
 }
 
-/* ── Quantity selector ──────────────────── */
+/* ── Вибір кількості ────────────────────── */
 .quantitySection {
   display: flex;
   align-items: center;
@@ -595,7 +576,7 @@
   justify-content: center;
 }
 
-/* ── Actions ─────────────────────────────── */
+/* ── Дії ────────────────────────────────── */
 .actions {
   display: flex;
   flex-direction: column;
@@ -670,6 +651,17 @@
   background: var(--lace);
 }
 
+.btnSecondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btnSecondary:disabled:hover {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  background: var(--surface);
+}
+
 .btnRow {
   display: flex;
   gap: 10px;
@@ -679,7 +671,7 @@
   flex: 1;
 }
 
-/* ── Description tabs ────────────────────── */
+/* ── Вкладки опису ──────────────────────── */
 .tabs {
   margin-top: 48px;
   border-top: 1px solid var(--border);
@@ -720,7 +712,7 @@
   animation: fadeIn 0.35s ease both;
 }
 
-/* Description content */
+/* Вміст опису */
 .descriptionText {
   font-size: 14px;
   line-height: 1.85;
@@ -728,7 +720,7 @@
   max-width: 680px;
 }
 
-/* Specs table */
+/* Таблиця характеристик */
 .specsTable {
   width: 100%;
   border-collapse: collapse;
@@ -773,20 +765,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .breadcrumb,
-  .gallery,
-  .info,
-  .tabs,
-  .mainImage,
-  .thumb,
-  .thumbImg,
-  .pillDot {
-    animation: none !important;
-    transition: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* ── Responsive ──────────────────────────── */
+/* ── Адаптивність ───────────────────────── */
 @media (max-width: 1024px) {
   .productGrid {
     gap: 40px;
@@ -814,11 +803,6 @@
   .tabNav {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .tabNav::-webkit-scrollbar {
-    display: none;
   }
 
   .tabBtn {
