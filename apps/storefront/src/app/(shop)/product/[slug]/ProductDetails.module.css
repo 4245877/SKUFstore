@@ -87,16 +87,16 @@
   width: calc(100% + 48px);
   height: calc(100% + 48px);
   object-fit: cover;
-  filter: blur(24px) saturate(0.95);
+  filter: blur(24px) saturate(1) brightness(1);
   transform: scale(1.04);
-  opacity: 0.65;
+  opacity: 1;
   pointer-events: none;
   user-select: none;
 }
 
 .mainImageBackdropBlurred {
-  filter: blur(34px) saturate(0.85);
-  opacity: 0.45;
+  filter: blur(34px) saturate(1) brightness(1);
+  opacity: 1;
 }
 
 .mainImage {
