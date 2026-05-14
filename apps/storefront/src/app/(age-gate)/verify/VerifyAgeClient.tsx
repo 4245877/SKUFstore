@@ -79,7 +79,7 @@ export default function VerifyAgeClient() {
 
         <p className={styles.text}>
           Будь ласка, підтвердьте, що вам виповнилось <strong>18 років</strong>
-          або більше, щоб продовжити перегляд.
+           або більше, щоб продовжити перегляд.
         </p>
 
         {error ? (
