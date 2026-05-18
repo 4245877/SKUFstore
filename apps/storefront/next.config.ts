@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   experimental: {
     staticGenerationRetryCount: 3,
     staticGenerationMaxConcurrency: 1,
-    staticGenerationMinPagesPerWorker: 1,
+    staticGenerationMinPagesPerWorker: 200,
   },
 
   images: {
