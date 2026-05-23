@@ -204,13 +204,19 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
         </div>
       </div>
 
-      <div className={styles.cartItemPrice}>
+      <div
+        className={styles.cartItemPrice}
+        data-label={PAGE_COPY.cart.columns.price}
+      >
         <span className={styles.cartItemPriceVal}>
           {formatPrice(item.price, currency)}
         </span>
       </div>
 
-      <div className={styles.cartItemQtyWrap}>
+      <div
+        className={styles.cartItemQtyWrap}
+        data-label={PAGE_COPY.cart.columns.quantity}
+      >
         <div className={styles.cartItemQty}>
           <button
             type="button"
@@ -233,7 +239,10 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
         </div>
       </div>
 
-      <div className={styles.cartItemSubtotal}>
+      <div
+        className={styles.cartItemSubtotal}
+        data-label={PAGE_COPY.cart.columns.subtotal}
+      >
         <span className={styles.cartItemSubtotalVal}>
           {formatPrice(subtotal, currency)}
         </span>
@@ -294,14 +303,14 @@ function OrderSummary({
             <div className={styles.summaryLine}>
               <span className={styles.summaryLineLabel}>
                 {SUMMARY_COPY.labels.shipping}
-                <span
+                <button
+                  type="button"
                   className={styles.summaryInfoTip}
                   title={SUMMARY_COPY.shipping.tooltip}
                   aria-label={SUMMARY_COPY.shipping.tooltip}
-                  tabIndex={0}
                 >
                   ?
-                </span>
+                </button>
               </span>
 
               {shipping === 0 ? (
@@ -358,9 +367,9 @@ function OrderSummary({
             )}
           </p>
 
-          <div className={styles.progressBar}>
+          <div className={styles.shippingProgressBar}>
             <div
-              className={styles.progressFill}
+              className={styles.shippingProgressFill}
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -548,7 +557,7 @@ export default function CartPage() {
       </div>
 
       {!isReady ? (
-        <div className={styles.loadingState}>{PAGE_COPY.header.loading}</div>
+        <div className={styles.loading}>{PAGE_COPY.header.loading}</div>
       ) : (
         <div
           className={`${styles.cartMain} ${isEmpty ? styles.cartMainEmpty : ""}`}
