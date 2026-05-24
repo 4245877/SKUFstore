@@ -3,11 +3,6 @@
   min-height: 100vh;
   background: var(--cream);
   padding-bottom: clamp(56px, 8vw, 96px);
-
-  #C89474 + #9C444F + #EFE2D2 + #4F3F4A + #B0996A
-
-
-
 }
 
 /* Breadcrumb */
