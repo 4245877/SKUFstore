@@ -1,0 +1,1269 @@
+
+========== apps/storefront/src/app/(shop)/cart/page.tsx ==========
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import {
+  getHomeProducts,
+  resolveMediaUrl,
+  type HomeProductItem,
+} from "../../../lib/api";
+import { buildAgeVerifyPath, isAgeVerifiedClient } from "../../../lib/age-gate";
+import {
+  FREE_DELIVERY_THRESHOLD,
+  clearCart,
+  formatPrice,
+  getCartItemsCount,
+  getCartSubtotal,
+  getDeliveryPrice,
+  readCart,
+  removeCartItem,
+  subscribeToCartChange,
+  type CartItem,
+  updateCartItemQuantity,
+} from "../../../lib/demo-store";
+
+import styles from "./CartPage.module.css";
+
+type RecommendedItem = {
+  id: string;
+  slug: string;
+  name: string;
+  price: number;
+  currency: string;
+  imageUrl: string | null;
+  imageAlt: string | null;
+};
+
+type CartItemRowProps = {
+  item: CartItem;
+  onQtyChange: (id: string, qty: number) => void;
+  onRemove: (id: string) => void;
+};
+
+type OrderSummaryProps = {
+  items: CartItem[];
+  subtotal: number;
+  currency: string;
+  checkoutHref: string;
+  checkoutLabel: string;
+};
+
+const PAGE_COPY = {
+  breadcrumb: {
+    ariaLabel: "Навігація по сторінці",
+    home: "Головна",
+    catalog: "Каталог",
+    current: "Кошик",
+  },
+  header: {
+    eyebrow: "Кошик",
+    title: "Ваш кошик",
+    clear: "Очистити кошик",
+    loading: "Завантаження кошика…",
+  },
+  empty: {
+    icon: "🛒",
+    title: "Кошик порожній",
+    text: "Схоже, у кошику поки нічого немає. Загляньте до каталогу.",
+    cta: "Перейти до каталогу →",
+  },
+  cart: {
+    productLink: "До товару",
+    continueShopping: "Продовжити покупки",
+    quantityDecrease: "Зменшити",
+    quantityIncrease: "Збільшити",
+    remove: "Видалити з кошика",
+    columns: {
+      product: "Товар",
+      price: "Ціна",
+      quantity: "Кількість",
+      subtotal: "Сума",
+    },
+  },
+  actions: {
+    checkout: "Оформити замовлення",
+    paymentMethods: "Способи оплати",
+  },
+  recommendations: {
+    title: "Також може сподобатися",
+  },
+  placeholders: {
+    image: "Без фото",
+  },
+};
+
+const SUMMARY_COPY = {
+  title: "Підсумок кошика",
+  itemsInCartSuffix: "у кошику",
+  labels: {
+    subtotal: "Сума товарів",
+    shipping: "Доставка",
+    total: "Разом",
+  },
+  shipping: {
+    free: "Безкоштовно",
+    tooltip:
+      "Попередня вартість доставки. Точну суму буде показано під час оформлення.",
+    freeReached: "Безкоштовна доставка вже доступна",
+    remainingPrefix: "Додайте ще",
+    remainingSuffix: "для безкоштовної доставки",
+  },
+  notes: {
+    savedTitle: "Товари вже збережені у кошику",
+    savedText:
+      "На наступному кроці залишиться лише вказати контакти та спосіб доставки.",
+    reviewTitle: "Перевірка перед оплатою",
+    reviewText: "Кількість можна змінити, а каталог залишається доступним.",
+    shippingTitle: "Попередній розрахунок доставки",
+    shippingText: "Точну суму буде показано під час оформлення.",
+  },
+};
+
+const TRUST_BADGES = [
+  { icon: "✓", label: "Ручна перевірка" },
+  { icon: "✓", label: "Надійне пакування" },
+  { icon: "✓", label: "Безпечна оплата" },
+] as const;
+
+const SUMMARY_NOTES = [
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.savedTitle,
+    text: SUMMARY_COPY.notes.savedText,
+  },
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.reviewTitle,
+    text: SUMMARY_COPY.notes.reviewText,
+  },
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.shippingTitle,
+    text: SUMMARY_COPY.notes.shippingText,
+  },
+] as const;
+
+const DEFAULT_SERIES_LABEL = "Фігурка з каталогу";
+
+function pluralizeProducts(count: number) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return "товар";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return "товари";
+  }
+
+  return "товарів";
+}
+
+function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
+  const currency = item.currency ?? "UAH";
+  const subtotal = item.price * item.quantity;
+  const seriesLabel = item.series || item.subtitle || DEFAULT_SERIES_LABEL;
+  const imageSrc = item.imageUrl ? resolveMediaUrl(item.imageUrl) : null;
+  const productHref = `/product/${item.slug}`;
+
+  return (
+    <div className={styles.cartItem}>
+      <div className={styles.cartItemInfo}>
+        <div className={styles.cartItemThumb}>
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={item.imageAlt || item.name}
+              className={styles.cartItemThumbImg}
+            />
+          ) : (
+            <div
+              className={styles.cartItemThumbPlaceholder}
+              aria-label={PAGE_COPY.placeholders.image}
+            >
+              {PAGE_COPY.placeholders.image}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.cartItemDetails}>
+          <p className={styles.cartItemSeries}>{seriesLabel}</p>
+
+          <Link href={productHref} className={styles.cartItemName}>
+            {item.name}
+          </Link>
+
+          <div className={styles.cartItemMeta}>
+            {item.subtitle && item.subtitle !== item.series ? (
+              <span className={styles.cartItemTag}>{item.subtitle}</span>
+            ) : null}
+
+            <Link href={productHref} className={styles.cartItemLink}>
+              {PAGE_COPY.cart.productLink}
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.cartItemPrice}>
+        <span className={styles.cartItemPriceVal}>
+          {formatPrice(item.price, currency)}
+        </span>
+      </div>
+
+      <div className={styles.cartItemQtyWrap}>
+        <div className={styles.cartItemQty}>
+          <button
+            type="button"
+            className={styles.qtyBtn}
+            aria-label={PAGE_COPY.cart.quantityDecrease}
+            disabled={item.quantity <= 1}
+            onClick={() => onQtyChange(item.id, item.quantity - 1)}
+          >
+            −
+          </button>
+          <span className={styles.qtyValue}>{item.quantity}</span>
+          <button
+            type="button"
+            className={styles.qtyBtn}
+            aria-label={PAGE_COPY.cart.quantityIncrease}
+            onClick={() => onQtyChange(item.id, item.quantity + 1)}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.cartItemSubtotal}>
+        <span className={styles.cartItemSubtotalVal}>
+          {formatPrice(subtotal, currency)}
+        </span>
+      </div>
+
+      <div className={styles.cartItemRemove}>
+        <button
+          type="button"
+          className={styles.removeBtn}
+          aria-label={PAGE_COPY.cart.remove}
+          onClick={() => onRemove(item.id)}
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OrderSummary({
+  items,
+  subtotal,
+  currency,
+  checkoutHref,
+  checkoutLabel,
+}: OrderSummaryProps) {
+  const shipping = getDeliveryPrice("nova-poshta-branch", items);
+  const total = subtotal + shipping;
+  const progressPct = Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100);
+  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
+  const itemsCount = getCartItemsCount(items);
+
+  return (
+    <div className={styles.orderSummary}>
+      <div className={styles.summaryCard}>
+        <div className={styles.summaryHead}>
+          <div>
+            <h2 className={styles.summaryTitle}>{SUMMARY_COPY.title}</h2>
+            <p className={styles.summaryHint}>
+              {itemsCount} {pluralizeProducts(itemsCount)}{" "}
+              {SUMMARY_COPY.itemsInCartSuffix}
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.summaryBody}>
+          <div className={styles.summaryLines}>
+            <div className={styles.summaryLine}>
+              <span className={styles.summaryLineLabel}>
+                {SUMMARY_COPY.labels.subtotal}
+              </span>
+              <span className={styles.summaryLineVal}>
+                {formatPrice(subtotal, currency)}
+              </span>
+            </div>
+
+            <div className={styles.summaryLine}>
+              <span className={styles.summaryLineLabel}>
+                {SUMMARY_COPY.labels.shipping}
+                <span
+                  className={styles.summaryInfoTip}
+                  title={SUMMARY_COPY.shipping.tooltip}
+                  aria-label={SUMMARY_COPY.shipping.tooltip}
+                  tabIndex={0}
+                >
+                  ?
+                </span>
+              </span>
+
+              {shipping === 0 ? (
+                <span
+                  className={`${styles.summaryLineVal} ${styles.summaryLineFree}`}
+                >
+                  {SUMMARY_COPY.shipping.free}
+                </span>
+              ) : (
+                <span className={styles.summaryLineVal}>
+                  {formatPrice(shipping, currency)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.summaryTotal}>
+            <span className={styles.summaryTotalLabel}>
+              {SUMMARY_COPY.labels.total}
+            </span>
+            <span className={styles.summaryTotalVal}>
+              {formatPrice(total, currency)}
+            </span>
+          </div>
+
+          <Link href={checkoutHref} className={styles.checkoutBtn}>
+            {checkoutLabel}
+          </Link>
+
+          <Link href="/payment" className={styles.checkoutBtnAlt}>
+            {PAGE_COPY.actions.paymentMethods}
+          </Link>
+
+          <div className={styles.secureBadges}>
+            {TRUST_BADGES.map((badge) => (
+              <span key={badge.label} className={styles.secureBadge}>
+                <span className={styles.secureBadgeIcon}>{badge.icon}</span>
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.shippingProgress}>
+          <p className={styles.shippingProgressText}>
+            {shipping === 0 ? (
+              <strong>{SUMMARY_COPY.shipping.freeReached}</strong>
+            ) : (
+              <>
+                {SUMMARY_COPY.shipping.remainingPrefix}{" "}
+                <strong>{formatPrice(remaining, currency)}</strong>{" "}
+                {SUMMARY_COPY.shipping.remainingSuffix}
+              </>
+            )}
+          </p>
+
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+
+          <div className={styles.shippingProgressCap}>
+            <span>{formatPrice(0, currency)}</span>
+            <span>{formatPrice(FREE_DELIVERY_THRESHOLD, currency)}</span>
+          </div>
+        </div>
+
+        <div className={styles.trustBlock}>
+          {SUMMARY_NOTES.map((note) => (
+            <div key={note.title} className={styles.trustItem}>
+              <span className={styles.trustIcon}>{note.icon}</span>
+              <p className={styles.trustText}>
+                <strong>{note.title}.</strong> {note.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CartPage() {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isReady, setIsReady] = useState(false);
+  const [catalogItems, setCatalogItems] = useState<HomeProductItem[]>([]);
+  const [isAgeVerified, setIsAgeVerified] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const syncCart = () => {
+      setItems(readCart());
+      setIsReady(true);
+    };
+
+    syncCart();
+
+========== apps/storefront/src/app/(shop)/checkout/page.tsx ==========
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import {
+  getHomeProducts,
+  resolveMediaUrl,
+  type HomeProductItem,
+} from "../../../lib/api";
+import { buildAgeVerifyPath, isAgeVerifiedClient } from "../../../lib/age-gate";
+import {
+  FREE_DELIVERY_THRESHOLD,
+  clearCart,
+  formatPrice,
+  getCartItemsCount,
+  getCartSubtotal,
+  getDeliveryPrice,
+  readCart,
+  removeCartItem,
+  subscribeToCartChange,
+  type CartItem,
+  updateCartItemQuantity,
+} from "../../../lib/demo-store";
+
+import styles from "./CheckoutPage.module.css";
+
+type RecommendedItem = {
+  id: string;
+  slug: string;
+  name: string;
+  price: number;
+  currency: string;
+  imageUrl: string | null;
+  imageAlt: string | null;
+};
+
+type CartItemRowProps = {
+  item: CartItem;
+  onQtyChange: (id: string, qty: number) => void;
+  onRemove: (id: string) => void;
+};
+
+type OrderSummaryProps = {
+  items: CartItem[];
+  subtotal: number;
+  currency: string;
+  checkoutHref: string;
+  checkoutLabel: string;
+};
+
+const PAGE_COPY = {
+  breadcrumb: {
+    ariaLabel: "Хлібні крихти",
+    home: "Головна",
+    catalog: "Каталог",
+    current: "Кошик",
+  },
+  header: {
+    eyebrow: "Кошик",
+    title: "Ваш кошик",
+    clear: "Очистити кошик",
+    loading: "Завантаження кошика…",
+  },
+  empty: {
+    icon: "🛒",
+    title: "Кошик порожній",
+    text: "Схоже, у кошику поки нічого немає. Загляньте до каталогу.",
+    cta: "Перейти до каталогу →",
+  },
+  cart: {
+    productLink: "До товару",
+    continueShopping: "Продовжити покупки",
+    quantityDecrease: "Зменшити",
+    quantityIncrease: "Збільшити",
+    remove: "Видалити з кошика",
+    columns: {
+      product: "Товар",
+      price: "Ціна",
+      quantity: "Кількість",
+      subtotal: "Сума",
+    },
+  },
+  actions: {
+    checkout: "Оформити замовлення",
+    paymentMethods: "Способи оплати",
+  },
+  recommendations: {
+    title: "До вашого замовлення також пасують",
+  },
+  placeholders: {
+    image: "Фото",
+  },
+};
+
+const SUMMARY_COPY = {
+  title: "Підсумок кошика",
+  itemsInCartSuffix: "у кошику",
+  labels: {
+    subtotal: "Сума товарів",
+    shipping: "Доставка",
+    total: "Разом",
+  },
+  shipping: {
+    free: "Безкоштовно",
+    tooltip:
+      "Попередня вартість доставки. Точну суму буде показано під час оформлення.",
+    freeReached: "Безкоштовна доставка вже доступна",
+    remainingPrefix: "Додайте ще",
+    remainingSuffix: "для безкоштовної доставки",
+  },
+  notes: {
+    savedTitle: "Товари вже збережені у кошику",
+    savedText:
+      "на наступному кроці залишиться лише вказати контакти та спосіб доставки",
+    reviewTitle: "Перевірка перед оплатою",
+    reviewText: "кількість можна змінити, а каталог залишається доступним",
+    shippingTitle: "Попередній розрахунок доставки",
+    shippingText: "точну суму буде показано під час оформлення",
+  },
+};
+
+const TRUST_BADGES = [
+  { icon: "✓", label: "Ручна перевірка" },
+  { icon: "✓", label: "Надійне пакування" },
+  { icon: "✓", label: "Безпечна оплата" },
+] as const;
+
+const SUMMARY_NOTES = [
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.savedTitle,
+    text: SUMMARY_COPY.notes.savedText,
+  },
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.reviewTitle,
+    text: SUMMARY_COPY.notes.reviewText,
+  },
+  {
+    icon: "✓",
+    title: SUMMARY_COPY.notes.shippingTitle,
+    text: SUMMARY_COPY.notes.shippingText,
+  },
+] as const;
+
+const DEFAULT_SERIES_LABEL = "Фігурка з каталогу";
+
+function pluralizeProducts(count: number) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return "товар";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return "товари";
+  }
+
+  return "товарів";
+}
+
+function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
+  const currency = item.currency ?? "UAH";
+  const subtotal = item.price * item.quantity;
+  const seriesLabel = item.series || item.subtitle || DEFAULT_SERIES_LABEL;
+  const imageSrc = item.imageUrl ? resolveMediaUrl(item.imageUrl) : null;
+  const productHref = `/product/${item.slug}`;
+
+  return (
+    <div className={styles.cartItem}>
+      <div className={styles.cartItemInfo}>
+        <div className={styles.cartItemThumb}>
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={item.imageAlt || item.name}
+              className={styles.cartItemThumbImg}
+            />
+          ) : (
+            <div
+              className={styles.cartItemThumbPlaceholder}
+              aria-label={PAGE_COPY.placeholders.image}
+            >
+              {PAGE_COPY.placeholders.image}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.cartItemDetails}>
+          <p className={styles.cartItemSeries}>{seriesLabel}</p>
+
+          <Link href={productHref} className={styles.cartItemName}>
+            {item.name}
+          </Link>
+
+          <div className={styles.cartItemMeta}>
+            {item.subtitle && item.subtitle !== item.series ? (
+              <span className={styles.cartItemTag}>{item.subtitle}</span>
+            ) : null}
+
+            <Link href={productHref} className={styles.cartItemLink}>
+              {PAGE_COPY.cart.productLink}
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={styles.cartItemPrice}
+        data-label={PAGE_COPY.cart.columns.price}
+      >
+        <span className={styles.cartItemPriceVal}>
+          {formatPrice(item.price, currency)}
+        </span>
+      </div>
+
+      <div
+        className={styles.cartItemQtyWrap}
+        data-label={PAGE_COPY.cart.columns.quantity}
+      >
+        <div className={styles.cartItemQty}>
+          <button
+            type="button"
+            className={styles.qtyBtn}
+            aria-label={PAGE_COPY.cart.quantityDecrease}
+            disabled={item.quantity <= 1}
+            onClick={() => onQtyChange(item.id, item.quantity - 1)}
+          >
+            −
+          </button>
+          <span className={styles.qtyValue}>{item.quantity}</span>
+          <button
+            type="button"
+            className={styles.qtyBtn}
+            aria-label={PAGE_COPY.cart.quantityIncrease}
+            onClick={() => onQtyChange(item.id, item.quantity + 1)}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div
+        className={styles.cartItemSubtotal}
+        data-label={PAGE_COPY.cart.columns.subtotal}
+      >
+        <span className={styles.cartItemSubtotalVal}>
+          {formatPrice(subtotal, currency)}
+        </span>
+      </div>
+
+      <div className={styles.cartItemRemove}>
+        <button
+          type="button"
+          className={styles.removeBtn}
+          aria-label={PAGE_COPY.cart.remove}
+          title={PAGE_COPY.cart.remove}
+          onClick={() => onRemove(item.id)}
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OrderSummary({
+  items,
+  subtotal,
+  currency,
+  checkoutHref,
+  checkoutLabel,
+}: OrderSummaryProps) {
+  const shipping = getDeliveryPrice("nova-poshta-branch", items);
+  const total = subtotal + shipping;
+  const progressPct = Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100);
+  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
+  const itemsCount = getCartItemsCount(items);
+
+  return (
+    <div className={styles.orderSummary}>
+      <div className={styles.summaryCard}>
+        <div className={styles.summaryHead}>
+          <div>
+            <h2 className={styles.summaryTitle}>{SUMMARY_COPY.title}</h2>
+            <p className={styles.summaryHint}>
+              {itemsCount} {pluralizeProducts(itemsCount)}{" "}
+              {SUMMARY_COPY.itemsInCartSuffix}
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.summaryBody}>
+          <div className={styles.summaryLines}>
+            <div className={styles.summaryLine}>
+              <span className={styles.summaryLineLabel}>
+                {SUMMARY_COPY.labels.subtotal}
+              </span>
+              <span className={styles.summaryLineVal}>
+                {formatPrice(subtotal, currency)}
+              </span>
+            </div>
+
+            <div className={styles.summaryLine}>
+              <span className={styles.summaryLineLabel}>
+                {SUMMARY_COPY.labels.shipping}
+                <button
+                  type="button"
+                  className={styles.summaryInfoTip}
+                  title={SUMMARY_COPY.shipping.tooltip}
+                  aria-label={SUMMARY_COPY.shipping.tooltip}
+                >
+                  ?
+                </button>
+              </span>
+
+              {shipping === 0 ? (
+                <span
+                  className={`${styles.summaryLineVal} ${styles.summaryLineFree}`}
+                >
+                  {SUMMARY_COPY.shipping.free}
+                </span>
+              ) : (
+                <span className={styles.summaryLineVal}>
+                  {formatPrice(shipping, currency)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.summaryTotal}>
+            <span className={styles.summaryTotalLabel}>
+              {SUMMARY_COPY.labels.total}
+            </span>
+            <span className={styles.summaryTotalVal}>
+              {formatPrice(total, currency)}
+            </span>
+          </div>
+
+          <Link href={checkoutHref} className={styles.checkoutBtn}>
+            {checkoutLabel}
+          </Link>
+
+          <Link href="/payment" className={styles.checkoutBtnAlt}>
+            {PAGE_COPY.actions.paymentMethods}
+          </Link>
+
+          <div className={styles.secureBadges}>
+            {TRUST_BADGES.map((badge) => (
+              <span key={badge.label} className={styles.secureBadge}>
+                <span className={styles.secureBadgeIcon}>{badge.icon}</span>
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.shippingProgress}>
+          <p className={styles.shippingProgressText}>
+            {shipping === 0 ? (
+              <strong>{SUMMARY_COPY.shipping.freeReached}</strong>
+            ) : (
+              <>
+                {SUMMARY_COPY.shipping.remainingPrefix}{" "}
+                <strong>{formatPrice(remaining, currency)}</strong>{" "}
+                {SUMMARY_COPY.shipping.remainingSuffix}
+              </>
+            )}
+          </p>
+
+          <div className={styles.shippingProgressBar}>
+            <div
+              className={styles.shippingProgressFill}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+
+          <div className={styles.shippingProgressCap}>
+            <span>{formatPrice(0, currency)}</span>
+            <span>{formatPrice(FREE_DELIVERY_THRESHOLD, currency)}</span>
+          </div>
+        </div>
+
+        <div className={styles.trustBlock}>
+          {SUMMARY_NOTES.map((note) => (
+            <div key={note.title} className={styles.trustItem}>
+              <span className={styles.trustIcon}>{note.icon}</span>
+              <p className={styles.trustText}>
+                <strong>{note.title}</strong> — {note.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CartPage() {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isReady, setIsReady] = useState(false);
+
+========== apps/storefront/src/lib/demo-store.ts ==========
+export type CartItem = {
+  id: string;
+  productId?: string;
+  slug: string;
+  name: string;
+  price: number;
+  quantity: number;
+  currency?: string;
+  subtitle?: string;
+  series?: string | null;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  isAdult?: boolean;
+};
+
+export type DeliveryMethod =
+  | 'nova-poshta-branch'
+  | 'ukrposhta-branch'
+  | 'courier'
+  | 'pickup';
+export type PaymentMethod = 'partial-prepayment' | 'full-prepayment';
+
+export type CheckoutFormValues = {
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  address: string;
+  deliveryMethod: DeliveryMethod;
+  paymentMethod: PaymentMethod;
+  comment: string;
+};
+
+export type OrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled';
+
+export type StoreOrder = {
+  id: string;
+  number: string;
+  createdAt: string;
+  status: OrderStatus;
+  items: CartItem[];
+  customer: CheckoutFormValues;
+  subtotal: number;
+  deliveryPrice: number;
+  total: number;
+};
+
+export type FavoriteSnapshot = {
+  productId: string;
+  slug: string;
+  title: string;
+  series?: string | null;
+  priceFrom: number;
+  currency: string;
+  saleType?: string;
+  stockQty?: number;
+  isAdult?: boolean;
+  coverImage?: {
+    url: string;
+    alt: string | null;
+  } | null;
+  addedAt: string;
+};
+
+const CART_KEY = 'skufnya:cart';
+const ORDERS_KEY = 'skufnya:orders';
+const LAST_ORDER_KEY = 'skufnya:last-order';
+const FAVORITES_KEY = 'skufnya:favorites';
+const FAVORITES_CHANGED_EVENT = 'skufnya:favorites:changed';
+const CART_CHANGED_EVENT = 'skufnya:cart:changed';
+export const FREE_DELIVERY_THRESHOLD = 5000;
+
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+});
+
+function hasWindow() {
+  return typeof window !== 'undefined';
+}
+
+function safeParse<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function generateId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function buildOrderNumber() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const random = Math.floor(1000 + Math.random() * 9000);
+
+  return `SKF-${yyyy}${mm}${dd}-${random}`;
+}
+
+const DEFAULT_CUSTOMER: CheckoutFormValues = {
+  fullName: 'Михайло П.',
+  email: 'demo@skufnya.local',
+  phone: '+380 99 123 45 67',
+  city: 'Київ',
+  address: 'Відділення №12',
+  deliveryMethod: 'nova-poshta-branch',
+  paymentMethod: 'partial-prepayment',
+  comment: '',
+};
+
+const DEMO_ORDERS: StoreOrder[] = [
+  {
+    id: 'demo-order-1',
+    number: 'SKF-20260325-4812',
+    createdAt: '2026-03-25T14:20:00.000Z',
+    status: 'processing',
+    items: [
+      {
+        id: 'demo-item-1',
+        slug: 'miku-sakura-ver',
+        name: 'Hatsune Miku Sakura Ver.',
+        subtitle: 'PVC figure • 1/7 scale',
+        price: 2890,
+        quantity: 1,
+      },
+      {
+        id: 'demo-item-2',
+        slug: 'gojo-mini-stand',
+        name: 'Gojo Acrylic Stand',
+        subtitle: 'Acrylic merch',
+        price: 420,
+        quantity: 2,
+      },
+    ],
+    customer: {
+      ...DEFAULT_CUSTOMER,
+      fullName: 'Михайло Пларов',
+      address: 'Нова пошта, відділення №18',
+      paymentMethod: 'full-prepayment',
+    },
+    subtotal: 3730,
+    deliveryPrice: 120,
+    total: 3850,
+  },
+  {
+    id: 'demo-order-2',
+    number: 'SKF-20260318-1504',
+    createdAt: '2026-03-18T09:05:00.000Z',
+    status: 'delivered',
+    items: [
+      {
+        id: 'demo-item-3',
+        slug: 'marin-kitagawa-bunny',
+        name: 'Marin Kitagawa Bunny Style',
+        subtitle: 'Resin statue',
+        price: 4990,
+        quantity: 1,
+      },
+    ],
+    customer: {
+      ...DEFAULT_CUSTOMER,
+      fullName: 'Михайло Пларов',
+      address: 'Курʼєрська доставка',
+      deliveryMethod: 'courier',
+      paymentMethod: 'partial-prepayment',
+    },
+    subtotal: 4990,
+    deliveryPrice: 120,
+    total: 5110,
+  },
+];
+
+function readStoredUserOrders(): StoreOrder[] {
+  if (!hasWindow()) return [];
+
+  return safeParse<StoreOrder[]>(window.localStorage.getItem(ORDERS_KEY), []);
+}
+
+function writeStoredUserOrders(orders: StoreOrder[]) {
+  if (!hasWindow()) return;
+
+  window.localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+}
+
+export function formatPrice(value: number, currency = 'UAH') {
+  return new Intl.NumberFormat('uk-UA', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export function formatDate(value: string) {
+  return dateFormatter.format(new Date(value));
+}
+
+export function getStatusLabel(status: OrderStatus) {
+  switch (status) {
+    case 'pending':
+      return 'Очікує підтвердження';
+    case 'paid':
+      return 'Оплачено';
+    case 'processing':
+      return 'В роботі';
+    case 'shipped':
+      return 'Відправлено';
+    case 'delivered':
+      return 'Доставлено';
+    case 'cancelled':
+      return 'Скасовано';
+    default:
+      return 'Невідомо';
+  }
+}
+
+export function readCart(): CartItem[] {
+  if (!hasWindow()) return [];
+
+  return safeParse<CartItem[]>(window.localStorage.getItem(CART_KEY), []);
+}
+
+export function writeCart(items: CartItem[]) {
+  if (!hasWindow()) return;
+
+  window.localStorage.setItem(CART_KEY, JSON.stringify(items));
+  emitCartChanged();
+}
+
+export function clearCart() {
+  if (!hasWindow()) return;
+
+  window.localStorage.removeItem(CART_KEY);
+  emitCartChanged();
+}
+
+export function addCartItem(item: CartItem) {
+  const nextItems = [...readCart()];
+  const normalizedQuantity = Math.max(1, Math.min(99, item.quantity));
+
+  const existingIndex = nextItems.findIndex((entry) => entry.id === item.id);
+
+  if (existingIndex >= 0) {
+    const existing = nextItems[existingIndex];
+    nextItems[existingIndex] = {
+      ...existing,
+      ...item,
+      quantity: Math.min(99, existing.quantity + normalizedQuantity),
+    };
+  } else {
+    nextItems.unshift({
+      ...item,
+      quantity: normalizedQuantity,
+    });
+  }
+
+  writeCart(nextItems);
+  return nextItems;
+}
+
+export function getCartSubtotal(items: CartItem[]) {
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+export function getDeliveryPrice(deliveryMethod: DeliveryMethod, items: CartItem[]) {
+  if (items.length === 0) return 0;
+  if (deliveryMethod === 'pickup') return 0;
+
+  const subtotal = getCartSubtotal(items);
+  if (subtotal >= FREE_DELIVERY_THRESHOLD) return 0;
+
+  return 120;
+}
+
+export function updateCartItemQuantity(id: string, quantity: number) {
+  const nextItems = readCart()
+    .map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            quantity: Math.max(1, Math.min(99, quantity)),
+          }
+        : item,
+    )
+    .filter((item) => item.quantity > 0);
+
+  writeCart(nextItems);
+  return nextItems;
+}
+
+export function removeCartItem(id: string) {
+  const nextItems = readCart().filter((item) => item.id !== id);
+  writeCart(nextItems);
+  return nextItems;
+}
+
+export function readOrders(): StoreOrder[] {
+  const stored = readStoredUserOrders();
+  const demoFallback = DEMO_ORDERS.filter(
+    (demo) => !stored.some((item) => item.id === demo.id),
+  );
+
+  return [...stored, ...demoFallback].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+}
+
+export function readOrderById(id: string) {
+  return readOrders().find((order) => order.id === id || order.number === id) ?? null;
+}
+
+export function readLastOrder(): StoreOrder | null {
+  if (!hasWindow()) return null;
+
+  return safeParse<StoreOrder | null>(
+    window.localStorage.getItem(LAST_ORDER_KEY),
+    null,
+  );
+}
+
+export function writeLastOrder(order: StoreOrder | null) {
+  if (!hasWindow()) return;
+
+  if (order) {
+    window.localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+    return;
+  }
+
+  window.localStorage.removeItem(LAST_ORDER_KEY);
+}
+
+export function createOrderFromCart(
+  items: CartItem[],
+  customer: CheckoutFormValues,
+): StoreOrder {
+  const subtotal = getCartSubtotal(items);
+  const deliveryPrice = getDeliveryPrice(customer.deliveryMethod, items);
+
+  const order: StoreOrder = {
+    id: generateId(),
+    number: buildOrderNumber(),
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+    items,
+    customer,
+    subtotal,
+    deliveryPrice,
+    total: subtotal + deliveryPrice,
+  };
+
+  const currentOrders = readStoredUserOrders();
+  writeStoredUserOrders([order, ...currentOrders]);
+
+  if (hasWindow()) {
+    window.localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+    clearCart();
+  }
+
+  return order;
+}
+
+function emitFavoritesChanged() {
+  if (!hasWindow()) return;
+  window.dispatchEvent(new CustomEvent(FAVORITES_CHANGED_EVENT));
+}
+
+function emitCartChanged() {
+  if (!hasWindow()) return;
+  window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+}
+
+export function readFavorites(): FavoriteSnapshot[] {
+  if (!hasWindow()) return [];
+  return safeParse<FavoriteSnapshot[]>(window.localStorage.getItem(FAVORITES_KEY), []);
+}
+
+export function writeFavorites(items: FavoriteSnapshot[]) {
+  if (!hasWindow()) return;
+  window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
+  emitFavoritesChanged();
+}
+
+export function isFavorite(productId: string) {
+
+========== apps/storefront/src/lib/api.ts ==========
+// apps/storefront/src/lib/api.tsfunction normalizeBaseUrl(value?: string) {  return value?.trim().replace(/\/+$/, '') ?? '';}const IS_PAGES_BUILD = process.env.DEPLOY_TARGET === 'pages';const INTERNAL_API_URL = normalizeBaseUrl(process.env.API_INTERNAL_URL);const PUBLIC_API_URL = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL);const PUBLIC_MEDIA_URL =  normalizeBaseUrl(process.env.NEXT_PUBLIC_MEDIA_URL) || PUBLIC_API_URL;function getApiBase() {  if (typeof window === 'undefined') {    if (IS_PAGES_BUILD) {      return PUBLIC_API_URL || INTERNAL_API_URL;    }    return INTERNAL_API_URL || PUBLIC_API_URL;  }  return PUBLIC_API_URL;}export function buildApiUrl(path: string) {  const normalizedPath = path.startsWith('/') ? path : `/${path}`;  const base = getApiBase();  return base ? `${base}${normalizedPath}` : normalizedPath;}function normalizeStorageKey(value?: string | null) {  const trimmed = value?.trim().replace(/^\/+/, '') ?? '';  if (!trimmed) return '';  return trimmed    .replace(/^uploads\/media\/+/i, '')    .replace(/^uploads\/+/i, '')    .replace(/^media\/+/i, '');}function normalizeUploadsPath(value: string) {  const trimmed = value.trim();  if (!trimmed) return '';  const normalized = normalizeStorageKey(trimmed);  return normalized ? `/uploads/${normalized}` : '';}function toUploadsPath(value: string) {  const trimmed = value.trim();  if (!trimmed) return '';  if (/^(data|blob):/i.test(trimmed)) return trimmed;  if (/^https?:\/\//i.test(trimmed)) {    try {      const url = new URL(trimmed);      return normalizeUploadsPath(`${url.pathname}${url.search}${url.hash}`);    } catch {      return normalizeUploadsPath(trimmed);    }  }  if (trimmed.startsWith('/uploads/')) {    return normalizeUploadsPath(trimmed);  }  return normalizeUploadsPath(trimmed);}type ApiErrorPayload = {  error?: string;  message?: string;  details?: unknown;};type ApiFetchInit = RequestInit & {  next?: { revalidate?: number; tags?: string[] };  retry?: boolean;  maxAttempts?: number;  timeoutMs?: number;};type AnyRecord = Record<string, any>;const RETRY_STATUSES = new Set([408, 429, 500, 502, 503, 504]);const MAX_API_FETCH_ATTEMPTS = 5;const DEFAULT_API_FETCH_TIMEOUT_MS = IS_PAGES_BUILD ? 70_000 : 20_000;const MAX_RETRY_DELAY_MS = IS_PAGES_BUILD ? 10_000 : 15_000;const MAX_RETRY_AFTER_MS = 60_000;function sleep(ms: number) {  return new Promise((resolve) => setTimeout(resolve, ms));}function parseRetryAfterMs(value: string | null) {  if (!value) return null;  const seconds = Number(value);  if (Number.isFinite(seconds) && seconds >= 0) {    return seconds * 1000;  }  const dateMs = Date.parse(value);  if (Number.isFinite(dateMs)) {    return Math.max(0, dateMs - Date.now());  }  return null;}function getRetryDelayMs(response: Response, bodyText: string, attempt: number) {  const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'));  if (retryAfterMs !== null) {    return Math.min(retryAfterMs, MAX_RETRY_AFTER_MS);  }  const bodyMatch = bodyText.match(/retry in\s+(\d+)\s+seconds?/i);  if (bodyMatch?.[1]) {    return Math.min(Number(bodyMatch[1]) * 1000, MAX_RETRY_AFTER_MS);  }  return Math.min(1000 * 2 ** attempt, MAX_RETRY_DELAY_MS);}function getNetworkRetryDelayMs(attempt: number) {  return Math.min(1000 * 2 ** attempt, MAX_RETRY_DELAY_MS);}function parsePayload<T>(bodyText: string): T | ApiErrorPayload | null {  if (!bodyText) return null;  try {    return JSON.parse(bodyText) as T | ApiErrorPayload;  } catch {    return null;  }}export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promise<T> {  const {    retry = true,    maxAttempts,    timeoutMs = DEFAULT_API_FETCH_TIMEOUT_MS,    ...fetchInit  } = init;  const headers = new Headers(fetchInit.headers ?? {});  // Автоматически ставим application/json, если это не FormData (файлы)  if (!(fetchInit.body instanceof FormData) && !headers.has('Content-Type')) {    headers.set('Content-Type', 'application/json');  }  const url = buildApiUrl(path);  const attempts =    retry === false ? 1 : Math.max(1, maxAttempts ?? MAX_API_FETCH_ATTEMPTS);  let lastError: unknown;  for (let attempt = 0; attempt < attempts; attempt += 1) {    const controller = new AbortController();    const timeout = setTimeout(() => controller.abort(), timeoutMs);    const externalSignal = fetchInit.signal;    const abortFromExternalSignal = () => controller.abort();    if (externalSignal?.aborted) {      controller.abort();    } else {      externalSignal?.addEventListener('abort', abortFromExternalSignal, {        once: true,      });    }    let response: Response;    let bodyText = '';    try {      response = await fetch(url, {        ...fetchInit,        headers,        signal: controller.signal,      });      bodyText = await response.text();    } catch (error) {      lastError = error;      if (attempt < attempts - 1) {        const delayMs = getNetworkRetryDelayMs(attempt);        await sleep(delayMs);        continue;      }      throw error;    } finally {      clearTimeout(timeout);      externalSignal?.removeEventListener('abort', abortFromExternalSignal);    }    const payload = parsePayload<T>(bodyText);    if (response.ok) {      return payload as T;    }    if (attempt < attempts - 1 && RETRY_STATUSES.has(response.status)) {      const delayMs = getRetryDelayMs(response, bodyText, attempt);      await sleep(delayMs);      continue;    }    const errorPayload = payload as ApiErrorPayload | null;    const error = new Error(      errorPayload?.message ||        errorPayload?.error ||        bodyText ||        `Request failed with status ${response.status}`,    ) as Error & { status?: number; payload?: ApiErrorPayload | null };    error.status = response.status;    error.payload = errorPayload;    throw error;  }  throw lastError instanceof Error ? lastError : new Error(`Request failed for ${path}`);}async function apiFetchWithSession<T>(path: string, init: ApiFetchInit = {}): Promise<T> {  return apiFetch<T>(path, {    ...init,    credentials: 'include',    cache: 'no-store',  });}export function resolveMediaUrl(path?: string | null) {  if (!path) return null;  if (/^(data|blob):/i.test(path)) return path;  const mediaPath = toUploadsPath(path);  if (!mediaPath) return null;  return PUBLIC_MEDIA_URL ? `${PUBLIC_MEDIA_URL}${mediaPath}` : mediaPath;}export type CatalogCategoryTreeItem = {  id: string;  slug: string;  name: string;  children: CatalogCategoryTreeItem[];  productCount?: number;};type RawCatalogCategoryTreeItem = {  id?: string | null;  slug?: string | null;  name?: string | null;  productCount?: number | null;  children?: RawCatalogCategoryTreeItem[] | null;};function normalizeCategoryTree(  items: RawCatalogCategoryTreeItem[] | null | undefined,): CatalogCategoryTreeItem[] {  if (!Array.isArray(items)) return [];  return items    .filter((item): item is RawCatalogCategoryTreeItem => Boolean(item?.slug && item?.name))    .map((item) => ({      id: item.id ?? item.slug ?? '',      slug: item.slug ?? '',      name: item.name ?? '',      productCount: typeof item.productCount === 'number' ? item.productCount : undefined,      children: normalizeCategoryTree(item.children),    }));}export type CatalogEntityRef = {  id?: string;  slug?: string;  name?: string;  [key: string]: any;} | null;function normalizeEntityRef(value: unknown): CatalogEntityRef {  if (!value || typeof value !== 'object') return null;  const record = value as AnyRecord;  return {    ...record,    id: typeof record.id === 'string' ? record.id : undefined,    slug: typeof record.slug === 'string' ? record.slug : undefined,    name: typeof record.name === 'string' ? record.name : undefined,  };}export type HomeProductItem = {  id: string;  title: string;  slug: string;  saleType: string;  isAdult: boolean;  priceFrom: number;  currency: string;  qualityScore: number;  showOnHome: boolean;  shortDescription: string | null;  stockQty: number;  coverImage: {    url: string;    alt: string | null;  } | null;  category?: CatalogEntityRef;  franchise?: CatalogEntityRef;  brand?: CatalogEntityRef;  character?: CatalogEntityRef;  defaultVariant?: {    id: string;    name: string;    price: number;    currency: string;    sizeLabel: string | null;    stockQty: number;    reservedQty: number;  } | null;};export type CatalogProductImage = {  id: string;  url: string;  alt: string | null;  isCover: boolean;  storageKey: string | null;  [key: string]: any;};function normalizeImage(value: unknown): CatalogProductImage | null {  if (!value || typeof value !== 'object') return null;  const image = value as AnyRecord;  const id = typeof image.id === 'string' ? image.id : '';  const storageKey = normalizeStorageKey(    typeof image.storageKey === 'string' ? image.storageKey : '',  );  let url = typeof image.url === 'string' ? image.url.trim() : '';  if (storageKey) {    url = `/uploads/${storageKey.replace(/^\/+/, '')}`;  } else if (url) {    url = toUploadsPath(url);  }  if (!id && !url) return null;  return {    ...image,    id,    url,    alt: typeof image.alt === 'string' ? image.alt : image.alt ?? null,    isCover: Boolean(image.isCover),    storageKey: storageKey || null,  };}function normalizeCoverImage(value: unknown) {  const image = normalizeImage(value);  if (!image) return null;  return {    url: image.url,    alt: image.alt,  };}function normalizeImages(value: unknown): CatalogProductImage[] {  if (!Array.isArray(value)) return [];  return value.map(normalizeImage).filter((item): item is CatalogProductImage => Boolean(item));}export type CatalogProductListItem = {  id: string;  title: string;  slug: string;  sku: string;  status: string;  isAdult: boolean;  saleType: string;  priceFrom: number;  currency: string;  stockQty: number;  series?: string | null;  productType?: string;  coverImage: {    url: string;    alt: string | null;  } | null;  category?: CatalogEntityRef;  franchise?: CatalogEntityRef;  brand?: CatalogEntityRef;  character?: CatalogEntityRef;  [key: string]: any;};function normalizeCatalogProductListItem(value: unknown): CatalogProductListItem | null {  if (!value || typeof value !== 'object') return null;  const item = value as AnyRecord;  return {    ...item,    id: typeof item.id === 'string' ? item.id : '',    title: typeof item.title === 'string' ? item.title : '',    slug: typeof item.slug === 'string' ? item.slug : '',    sku: typeof item.sku === 'string' ? item.sku : '',    status: typeof item.status === 'string' ? item.status : '',    isAdult: Boolean(item.isAdult),    saleType: typeof item.saleType === 'string' ? item.saleType : '',    priceFrom:      typeof item.priceFrom === 'number'        ? item.priceFrom        : Number(item.priceFrom ?? 0) || 0,    currency: typeof item.currency === 'string' ? item.currency : '',    stockQty:      typeof item.stockQty === 'number'        ? item.stockQty        : Number(item.stockQty ?? 0) || 0,    series: typeof item.series === 'string' ? item.series : item.series ?? null,    productType:      typeof item.productType === 'string' ? item.productType : item.productType ?? undefined,    coverImage: normalizeCoverImage(item.coverImage),    category: normalizeEntityRef(item.category),    franchise: normalizeEntityRef(item.franchise),    brand: normalizeEntityRef(item.brand),    character: normalizeEntityRef(item.character),  };}export type CatalogProductsResponse = {  items: CatalogProductListItem[];  meta: {    page: number;    limit: number;    total: number;    pageCount: number;  };};type CatalogCategoriesResponse = {  items?: RawCatalogCategoryTreeItem[];};function normalizeHomeProductItem(value: unknown): HomeProductItem | null {  if (!value || typeof value !== 'object') return null;  const item = value as AnyRecord;  const defaultVariant =    item.defaultVariant && typeof item.defaultVariant === 'object'      ? {          id: typeof item.defaultVariant.id === 'string' ? item.defaultVariant.id : '',          name: typeof item.defaultVariant.name === 'string' ? item.defaultVariant.name : '',          price:            typeof item.defaultVariant.price === 'number'              ? item.defaultVariant.price              : Number(item.defaultVariant.price ?? 0) || 0,          currency:            typeof item.defaultVariant.currency === 'string' ? item.defaultVariant.currency : '',          sizeLabel:            typeof item.defaultVariant.sizeLabel === 'string'              ? item.defaultVariant.sizeLabel              : item.defaultVariant.sizeLabel ?? null,          stockQty:            typeof item.defaultVariant.stockQty === 'number'              ? item.defaultVariant.stockQty              : Number(item.defaultVariant.stockQty ?? 0) || 0,          reservedQty:            typeof item.defaultVariant.reservedQty === 'number'              ? item.defaultVariant.reservedQty              : Number(item.defaultVariant.reservedQty ?? 0) || 0,        }      : null;  return {    ...item,    id: typeof item.id === 'string' ? item.id : '',    title: typeof item.title === 'string' ? item.title : '',    slug: typeof item.slug === 'string' ? item.slug : '',    saleType: typeof item.saleType === 'string' ? item.saleType : '',    isAdult: Boolean(item.isAdult),    priceFrom:      typeof item.priceFrom === 'number'        ? item.priceFrom        : Number(item.priceFrom ?? 0) || 0,    currency: typeof item.currency === 'string' ? item.currency : '',    qualityScore:      typeof item.qualityScore === 'number'        ? item.qualityScore        : Number(item.qualityScore ?? 0) || 0,    showOnHome: Boolean(item.showOnHome),    shortDescription:      typeof item.shortDescription === 'string'        ? item.shortDescription        : item.shortDescription ?? null,    stockQty:      typeof item.stockQty === 'number'        ? item.stockQty        : Number(item.stockQty ?? 0) || 0,    coverImage: normalizeCoverImage(item.coverImage),    category: normalizeEntityRef(item.category),    franchise: normalizeEntityRef(item.franchise),    brand: normalizeEntityRef(item.brand),    character: normalizeEntityRef(item.character),    defaultVariant,  };}export async function getCatalogCategories(): Promise<CatalogCategoryTreeItem[]> {  const response = await apiFetch<CatalogCategoriesResponse>('/api/catalog/categories', {    cache: 'force-cache',  });  return normalizeCategoryTree(response.items);}export async function getCatalogProducts(  params: Record<string, string | number | boolean | undefined> = {},): Promise<CatalogProductsResponse> {  const search = new URLSearchParams();  for (const [key, value] of Object.entries(params)) {    if (value === undefined || value === null || value === '') continue;    search.set(key, String(value));  }  const suffix = search.toString() ? `?${search.toString()}` : '';  const response = await apiFetch<AnyRecord>(`/api/catalog/products${suffix}`, {    cache: 'force-cache',  });  return {    items: Array.isArray(response.items)      ? response.items          .map(normalizeCatalogProductListItem)          .filter((item): item is CatalogProductListItem => Boolean(item))      : [],    meta: {      page: Number(response.meta?.page ?? 1) || 1,      limit: Number(response.meta?.limit ?? 1) || 1,      total: Number(response.meta?.total ?? 0) || 0,      pageCount: Number(response.meta?.pageCount ?? 0) || 0,    },  };}export async function getHomeProducts(): Promise<{ items: HomeProductItem[] }> {  const response = await apiFetch<AnyRecord>('/api/catalog/products/home', {    cache: 'force-cache',  });  return {    items: Array.isArray(response.items)      ? response.items          .map(normalizeHomeProductItem)          .filter((item): item is HomeProductItem => Boolean(item))      : [],  };}export type CatalogProductVariant = {  id: string;  name: string;  sku: string;  sizeLabel: string | null;  outfitLabel: string | null;  faceLabel: string | null;  resinGrams: number;  price: number;  currency: string;  stockQty: number;  reservedQty: number;  isDefault: boolean;  isActive: boolean;  images: CatalogProductImage[];  [key: string]: any;};function normalizeVariant(value: unknown): CatalogProductVariant | null {  if (!value || typeof value !== 'object') return null;  const variant = value as AnyRecord;  return {    ...variant,    id: typeof variant.id === 'string' ? variant.id : '',    name: typeof variant.name === 'string' ? variant.name : '',    sku: typeof variant.sku === 'string' ? variant.sku : '',    sizeLabel:      typeof variant.sizeLabel === 'string' ? variant.sizeLabel : variant.sizeLabel ?? null,    outfitLabel:      typeof variant.outfitLabel === 'string' ? variant.outfitLabel : variant.outfitLabel ?? null,    faceLabel:      typeof variant.faceLabel === 'string' ? variant.faceLabel : variant.faceLabel ?? null,    resinGrams:      typeof variant.resinGrams === 'number'        ? variant.resinGrams        : Number(variant.resinGrams ?? 0) || 0,    price: typeof variant.price === 'number' ? variant.price : Number(variant.price ?? 0) || 0,    currency: typeof variant.currency === 'string' ? variant.currency : '',    stockQty:      typeof variant.stockQty === 'number' ? variant.stockQty : Number(variant.stockQty ?? 0) || 0,    reservedQty:      typeof variant.reservedQty === 'number'        ? variant.reservedQty        : Number(variant.reservedQty ?? 0) || 0,    isDefault: Boolean(variant.isDefault),    isActive: variant.isActive !== false,    images: normalizeImages(variant.images),  };}function normalizeVariants(value: unknown): CatalogProductVariant[] {  if (!Array.isArray(value)) return [];  return value    .map(normalizeVariant)    .filter((item): item is CatalogProductVariant => Boolean(item));}export type CatalogProductDetail = {  id: string;  title: string;  slug: string;  sku: string;  status: string;  description: string | null;  shortDescription: string | null;  isAdult: boolean;  saleType: string;  ageRating: string;  priceFrom: number;  currency: string;  series?: string | null;  productType?: string;  images: CatalogProductImage[];  variants: CatalogProductVariant[];  attributes: Record<string, any> | null;  category?: CatalogEntityRef;  franchise?: CatalogEntityRef;  brand?: CatalogEntityRef;  character?: CatalogEntityRef;  [key: string]: any;};export async function getCatalogProductBySlug(slug: string): Promise<CatalogProductDetail> {  const response = await apiFetch<AnyRecord>(`/api/catalog/products/${encodeURIComponent(slug)}`, {    cache: 'force-cache',    maxAttempts: IS_PAGES_BUILD ? 5 : undefined,    timeoutMs: IS_PAGES_BUILD ? 70_000 : undefined,  });  return {    ...response,    id: typeof response.id === 'string' ? response.id : '',    title: typeof response.title === 'string' ? response.title : '',    slug: typeof response.slug === 'string' ? response.slug : '',    sku: typeof response.sku === 'string' ? response.sku : '',    status: typeof response.status === 'string' ? response.status : '',    description:      typeof response.description === 'string' ? response.description : response.description ?? null,    shortDescription:      typeof response.shortDescription === 'string'        ? response.shortDescription        : response.shortDescription ?? null,    isAdult: Boolean(response.isAdult),    saleType: typeof response.saleType === 'string' ? response.saleType : '',    ageRating: typeof response.ageRating === 'string' ? response.ageRating : '',    priceFrom:      typeof response.priceFrom === 'number'        ? response.priceFrom        : Number(response.priceFrom ?? 0) || 0,    currency: typeof response.currency === 'string' ? response.currency : '',    series: typeof response.series === 'string' ? response.series : response.series ?? null,    productType: typeof response.productType === 'string' ? response.productType : '',    images: normalizeImages(response.images),    variants: normalizeVariants(response.variants),    attributes:      response.attributes &&      typeof response.attributes === 'object' &&      !Array.isArray(response.attributes)        ? (response.attributes as Record<string, any>)        : null,    category: normalizeEntityRef(response.category),    franchise: normalizeEntityRef(response.franchise),    brand: normalizeEntityRef(response.brand),    character: normalizeEntityRef(response.character),  };}export function buildOAuthStartUrl(  provider: 'google' | 'facebook',  options: { returnTo?: string; remember?: boolean } = {},) {  const search = new URLSearchParams();  if (options.returnTo) search.set('returnTo', options.returnTo);  if (options.remember !== undefined) {    search.set('remember', options.remember ? '1' : '0');  }  const suffix = search.toString() ? `?${search.toString()}` : '';  return buildApiUrl(`/api/auth/oauth/${provider}/start${suffix}`);}export type AccountFavoriteItem = {  id: string;  createdAt: string;  productId: string;  title: string;  slug: string;  series: string | null;  saleType: string;  isAdult: boolean;  priceFrom: number;  currency: string;  stockQty: number;  productType: string | null;  coverImage: {    id?: string;    url: string;    alt: string | null;    isCover?: boolean;    storageKey?: string | null;  } | null;  category?: CatalogEntityRef;  brand?: CatalogEntityRef;  franchise?: CatalogEntityRef;  character?: CatalogEntityRef;  defaultVariant?: {    id: string;    name: string;    price: number;    currency: string;    sizeLabel: string | null;    stockQty: number;    reservedQty: number;  } | null;};export async function getAccountFavorites(): Promise<{ items: AccountFavoriteItem[] }> {  return apiFetchWithSession<{ items: AccountFavoriteItem[] }>('/api/account/favorites');}export async function addAccountFavorite(productId: string) {  return apiFetchWithSession<{ wished: true; item: AccountFavoriteItem }>(    `/api/account/favorites/${encodeURIComponent(productId)}`,    {      method: 'POST',    },  );}export async function removeAccountFavorite(productId: string) {  return apiFetchWithSession<{ wished: false; productId: string }>(    `/api/account/favorites/${encodeURIComponent(productId)}`,    {      method: 'DELETE',    },  );}export type AccountUser = {  id: string;  email: string;  username: string;  firstName: string;  lastName: string;  phone?: string | null;  role: 'USER' | 'ADMIN';  createdAt: string;};export type UpdateAccountProfileInput = {  firstName: string;  lastName: string;  email: string;  phone?: string | null;};export async function getAccountProfile(): Promise<AccountUser> {  const response = await apiFetchWithSession<{ user: AccountUser }>('/api/auth/me');  return response.user;}export type RegisterInput = {  firstName: string;  lastName: string;  username: string;  email: string;  password: string;  code: string;  remember?: boolean;};export type LoginInput = {  email: string;  password: string;  remember?: boolean;};export async function requestRegisterCode(  email: string,): Promise<{ ok: true; message?: string }> {  return apiFetch<{ ok: true; message?: string }>('/api/auth/register/request-code', {    method: 'POST',    body: JSON.stringify({ email }),  });}export async function registerAccount(payload: RegisterInput): Promise<{ user: AccountUser }> {  return apiFetchWithSession<{ user: AccountUser }>('/api/auth/register', {    method: 'POST',    body: JSON.stringify(payload),  });}export async function loginAccount(payload: LoginInput): Promise<{ user: AccountUser }> {  return apiFetchWithSession<{ user: AccountUser }>('/api/auth/login', {    method: 'POST',    body: JSON.stringify(payload),  });}export async function logoutAccount(): Promise<{ ok: true }> {  return apiFetchWithSession<{ ok: true }>('/api/auth/logout', {    method: 'POST',  });}export async function updateAccountProfile(  payload: UpdateAccountProfileInput,): Promise<AccountUser> {  const response = await apiFetchWithSession<{ user: AccountUser }>('/api/account/profile', {    method: 'PATCH',    body: JSON.stringify(payload),  });  return response.user;}export type OrderDeliveryMethod =  | 'nova-poshta-branch'  | 'ukrposhta-branch'  | 'courier'  | 'pickup';export type OrderPaymentMethod =  | 'card'  | 'cash-on-delivery'  | 'agreement'  | 'partial-prepayment'  | 'full-prepayment';export type OrderStatus =  | 'pending'  | 'paid'  | 'processing'  | 'shipped'  | 'delivered'  | 'cancelled';export type OrderRecordItem = {  id: string;  productId: string;  variantId: string;  slug: string;  name: string;  subtitle?: string | null;  series?: string | null;  price: number;  quantity: number;  currency: string;};export type OrderRecord = {  id: string;  number: string;  createdAt: string;  status: OrderStatus;  currency: string;  subtotal: number;  deliveryPrice: number;  total: number;  customer: {    fullName: string;    email: string;    phone: string;    city: string;    address: string;    deliveryMethod: OrderDeliveryMethod;    paymentMethod: OrderPaymentMethod;    comment: string;  };  items: OrderRecordItem[];};export type CreateOrderInput = {  email: string;  fullName: string;  phone: string;  city: string;  address: string;  deliveryMethod: OrderDeliveryMethod;  paymentMethod: OrderPaymentMethod;  currency: string;  comment?: string;  items: Array<{    variantId: string;    productId?: string;    qty: number;  }>;};export async function createOrder(payload: CreateOrderInput): Promise<{ order: OrderRecord }> {  return apiFetchWithSession<{ order: OrderRecord }>('/api/orders', {    method: 'POST',    body: JSON.stringify(payload),  });}export async function getAccountOrders(): Promise<{ items: OrderRecord[] }> {  return apiFetchWithSession<{ items: OrderRecord[] }>('/api/orders/my');}export async function getAccountOrder(id: string): Promise<{ order: OrderRecord }> {  return apiFetchWithSession<{ order: OrderRecord }>(    `/api/orders/my/${encodeURIComponent(id)}`,  );} 
+========== apps/storefront/next.config.ts ==========
+import type { NextConfig } from 'next'
+
+const deployTarget = process.env.DEPLOY_TARGET ?? 'server'
+const isPages = deployTarget === 'pages'
+
+const rawBasePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '')
+const useBasePath = process.env.USE_BASE_PATH === 'true'
+const basePath = isPages && useBasePath ? rawBasePath : ''
+
+const nextConfig: NextConfig = {
+  trailingSlash: true,
+
+  experimental: {
+    staticGenerationRetryCount: 3,
+    staticGenerationMaxConcurrency: 1,
+    staticGenerationMinPagesPerWorker: 200,
+  },
+
+  images: {
+    unoptimized: true,
+  },
+
+  ...(isPages
+    ? {
+        output: 'export',
+        ...(basePath ? { basePath } : {}),
+      }
+    : {
+        output: 'standalone',
+      }),
+}
+
+export default nextConfig
+========== apps/storefront/package.json ==========
+{
+  "name": "storefront",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0 -p 3000",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.0.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.4",
+    "typescript": "^5"
+  }
+}

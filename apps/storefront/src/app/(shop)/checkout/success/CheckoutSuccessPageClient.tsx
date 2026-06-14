@@ -23,7 +23,7 @@ type CardShellProps = {
   subtitle: string;
   children?: ReactNode;
 };
- 
+
 function getPaymentMethodLabel(value?: string) {
   switch (value) {
     case 'partial-prepayment':
@@ -146,8 +146,8 @@ function CheckoutSuccessContent() {
   }
 
   const detailsHref = queryOrderId
-    ? `/profile/orders/${queryOrderId}`
-    : '/profile/orders';
+    ? `/profile/orders/details/?id=${encodeURIComponent(queryOrderId)}`
+    : "/profile/orders";
 
   return (
     <CardShell

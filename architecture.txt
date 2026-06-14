@@ -1,0 +1,138 @@
+.
+├── apps
+│   └── storefront
+│       ├── Dockerfile
+│       ├── .env.local
+│       ├── next.config.ts
+│       ├── next-env.d.ts
+│       ├── package.json
+│       ├── postcss.config.js
+│       ├── src
+│       │   ├── app
+│       │   │   ├── (account)
+│       │   │   │   ├── layout.tsx
+│       │   │   │   └── profile
+│       │   │   │       ├── addresses
+│       │   │   │       │   ├── AddressesPage.module.css
+│       │   │   │       │   └── page.tsx
+│       │   │   │       ├── orders
+│       │   │   │       │   ├── details
+│       │   │   │       │   │   ├── OrderDetailsPageClient.tsx
+│       │   │   │       │   │   └── page.tsx
+│       │   │   │       │   ├── OrderDetailsPage.module.css
+│       │   │   │       │   ├── OrdersPage.module.css
+│       │   │   │       │   └── page.tsx
+│       │   │   │       ├── page.tsx
+│       │   │   │       ├── ProfilePage.module.css
+│       │   │   │       └── settings
+│       │   │   │           ├── page.tsx
+│       │   │   │           └── ProfileSettingsPage.module.css
+│       │   │   ├── (age-gate)
+│       │   │   │   └── verify
+│       │   │   │       ├── page.tsx
+│       │   │   │       ├── VerifyAgeClient.tsx
+│       │   │   │       └── Verify.module.css
+│       │   │   ├── (auth)
+│       │   │   │   ├── forgot-password
+│       │   │   │   │   └── page.tsx
+│       │   │   │   ├── login
+│       │   │   │   │   ├── LoginPageClient.tsx
+│       │   │   │   │   ├── LoginPage.module.css
+│       │   │   │   │   └── page.tsx
+│       │   │   │   └── register
+│       │   │   │       ├── page.tsx
+│       │   │   │       └── RegisterPage.module.css
+│       │   │   ├── (content)
+│       │   │   │   ├── contacts
+│       │   │   │   │   ├── ContactsPage.module.css
+│       │   │   │   │   └── page.tsx
+│       │   │   │   ├── delivery
+│       │   │   │   │   ├── DeliveryPage.module.css
+│       │   │   │   │   └── page.tsx
+│       │   │   │   ├── faq
+│       │   │   │   │   ├── FaqPage.module.css
+│       │   │   │   │   └── page.tsx
+│       │   │   │   ├── payment
+│       │   │   │   │   ├── page.tsx
+│       │   │   │   │   └── PaymentPage.module.css
+│       │   │   │   ├── privacy
+│       │   │   │   │   ├── page.tsx
+│       │   │   │   │   └── PrivacyPage.module.css
+│       │   │   │   ├── returns
+│       │   │   │   │   ├── page.tsx
+│       │   │   │   │   └── Returns.module.css
+│       │   │   │   ├── terms
+│       │   │   │   │   ├── page.tsx
+│       │   │   │   │   └── TermsPage.module.css
+│       │   │   │   └── user-data-deletion
+│       │   │   │       ├── page.tsx
+│       │   │   │       └── UserDataDeletionPage.module.css
+│       │   │   ├── globals.css
+│       │   │   ├── Home.module.css
+│       │   │   ├── HomePageClient.tsx
+│       │   │   ├── layout.tsx
+│       │   │   ├── not-found.tsx
+│       │   │   ├── page.tsx
+│       │   │   ├── robots.ts
+│       │   │   ├── (shop)
+│       │   │   │   ├── cart
+│       │   │   │   │   ├── CartPage.module.css
+│       │   │   │   │   └── page.tsx
+│       │   │   │   ├── catalog
+│       │   │   │   │   ├── Catalog.module.css
+│       │   │   │   │   ├── CatalogPageClient.tsx
+│       │   │   │   │   ├── catalog.utils.ts
+│       │   │   │   │   ├── _components
+│       │   │   │   │   │   ├── CatalogPagination.module.css
+│       │   │   │   │   │   ├── CatalogPagination.tsx
+│       │   │   │   │   │   ├── CatalogProductCard.tsx
+│       │   │   │   │   │   ├── CatalogSidebar.tsx
+│       │   │   │   │   │   └── HiddenQueryInputs.tsx
+│       │   │   │   │   └── page.tsx
+│       │   │   │   ├── checkout
+│       │   │   │   │   ├── CheckoutPage.module.css
+│       │   │   │   │   ├── failed
+│       │   │   │   │   │   └── page.tsx
+│       │   │   │   │   ├── page.tsx
+│       │   │   │   │   └── success
+│       │   │   │   │       ├── CheckoutSuccessPageClient.tsx
+│       │   │   │   │       ├── CheckoutSuccessPage.module.css
+│       │   │   │   │       └── page.tsx
+│       │   │   │   ├── favorites
+│       │   │   │   │   ├── FavoritesPage.module.css
+│       │   │   │   │   └── page.tsx
+│       │   │   │   └── product
+│       │   │   │       └── [slug]
+│       │   │   │           ├── page.tsx
+│       │   │   │           ├── ProductDetailsClient.tsx
+│       │   │   │           └── ProductDetails.module.css
+│       │   │   └── sitemap.ts
+│       │   ├── components
+│       │   │   ├── layout
+│       │   │   │   ├── Footer.module.css
+│       │   │   │   ├── Footer.tsx
+│       │   │   │   ├── Header.module.css
+│       │   │   │   └── Header.tsx
+│       │   │   └── product
+│       │   │       ├── ProductCard.module.css
+│       │   │       └── ProductCard.tsx
+│       │   └── lib
+│       │       ├── age-gate.ts
+│       │       ├── api.ts
+│       │       └── demo-store.ts
+│       ├── tailwind.config.ts
+│       └── tsconfig.json
+├── architecture.txt
+├── .github
+│   └── workflows
+│       └── deploy-storefront.yml
+├── .gitignore
+├── package.json
+├── packages
+│   └── shared-types
+│       ├── index.ts
+│       └── package.json
+├── pnpm-lock.yaml
+└── pnpm-workspace.yaml
+
+44 directories, 92 files
