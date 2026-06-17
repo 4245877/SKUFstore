@@ -19,6 +19,7 @@
 .breadcrumb {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   font-size: 12px;
   font-weight: 400;
@@ -43,6 +44,11 @@
 }
 
 .breadcrumbCurrent {
+  min-width: 0;
+  flex: 1 1 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -304,6 +310,7 @@
 .priceBlock {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 22px;
   padding: 16px 20px;
@@ -479,6 +486,7 @@
   font-weight: 500;
   color: var(--ink);
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .variantMeta {
@@ -487,6 +495,7 @@
   letter-spacing: 0.1em;
   color: var(--text-muted);
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .variantRight {
@@ -787,12 +796,15 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  min-width: 0;
 }
 
 .specsValue {
   padding: 14px 0;
   color: var(--text-secondary);
   font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .breadcrumbLink:focus-visible,

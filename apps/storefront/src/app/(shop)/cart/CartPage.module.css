@@ -940,9 +940,14 @@
   }
 
   .cartItem {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
     gap: 12px;
+  }
+
+  .cartItemInfo {
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .cartItemPrice,
@@ -954,10 +959,13 @@
 
   .cartItemPrice {
     grid-column: 1 / -1;
+    grid-row: 2;
     justify-content: flex-start;
   }
 
   .cartItemSubtotal {
+    grid-column: 2;
+    grid-row: 3;
     justify-content: flex-end;
   }
 
@@ -976,6 +984,8 @@
   }
 
   .cartItemQtyWrap {
+    grid-column: 1;
+    grid-row: 3;
     justify-content: flex-start;
   }
 
@@ -1001,6 +1011,10 @@
 
   .cartItem {
     padding: 16px 12px;
+  }
+
+  .cartItemInfo {
+    padding-right: 8px;
   }
 
   .cartItemThumb {

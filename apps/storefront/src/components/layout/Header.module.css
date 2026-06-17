@@ -64,6 +64,11 @@
   background: rgba(253, 248, 243, 0.97);
 }
 
+.mobileExpanded {
+  z-index: 500;
+  background: rgba(253, 248, 243, 0.98);
+}
+
 /* ── Inner layout ────────────────────────── */
 .inner {
   max-width: var(--container);
@@ -612,7 +617,7 @@
 /* ── Mobile nav drawer ───────────────────── */
 .mobileNav {
   position: fixed;
-  top: 0;
+  top: 64px;
   right: 0;
   bottom: 0;
   width: min(88vw, 380px);
@@ -623,6 +628,7 @@
   transform: translateX(100%);
   transition: transform 0.38s var(--ease-out-expo);
   overflow-y: auto;
+  overscroll-behavior: contain;
   border-left: 1px solid var(--border-soft);
 }
 
@@ -658,6 +664,7 @@
 
 .mobileSearchInput {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
   background: transparent;
@@ -841,6 +848,10 @@
   .inner {
     height: 56px;
     gap: 12px;
+  }
+
+  .mobileNav {
+    top: 56px;
   }
 
   .logoMain {
