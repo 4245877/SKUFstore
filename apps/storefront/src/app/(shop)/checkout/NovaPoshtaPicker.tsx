@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { buildApiUrl } from "../../../lib/api";
 import styles from "./CheckoutPage.module.css";
 
 type CitySuggestion = {
@@ -96,7 +97,11 @@ async function fetchNovaPoshtaSuggestions(
     return cached.data;
   }
 
-  const response = await fetch(`/api/nova-poshta/warehouses?${search.toString()}`, {
+  const apiUrl = buildApiUrl(
+    `/api/nova-poshta/warehouses?${search.toString()}`,
+  );
+
+  const response = await fetch(apiUrl, {
     cache: "no-store",
     headers: {
       Accept: "application/json",
