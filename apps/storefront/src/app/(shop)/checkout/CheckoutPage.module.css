@@ -227,7 +227,98 @@
 .fieldHint {
   margin: 12px 0 0;
 }
-
+.novaPoshtaStatus {
+  min-height: 18px;
+  margin: -4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.novaPoshtaStatus p {
+  margin: 0;
+}
+.warningText {
+  color: #8a2e2e;
+}
+.citySuggestions {
+  display: grid;
+  gap: 8px;
+}
+.suggestionTitle {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.citySuggestionList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.citySuggestionButton,
+.warehouseSuggestionButton {
+  width: 100%;
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: left;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+}
+.citySuggestionButton {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+}
+.citySuggestionButton:hover,
+.warehouseSuggestionButton:hover {
+  border-color: var(--rose);
+  background: var(--lace);
+}
+.citySuggestionButton strong,
+.warehouseSuggestionMain strong {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.citySuggestionButton small,
+.warehouseSuggestionButton small {
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.warehouseSuggestions {
+  display: grid;
+  max-height: 270px;
+  overflow: auto;
+  gap: 8px;
+  padding: 2px;
+}
+.warehouseSuggestionButton {
+  display: grid;
+  gap: 6px;
+  padding: 11px 12px;
+}
+.warehouseSuggestionMain {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+.warehouseTypeBadge {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid var(--blush);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--lace) 78%, var(--surface));
+  color: var(--mauve);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+}
 .summaryColumn {
   min-width: 0;
 }
@@ -475,6 +566,8 @@
 .breadcrumb a:focus-visible,
 .summaryHeader a:focus-visible,
 .itemInfo a:focus-visible,
+.citySuggestionButton:focus-visible,
+.warehouseSuggestionButton:focus-visible,
 .optionCard:focus-within {
   outline: 2px solid var(--rose);
   outline-offset: 3px;
@@ -539,12 +632,18 @@
     width: 48px;
     height: 62px;
   }
+  .warehouseSuggestionMain {
+    display: grid;
+    gap: 6px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fieldsGrid input,
   .commentField textarea,
   .optionCard,
+  .citySuggestionButton,
+  .warehouseSuggestionButton,
   .submitButton {
     transition: none;
   }

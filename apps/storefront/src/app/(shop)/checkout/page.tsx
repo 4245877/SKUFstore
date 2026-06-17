@@ -25,6 +25,7 @@ import {
   type StoreOrder,
 } from "../../../lib/demo-store";
 
+import { NovaPoshtaPicker } from "./NovaPoshtaPicker";
 import styles from "./CheckoutPage.module.css";
 
 const INITIAL_FORM: CheckoutFormValues = {
@@ -46,7 +47,7 @@ const DELIVERY_OPTIONS: Array<{
   {
     value: "nova-poshta-branch",
     label: "Нова Пошта — відділення або поштомат",
-    hint: "Вкажіть номер відділення, поштомата або повну адресу.",
+    hint: "Почніть вводити місто, номер або адресу та оберіть варіант зі списку.",
   },
   {
     value: "ukrposhta-branch",
@@ -425,41 +426,50 @@ export default function CheckoutPage() {
                   </label>
                 ))}
               </div>
-
               <div className={styles.fieldsGrid}>
-                <label>
-                  <span>Населений пункт *</span>
-
-                  <input
-                    type="text"
-                    value={form.city}
-                    onChange={(event) => setField("city", event.target.value)}
-                    autoComplete="address-level2"
-                    required
-                    maxLength={120}
-                    placeholder="Київ"
+                {form.deliveryMethod === "nova-poshta-branch" ? (
+                  <NovaPoshtaPicker
+                    city={form.city}
+                    address={form.address}
+                    onCityChange={(value) => setField("city", value)}
+                    onAddressChange={(value) => setField("address", value)}
                   />
-                </label>
-
-                <label>
-                  <span>Адреса або відділення *</span>
-
-                  <input
-                    type="text"
-                    value={form.address}
-                    onChange={(event) =>
-                      setField("address", event.target.value)
-                    }
-                    autoComplete="street-address"
-                    required
-                    maxLength={240}
-                    placeholder={
-                      form.deliveryMethod === "pickup"
-                        ? "Наприклад, узгодити з менеджером"
-                        : "Наприклад, відділення №12"
-                    }
-                  />
-                </label>
+                ) : (
+                  <>
+                    <label>
+                      <span>Населений пункт *</span>
+                      <input
+                        type="text"
+                        value={form.city}
+                        onChange={(event) =>
+                          setField("city", event.target.value)
+                        }
+                        autoComplete="address-level2"
+                        required
+                        maxLength={120}
+                        placeholder="Київ"
+                      />
+                    </label>
+                    <label>
+                      <span>Адреса або відділення *</span>
+                      <input
+                        type="text"
+                        value={form.address}
+                        onChange={(event) =>
+                          setField("address", event.target.value)
+                        }
+                        autoComplete="street-address"
+                        required
+                        maxLength={240}
+                        placeholder={
+                          form.deliveryMethod === "pickup"
+                            ? "Наприклад, узгодити з менеджером"
+                            : "Наприклад, відділення №12"
+                        }
+                      />
+                    </label>
+                  </>
+                )}
               </div>
 
               {selectedDelivery ? (
@@ -624,4 +634,4 @@ export default function CheckoutPage() {
       </div>
     </main>
   );
-}
+}
