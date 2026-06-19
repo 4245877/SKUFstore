@@ -5,6 +5,7 @@
 /* ── Page Layout ─────────────────────────── */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--cream);
   --catalog-radius-xs: 4px;
   --catalog-radius-sm: 6px;
@@ -922,7 +923,7 @@
   position: fixed;
   inset: 0;
   background: var(--overlay-dark, rgba(30,20,22,0.45));
-  z-index: 100;
+  z-index: 400;
   backdrop-filter: blur(2px);
   animation: fadeIn 0.2s ease both;
 }
@@ -936,15 +937,28 @@
   bottom: 0;
   width: min(300px, 85vw);
   background: var(--surface);
-  z-index: 101;
+  z-index: 401;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px 0 40px;
   border-radius: 0 var(--catalog-radius-sm) var(--catalog-radius-sm) 0;
   transform: translateX(-100%);
-  transition: transform 0.32s var(--ease-out-expo);
+  visibility: hidden;
+  transition:
+    transform 0.32s var(--ease-out-expo),
+    visibility 0.32s var(--ease-out-expo);
+}
+
+/* Сайдбар-фільтри всередині мобільного drawer */
+.drawerFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 20px;
 }
 .drawerOpen {
   transform: translateX(0);
+  visibility: visible;
 }
 .drawerHeader {
   display: flex;

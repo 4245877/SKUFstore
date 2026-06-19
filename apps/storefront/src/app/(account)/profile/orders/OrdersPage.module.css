@@ -6,6 +6,7 @@
 /* ── Page Shell ──────────────────────────── */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--cream);
   background-image:
     radial-gradient(circle at 10% 20%, rgba(242, 201, 201, 0.18) 0%, transparent 50%),

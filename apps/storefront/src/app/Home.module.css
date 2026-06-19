@@ -1086,6 +1086,14 @@
 .catCard:nth-child(4) { animation: fadeUp 0.7s var(--ease-out-expo) 0.26s both; }
 
 /* ── Responsive ──────────────────────────── */
+/* На тач-пристроях немає ховера — показуємо дії картки одразу */
+@media (hover: none) {
+  .cardActions {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 1024px) {
   .catGrid {
     grid-template-columns: repeat(2, 1fr);

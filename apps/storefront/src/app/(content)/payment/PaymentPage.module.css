@@ -6,6 +6,7 @@
 /* ── Page layout ─────────────────────────── */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--parchment);
   padding: clamp(32px, 5vw, 64px) var(--gutter);
   animation: fadeIn 0.5s var(--ease-out-expo) both;

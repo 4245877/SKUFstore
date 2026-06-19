@@ -221,6 +221,25 @@ export default function CatalogPageClient() {
     safePage: 1,
   });
 
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Закриваємо мобільний drawer фільтрів, коли змінюються параметри пошуку
+  useEffect(() => {
+    setMobileFiltersOpen(false);
+  }, [searchParamsKey]);
+
+  // Блокуємо прокручування фону, поки відкритий drawer фільтрів
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileFiltersOpen]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -614,6 +633,20 @@ export default function CatalogPageClient() {
         <div className={styles.content}>
           <div className={styles.toolbar}>
             <div className={styles.toolbarLeft}>
+              <button
+                type="button"
+                className={styles.filterToggle}
+                onClick={() => setMobileFiltersOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={mobileFiltersOpen}
+                aria-controls="catalog-filters-drawer"
+              >
+                <span className={styles.filterToggleIcon} aria-hidden="true">
+                  ⚙
+                </span>
+                Фільтри
+              </button>
+
               <span className={styles.pageCountLabel}>
                 Сторінка {safePage} з {pageCount}
               </span>
@@ -710,6 +743,48 @@ export default function CatalogPageClient() {
           )}
         </div>
       </div>
+
+      <div
+        className={`${styles.drawerOverlay} ${
+          mobileFiltersOpen ? styles.drawerOverlayOpen : ''
+        }`}
+        onClick={() => setMobileFiltersOpen(false)}
+        aria-hidden="true"
+      />
+
+      <aside
+        id="catalog-filters-drawer"
+        className={`${styles.drawer} ${mobileFiltersOpen ? styles.drawerOpen : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Фільтри каталогу"
+        aria-hidden={!mobileFiltersOpen}
+      >
+        <div className={styles.drawerHeader}>
+          <span className={styles.drawerTitle}>Фільтри</span>
+          <button
+            type="button"
+            className={styles.drawerClose}
+            onClick={() => setMobileFiltersOpen(false)}
+            aria-label="Закрити фільтри"
+          >
+            ✕
+          </button>
+        </div>
+
+        <CatalogSidebar
+          className={styles.drawerFilters}
+          idPrefix="catalog-drawer"
+          categories={state.categories}
+          searchParams={normalizedSearchParams as SearchParamsMap}
+          currentQuery={currentQuery}
+          currentCategorySlug={currentCategorySlug}
+          currentSaleType={currentSaleType}
+          currentIsAdult={currentIsAdult}
+          currentMinPrice={currentMinPrice}
+          currentMaxPrice={currentMaxPrice}
+        />
+      </aside>
     </div>
   );
 }

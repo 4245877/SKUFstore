@@ -4,6 +4,7 @@
 /* ─── Page Shell ─────────────────────────────────────────────────────────── */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg);
   /* Subtle warm noise texture overlay via repeating-conic */
   background-image:

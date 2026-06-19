@@ -6,7 +6,10 @@
 /* ── Page wrapper ────────────────────────── */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--cream);
+  /* Запас знизу, щоб фіксована панель підсумку не перекривала контент */
+  padding-bottom: 104px;
 }
 
 /* ── Page Header ─────────────────────────── */
@@ -1218,6 +1221,11 @@
 }
 
 @media (max-width: 768px) {
+  .page {
+    /* На мобільному панель підсумку розкладається в стовпчик і вища */
+    padding-bottom: 220px;
+  }
+
   .headerInner {
     flex-direction: column;
     align-items: flex-start;

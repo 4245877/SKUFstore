@@ -6,6 +6,7 @@
 /* ── Page shell ─────────────────────────── */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
   padding-bottom: clamp(64px, 10vw, 120px);
 }
