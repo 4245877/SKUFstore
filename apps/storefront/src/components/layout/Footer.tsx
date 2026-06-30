@@ -52,11 +52,11 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <Link href="/" className={styles.logo} aria-label="SKUFNYA — на головну">
-            <span className={styles.logoMark}>✿</span>
+            <span className={styles.logoMark}>🎀</span>
             <span className={styles.logoText}>SKUFNYA</span>
           </Link>
 
-          <p className={styles.logoJp}>スクーフニャ</p>
+          <p className={styles.logoJp}>スクフニャ</p>
 
           <p className={styles.brandDesc}>
             Магазин аніме-фігурок і колекційних моделей з уважним відбором,

@@ -154,10 +154,6 @@ img {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-@keyframes ribbonSlide {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
-}
 @keyframes petalDrift {
   0%   { transform: translateY(0) rotate(0deg); opacity: 0.7; }
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }

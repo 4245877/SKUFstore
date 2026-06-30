@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -82,8 +83,6 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Кошик',
     labelJp: 'カート',
     href: '/cart',
-    badge: 'NEW',
-    badgeVariant: 'hot',
   },
   {
     label: 'Доставка',
@@ -99,6 +98,13 @@ const NAV_ITEMS: NavItem[] = [
 
 const SEARCH_PARAM_KEY = 'q';
 const CATALOG_PATH = '/catalog';
+
+const ANNOUNCEMENTS = [
+  'Безкоштовна доставка від 1 500 ₴',
+  'Актуальні товари з каталогу на головній',
+  '-15% на перше замовлення за промокодом SKUFNYA',
+  'Новинки та хіти регулярно оновлюються',
+];
 
 export default function Header() {
   const router = useRouter();
@@ -231,6 +237,21 @@ export default function Header() {
         }`}
         role="banner"
       >
+        <div className={styles.ribbon} aria-label="Оголошення магазину">
+          <div className={styles.ribbonTrack}>
+            {[0, 1].map((copy) => (
+              <div className={styles.ribbonInner} key={copy} aria-hidden={copy === 1}>
+                {ANNOUNCEMENTS.map((text, i) => (
+                  <Fragment key={`${copy}-${i}`}>
+                    {i > 0 && <span className={styles.ribbonSep}>✦</span>}
+                    <span>{text}</span>
+                  </Fragment>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className={styles.inner}>
           <Link href="/" className={styles.logo} aria-label="Skufnya — на головну">
             <span className={styles.logoIcon} aria-hidden="true">

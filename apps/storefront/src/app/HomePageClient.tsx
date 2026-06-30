@@ -183,20 +183,6 @@ export default function HomePageClient() {
 
   return (
     <main>
-      <div className={s.ribbon} role="marquee" aria-label="Оголошення">
-        <div className={s.ribbonTrack}>
-          <div className={s.ribbonInner}>
-            <span>Безкоштовна доставка від 1 500 ₴</span>
-            <span className={s.ribbonSep}>✦</span>
-            <span>Актуальні товари з каталогу на головній</span>
-            <span className={s.ribbonSep}>✦</span>
-            <span>-15% на перше замовлення за промокодом SKUFNYA</span>
-            <span className={s.ribbonSep}>✦</span>
-            <span>Новинки та хіти регулярно оновлюються</span>
-          </div>
-        </div>
-      </div>
-
       <section className={s.hero} aria-labelledby="hero-title">
         <div className={s.heroBg} aria-hidden="true">
           <div className={s.heroBgCircle} />
@@ -537,34 +523,24 @@ export default function HomePageClient() {
             💌
           </span>
           <h2 className={s.newsletterTitle} id="newsletter-title">
-            Розсилка скоро
+            Новинки першими
           </h2>
           <p className={s.newsletterText}>
-            Готуємо підписку на новинки та спеціальні пропозиції. Блок ще в розробці.
+            Анонси релізів, передзамовлень і знижок ми публікуємо в Telegram-каналі — підпишись,
+            щоб не пропустити.
           </p>
 
-          <div
-            className={s.newsletterForm}
-            role="group"
-            aria-label="Форма підписки на розсилку"
+          <Link
+            href="https://t.me/+l3_CI64EkuxlZmYy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={s.newsletterCta}
           >
-            <label htmlFor="email-input" className="sr-only">
-              Email адреса
-            </label>
-            <input
-              id="email-input"
-              type="email"
-              className={s.newsletterInput}
-              placeholder="Форма скоро з’явиться"
-              autoComplete="email"
-              disabled
-            />
-            <button type="button" className={s.newsletterBtn} disabled>
-              Скоро
-            </button>
-          </div>
+            <span aria-hidden="true">✈</span>
+            Підписатися в Telegram
+          </Link>
 
-          <p className={s.newsletterDisclaimer}>Поки що стеж за оновленнями через каталог.</p>
+          <p className={s.newsletterDisclaimer}>Без спаму — лише новини магазину.</p>
         </div>
       </section>
     </main>

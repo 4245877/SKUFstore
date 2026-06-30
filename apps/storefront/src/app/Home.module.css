@@ -3,43 +3,6 @@
    Maid-aesthetic anime figure shop
    ═══════════════════════════════════════════ */
 
-/* ── Announcement Banner ────────────────── */
-.ribbon {
-  background: var(--ink);
-  color: var(--gold-light);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  overflow: hidden;
-  padding: 0;
-  height: 34px;
-  display: flex;
-  align-items: center;
-}
-
-.ribbonTrack {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  animation: ribbonSlide 0.6s var(--ease-out-expo) both;
-  white-space: nowrap;
-}
-
-.ribbonInner {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  padding: 0 24px;
-}
-
-.ribbonSep {
-  color: var(--gold);
-  font-size: 10px;
-  opacity: 0.6;
-}
-
 /* ── Hero ────────────────────────────────── */
 .hero {
   position: relative;
@@ -325,7 +288,7 @@
 }
 
 .heroImageLabel {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.2em;
   color: var(--mauve);
@@ -356,7 +319,7 @@
   inset: auto 18px 18px 18px;
   z-index: 2;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: 2px;
   background: rgba(22, 16, 18, 0.62);
   backdrop-filter: blur(10px);
   color: #fff7f4;
@@ -380,6 +343,7 @@
   font-weight: 600;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -432,7 +396,7 @@
 }
 
 .brandItem {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 12px;
   letter-spacing: 0.2em;
   color: var(--text-muted);
@@ -477,7 +441,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.2em;
   color: var(--mauve);
@@ -659,7 +623,7 @@
 }
 
 .cardSeries {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 10px;
   letter-spacing: 0.15em;
   color: var(--text-muted);
@@ -681,6 +645,7 @@
   margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: calc(1.3em * 2);
@@ -849,7 +814,7 @@
 
 .featureText {
   font-size: 13px;
-  color: rgba(253,248,243,0.5);
+  color: rgba(253,248,243,0.72);
   line-height: 1.6;
 }
 
@@ -895,7 +860,7 @@
 }
 
 .promoLabel {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.2em;
   color: var(--gold);
@@ -922,7 +887,7 @@
 
 .promoText {
   font-size: 14px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.75);
   max-width: 480px;
   line-height: 1.7;
 }
@@ -984,63 +949,26 @@
   margin-bottom: 32px;
 }
 
-.newsletterForm {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s;
-}
-
-.newsletterForm:focus-within {
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.12);
-  border-color: var(--rose);
-}
-
-.newsletterInput {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 14px 18px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: var(--text-primary);
-  background: transparent;
-  min-width: 0;
-}
-
-.newsletterInput::placeholder {
-  color: var(--text-muted);
-}
-
-.newsletterBtn {
+.newsletterCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   background: var(--ink);
   color: var(--cream);
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.06em;
-  padding: 14px 24px;
-  white-space: nowrap;
-  transition: background 0.15s;
+  padding: 14px 28px;
+  border-radius: 2px;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
 }
 
-.newsletterBtn:hover {
+.newsletterCta:hover {
   background: var(--charcoal);
-}
-
-.newsletterInput:disabled {
-  cursor: not-allowed;
-  color: var(--text-muted);
-}
-
-.newsletterBtn:disabled,
-.newsletterBtn:disabled:hover {
-  background: var(--text-muted);
-  color: var(--surface);
-  cursor: not-allowed;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .newsletterDisclaimer {
@@ -1048,26 +976,6 @@
   color: var(--text-muted);
   margin-top: 14px;
   letter-spacing: 0.02em;
-}
-
-/* ── Petals decoration (cosmetic) ─────────── */
-.petalContainer {
-  pointer-events: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.petal {
-  position: absolute;
-  top: -20px;
-  font-size: 14px;
-  opacity: 0;
-  animation: petalDrift linear infinite;
 }
 
 /* ── Stagger animation helpers ───────────── */
@@ -1128,7 +1036,7 @@
   .heroMetaPanel {
     inset: auto 12px 12px 12px;
     padding: 12px 12px 13px;
-    border-radius: 14px;
+    border-radius: 2px;
   }
 
   .heroMetaTitle {
@@ -1197,7 +1105,14 @@
   }
 
   .heroStats {
-    display: none;
+    gap: 16px;
+    margin-top: 28px;
+    padding-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .heroStatNum {
+    font-size: 22px;
   }
 
   .heroCta {
@@ -1213,14 +1128,6 @@
   .heroActions {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .newsletterForm {
-    flex-direction: column;
-  }
-
-  .newsletterBtn {
-    border-top: 1px solid var(--border);
   }
 
   .cardBtn {

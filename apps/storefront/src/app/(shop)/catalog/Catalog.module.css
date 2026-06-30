@@ -57,7 +57,7 @@
   color: var(--text-muted);
   letter-spacing: 0.06em;
   margin-bottom: 20px;
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
 }
 .breadcrumbSep {
   color: var(--silver);
@@ -80,7 +80,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.2em;
   color: var(--mauve);
@@ -156,7 +156,7 @@
   background: var(--surface-alt);
 }
 .sidebarBlockTitle {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.18em;
   color: var(--text-muted);
@@ -532,7 +532,7 @@
   filter: drop-shadow(0 4px 10px rgba(201,107,107,0.25));
 }
 .cardImageHint {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 10px;
   letter-spacing: 0.2em;
   color: var(--mauve);
@@ -653,14 +653,14 @@
   flex: 1;
 }
 .cardEyebrow {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 10px;
   letter-spacing: 0.16em;
   color: var(--text-muted);
   text-transform: uppercase;
 }
 .cardSeries {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 10px;
   letter-spacing: 0.16em;
   color: var(--text-muted);

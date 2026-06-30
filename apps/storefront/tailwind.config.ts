@@ -9,9 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        primary: "#e11d48", // Розово-красный акцент, подходит для NSFW/Anime
+        background: "var(--bg)",
+        foreground: "var(--text-primary)",
+        primary: "var(--accent)",
       },
     },
   },
