@@ -10,7 +10,7 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from 'react';
-import { apiFetch } from '../../lib/api';
+import { getAccountProfile } from '../../lib/api';
 import {
   getCartItemsCount,
   readCart,
@@ -127,7 +127,7 @@ export default function Header() {
 
     async function syncAuth() {
       try {
-        await apiFetch<{ user: { id: string } }>('/api/auth/me');
+        await getAccountProfile();
         if (!cancelled) setAccountHref('/profile');
       } catch {
         if (!cancelled) setAccountHref('/login');
