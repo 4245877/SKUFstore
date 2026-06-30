@@ -37,6 +37,8 @@ const socials = [
   { href: 'https://t.me/SKUFnya_ua', label: 'Telegram', icon: '✈' },
   { href: 'https://t.me/+l3_CI64EkuxlZmYy', label: 'Telegram канал', icon: '◉' },
   { href: 'viber://chat?number=%2B380938213102', label: 'Viber', icon: '◈' },
+  { href: 'https://www.instagram.com/skufnya_ua', label: 'Instagram', icon: '◎' },
+  { href: 'https://www.tiktok.com/@skuf_nya', label: 'TikTok', icon: '♪' },
   { href: 'mailto:skufnya@gmail.com', label: 'Email', icon: '✉' },
 ];
 
@@ -101,6 +103,26 @@ export default function Footer() {
             >
               <span className={styles.contactIcon}>◉</span>
               Telegram-канал
+            </a>
+
+            <a
+              href="https://www.instagram.com/skufnya_ua"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.contactItem}
+            >
+              <span className={styles.contactIcon}>◎</span>
+              Instagram
+            </a>
+
+            <a
+              href="https://www.tiktok.com/@skuf_nya"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.contactItem}
+            >
+              <span className={styles.contactIcon}>♪</span>
+              TikTok
             </a>
           </div>
 

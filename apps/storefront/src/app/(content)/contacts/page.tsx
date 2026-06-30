@@ -54,6 +54,20 @@ const CONTACTS = [
     label: '+380 93 821 31 02',
     href: 'tel:+380938213102',
   },
+  {
+    icon: '📸',
+    title: 'Instagram',
+    text: 'Фото готових фігурок, новинки, добірки та короткі оновлення магазину.',
+    label: '@skufnya_ua',
+    href: 'https://www.instagram.com/skufnya_ua',
+  },
+  {
+    icon: '🎵',
+    title: 'TikTok',
+    text: 'Короткі відео, процеси, огляди фігурок і швидкі анонси новинок.',
+    label: '@skuf_nya',
+    href: 'https://www.tiktok.com/@skuf_nya',
+  },
 ];
 
 /* ─── Підкомпоненти ───────────────────────────────── */
@@ -100,8 +114,8 @@ export default function ContactsPage() {
             Зв’яжіться <span className={styles.pageTitleAccent}>з нами</span>
           </h1>
           <p className={styles.pageSubtitle}>
-            Зараз з нами можна зв’язатися через Telegram, Telegram-канал і Viber.
-            Це актуальні контакти магазину.
+            Зараз з нами можна зв’язатися через Telegram, Telegram-канал, Viber,
+            Instagram і TikTok. Це актуальні контакти магазину.
           </p>
         </div>
       </section>
@@ -155,6 +169,36 @@ export default function ContactsPage() {
                 </p>
                 <a href="tel:+380938213102" className={styles.contactIntroLink}>
                   +380 93 821 31 02
+                  <span className={styles.contactIntroLinkArrow} aria-hidden="true">→</span>
+                </a>
+              </div>
+
+              <div className={styles.contactIntroItem}>
+                <p className={styles.contactIntroText}>
+                  В Instagram ділимося фото, новинками та добірками з асортименту.
+                </p>
+                <a
+                  href="https://www.instagram.com/skufnya_ua"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.contactIntroLink}
+                >
+                  Відкрити Instagram
+                  <span className={styles.contactIntroLinkArrow} aria-hidden="true">→</span>
+                </a>
+              </div>
+
+              <div className={styles.contactIntroItem}>
+                <p className={styles.contactIntroText}>
+                  У TikTok публікуємо короткі відео, огляди та швидкі анонси.
+                </p>
+                <a
+                  href="https://www.tiktok.com/@skuf_nya"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.contactIntroLink}
+                >
+                  Відкрити TikTok
                   <span className={styles.contactIntroLinkArrow} aria-hidden="true">→</span>
                 </a>
               </div>
