@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
   getCatalogCategories,
@@ -185,6 +185,7 @@ function buildSearchParamsMap(searchParams: URLSearchParams): SearchParamsMap {
 }
 
 export default function CatalogPageClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsKey = searchParams.toString();
 
@@ -198,6 +199,9 @@ export default function CatalogPageClient() {
   );
 
   const requestedCategorySlug = normalizeOptionalParam(currentSearchParams.categorySlug);
+  const currentBrandSlug = normalizeOptionalParam(currentSearchParams.brandSlug);
+  const currentFranchiseSlug = normalizeOptionalParam(currentSearchParams.franchiseSlug);
+  const currentCharacterSlug = normalizeOptionalParam(currentSearchParams.characterSlug);
 
   const currentSaleType = parseSaleType(getSingleParam(currentSearchParams.saleType));
   const currentIsAdult = parseIsAdult(getSingleParam(currentSearchParams.isAdult));
@@ -222,6 +226,7 @@ export default function CatalogPageClient() {
   });
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [readySearchParamsKey, setReadySearchParamsKey] = useState<string | null>(null);
 
   // Закриваємо мобільний drawer фільтрів, коли змінюються параметри пошуку
   useEffect(() => {
@@ -244,6 +249,7 @@ export default function CatalogPageClient() {
     let cancelled = false;
 
     async function load() {
+      setReadySearchParamsKey(null);
       setState((prev) => ({
         ...prev,
         kind: 'loading',
@@ -291,6 +297,9 @@ export default function CatalogPageClient() {
       const buildProductsParams = (page: number) => ({
         q: currentQuery,
         categorySlug: currentCategorySlug,
+        brandSlug: currentBrandSlug,
+        franchiseSlug: currentFranchiseSlug,
+        characterSlug: currentCharacterSlug,
         saleType: currentSaleType,
         isAdult: currentIsAdult,
         minPrice: currentMinPrice,
@@ -317,6 +326,7 @@ export default function CatalogPageClient() {
 
         if (cancelled) return;
 
+        setReadySearchParamsKey(searchParamsKey);
         setState({
           kind: 'ready',
           categories,
@@ -345,6 +355,9 @@ export default function CatalogPageClient() {
       cancelled = true;
     };
   }, [
+    currentBrandSlug,
+    currentCharacterSlug,
+    currentFranchiseSlug,
     currentIsAdult,
     currentMaxPrice,
     currentMinPrice,
@@ -353,6 +366,7 @@ export default function CatalogPageClient() {
     currentSort,
     requestedCategorySlug,
     requestedPage,
+    searchParamsKey,
   ]);
 
   const pageTitle =
@@ -364,7 +378,6 @@ export default function CatalogPageClient() {
 
   const normalizedSearchParams: Record<string, string | string[] | undefined> = {
     ...currentSearchParams,
-    sort: currentSort,
   };
 
   delete normalizedSearchParams.search;
@@ -375,10 +388,34 @@ export default function CatalogPageClient() {
     delete normalizedSearchParams.q;
   }
 
+  if (currentSort !== 'newest') {
+    normalizedSearchParams.sort = currentSort;
+  } else {
+    delete normalizedSearchParams.sort;
+  }
+
   if (currentCategorySlug) {
     normalizedSearchParams.categorySlug = currentCategorySlug;
   } else {
     delete normalizedSearchParams.categorySlug;
+  }
+
+  if (currentBrandSlug) {
+    normalizedSearchParams.brandSlug = currentBrandSlug;
+  } else {
+    delete normalizedSearchParams.brandSlug;
+  }
+
+  if (currentFranchiseSlug) {
+    normalizedSearchParams.franchiseSlug = currentFranchiseSlug;
+  } else {
+    delete normalizedSearchParams.franchiseSlug;
+  }
+
+  if (currentCharacterSlug) {
+    normalizedSearchParams.characterSlug = currentCharacterSlug;
+  } else {
+    delete normalizedSearchParams.characterSlug;
   }
 
   if (currentSaleType) {
@@ -410,6 +447,29 @@ export default function CatalogPageClient() {
   } else {
     delete normalizedSearchParams.page;
   }
+
+  const canonicalCatalogHref = buildCatalogHref(
+    normalizedSearchParams as SearchParamsMap,
+    {},
+  );
+
+  useEffect(() => {
+    if (state.kind !== 'ready' || readySearchParamsKey !== searchParamsKey) {
+      return;
+    }
+
+    const currentHref = searchParamsKey ? `/catalog?${searchParamsKey}` : '/catalog';
+
+    if (canonicalCatalogHref !== currentHref) {
+      router.replace(canonicalCatalogHref, { scroll: false });
+    }
+  }, [
+    canonicalCatalogHref,
+    readySearchParamsKey,
+    router,
+    searchParamsKey,
+    state.kind,
+  ]);
 
   if (state.kind === 'categories-error') {
     return (
