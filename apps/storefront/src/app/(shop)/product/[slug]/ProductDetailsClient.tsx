@@ -123,8 +123,6 @@ function buildGuestFavoritePayload(product: Product) {
     series: product.series ?? product.franchise?.name ?? product.brand?.name ?? null,
     priceFrom: product.priceFrom,
     currency: product.currency,
-    saleType: product.saleType,
-    stockQty: typeof product.stockQty === 'number' ? product.stockQty : 0,
     isAdult: product.isAdult,
     coverImage: coverImage
       ? {

@@ -104,8 +104,6 @@ const CATALOG_PATH = '/catalog';
 const MOBILE_QUICK_LINKS = [
   { label: 'Усі товари', href: '/catalog' },
   { label: 'Новинки', href: '/catalog?sort=newest' },
-  { label: 'В наявності', href: '/catalog?saleType=IN_STOCK' },
-  { label: 'Передзамовлення', href: '/catalog?saleType=PREORDER' },
 ];
 
 const ANNOUNCEMENTS = [

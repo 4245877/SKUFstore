@@ -702,7 +702,6 @@
   padding: 2px 7px;
   border-radius: 1px;
   letter-spacing: 0.06em;
-  /* Не обрізаємо «Передзамовлення…»: довгий чип переноситься під ціну */
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;

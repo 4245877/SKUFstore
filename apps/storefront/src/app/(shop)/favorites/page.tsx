@@ -30,10 +30,8 @@ import {
   IconTrash,
 } from '../../../components/icons';
 
-type StockStatus = 'in-stock' | 'out-of-stock' | 'pre-order';
 type ViewMode = 'grid' | 'list';
 type SortKey = 'added' | 'price-asc' | 'price-desc' | 'name';
-type FilterKey = 'all' | 'in-stock' | 'pre-order';
 type SourceMode = 'loading' | 'guest' | 'account';
 
 type FavoriteItem = {
@@ -46,20 +44,7 @@ type FavoriteItem = {
   metaLabel: string | null;
   imageUrl: string | null;
   imageAlt: string | null;
-  stockStatus: StockStatus;
   addedAt: string;
-};
-
-const STOCK_LABEL: Record<StockStatus, string> = {
-  'in-stock': 'В наявності',
-  'out-of-stock': 'Немає в наявності',
-  'pre-order': 'Передзамовлення',
-};
-
-const STOCK_CLASS: Record<StockStatus, string> = {
-  'in-stock': s.cardStockIn,
-  'out-of-stock': s.cardStockOut,
-  'pre-order': s.cardStockPre,
 };
 
 function isAuthError(error: unknown) {
@@ -82,14 +67,6 @@ function formatPrice(value: number, currency: string) {
     currency,
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function getStockStatus(saleType?: string, stockQty = 0): StockStatus {
-  if (saleType === 'PREORDER' || saleType === 'BACKORDER') {
-    return 'pre-order';
-  }
-
-  return stockQty > 0 ? 'in-stock' : 'out-of-stock';
 }
 
 function getSeriesLabel(...values: Array<string | null | undefined>) {
@@ -129,7 +106,6 @@ function mapAccountFavorite(item: AccountFavoriteItem): FavoriteItem {
     ),
     imageUrl: item.coverImage?.url ?? null,
     imageAlt: item.coverImage?.alt ?? item.title,
-    stockStatus: getStockStatus(item.saleType, item.stockQty),
     addedAt: item.createdAt,
   };
 }
@@ -145,7 +121,6 @@ function mapGuestFavorite(item: FavoriteSnapshot): FavoriteItem {
     metaLabel: null,
     imageUrl: item.coverImage?.url ?? null,
     imageAlt: item.coverImage?.alt ?? item.title,
-    stockStatus: getStockStatus(item.saleType, item.stockQty ?? 0),
     addedAt: item.addedAt,
   };
 }
@@ -163,8 +138,6 @@ function buildGuestFavoriteSnapshot(product: CatalogProductListItem): Omit<Favor
     ),
     priceFrom: product.priceFrom,
     currency: product.currency,
-    saleType: product.saleType,
-    stockQty: product.stockQty,
     isAdult: product.isAdult,
     coverImage: product.coverImage
       ? {
@@ -191,7 +164,6 @@ function mapCatalogProductToFavorite(product: CatalogProductListItem): FavoriteI
     metaLabel: getMetaLabel(product.productType, product.category?.name as string | undefined),
     imageUrl: product.coverImage?.url ?? null,
     imageAlt: product.coverImage?.alt ?? product.title,
-    stockStatus: getStockStatus(product.saleType, product.stockQty),
     addedAt: new Date().toISOString(),
   };
 }
@@ -256,10 +228,6 @@ function GridCard({
         </div>
 
         <div className={s.cardFooter}>
-          <span className={`${s.cardStock} ${STOCK_CLASS[item.stockStatus]}`}>
-            <span className={s.cardStockDot} />
-            {STOCK_LABEL[item.stockStatus]}
-          </span>
           <span className={s.cardAddedDate}>{formatDate(item.addedAt)}</span>
         </div>
       </div>
@@ -306,10 +274,6 @@ function ListCard({
           <span className={s.listCardPrice}>{formatPrice(item.price, item.currency)}</span>
           <div className={s.listCardMeta}>
             {item.metaLabel ? <span className={s.listCardScale}>{item.metaLabel}</span> : null}
-            <span className={`${s.cardStock} ${STOCK_CLASS[item.stockStatus]}`}>
-              <span className={s.cardStockDot} />
-              {STOCK_LABEL[item.stockStatus]}
-            </span>
           </div>
         </div>
       </div>
@@ -347,7 +311,6 @@ export default function FavoritesPage() {
   const [items, setItems] = useState<FavoriteItem[]>([]);
   const [view, setView] = useState<ViewMode>('grid');
   const [sort, setSort] = useState<SortKey>('added');
-  const [filter, setFilter] = useState<FilterKey>('all');
   const [toast, setToast] = useState<string | null>(null);
   const [sourceMode, setSourceMode] = useState<SourceMode>('loading');
   const [isLoading, setIsLoading] = useState(true);
@@ -406,12 +369,7 @@ export default function FavoritesPage() {
   }, [sourceMode]);
 
   const sorted = useMemo(() => {
-    const filtered = items.filter((item) => {
-      if (filter === 'all') return true;
-      return item.stockStatus === filter;
-    });
-
-    const arr = [...filtered];
+    const arr = [...items];
 
     if (sort === 'added') arr.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
     if (sort === 'price-asc') arr.sort((a, b) => a.price - b.price);
@@ -419,11 +377,9 @@ export default function FavoritesPage() {
     if (sort === 'name') arr.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
 
     return arr;
-  }, [items, filter, sort]);
+  }, [items, sort]);
 
   const totalPrice = items.reduce((acc, item) => acc + item.price, 0);
-  const inStockCount = items.filter((item) => item.stockStatus === 'in-stock').length;
-  const preOrderCount = items.filter((item) => item.stockStatus === 'pre-order').length;
   const favoriteIds = new Set(items.map((item) => item.productId));
 
   const visibleSuggestions = useMemo(() => {
@@ -556,32 +512,10 @@ export default function FavoritesPage() {
         <div className={s.toolbar} role="toolbar" aria-label="Керування обраним">
           <div className={s.toolbarInner}>
             <div className={s.toolbarLeft}>
-              <button
-                type="button"
-                className={`${s.toolbarTab} ${filter === 'all' ? s.toolbarTabActive : ''}`}
-                onClick={() => setFilter('all')}
-              >
+              <span className={`${s.toolbarTab} ${s.toolbarTabActive}`}>
                 Усі
                 <span className={s.toolbarTabCount}>{items.length}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`${s.toolbarTab} ${filter === 'in-stock' ? s.toolbarTabActive : ''}`}
-                onClick={() => setFilter('in-stock')}
-              >
-                В наявності
-                <span className={s.toolbarTabCount}>{inStockCount}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`${s.toolbarTab} ${filter === 'pre-order' ? s.toolbarTabActive : ''}`}
-                onClick={() => setFilter('pre-order')}
-              >
-                Передзамовлення
-                <span className={s.toolbarTabCount}>{preOrderCount}</span>
-              </button>
+              </span>
             </div>
 
             <div className={s.toolbarRight}>
@@ -785,13 +719,6 @@ export default function FavoritesPage() {
               <div className={s.summaryItem}>
                 <span className={s.summaryItemLabel}>Фігурок</span>
                 <span className={s.summaryItemValue}>{items.length}</span>
-              </div>
-
-              <div className={s.summaryDivider} />
-
-              <div className={s.summaryItem}>
-                <span className={s.summaryItemLabel}>В наявності</span>
-                <span className={s.summaryItemValue}>{inStockCount}</span>
               </div>
 
               <div className={s.summaryDivider} />

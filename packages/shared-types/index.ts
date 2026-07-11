@@ -93,7 +93,6 @@ export type CatalogFilters = {
   brandSlug?: string;
   franchiseSlug?: string;
   characterSlug?: string;
-  saleType?: SaleType;
   isAdult?: boolean;
   minPrice?: number;
   maxPrice?: number;

@@ -28,23 +28,9 @@ function getEyebrow(product: CatalogProductListItem) {
   );
 }
 
-function getAvailabilityLabel(product: CatalogProductListItem) {
-  switch (product.saleType) {
-    case 'PREORDER':
-      return 'Передзамовлення';
-    case 'BACKORDER':
-      return 'Під замовлення';
-    case 'IN_STOCK':
-      return product.stockQty > 0 ? 'В наявності' : 'Немає в наявності';
-    default:
-      return null;
-  }
-}
-
 export function CatalogProductCard({ product }: CatalogProductCardProps) {
   const imageUrl = resolveMediaUrl(product.coverImage?.url);
   const eyebrow = getEyebrow(product);
-  const availability = getAvailabilityLabel(product);
 
   const [wished, setWished] = useState(false);
 
@@ -85,8 +71,6 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
         null,
       priceFrom: product.priceFrom,
       currency: product.currency,
-      saleType: product.saleType,
-      stockQty: product.stockQty,
       isAdult: product.isAdult,
       coverImage: product.coverImage,
     });
@@ -129,22 +113,16 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
             </div>
           )}
 
-          <div className={styles.cardBadges}>
-            {product.isAdult ? (
+          {product.isAdult ? (
+            <div className={styles.cardBadges}>
               <span
                 className={`${styles.badge} ${styles.badgeAdult}`}
                 aria-label="Тільки для повнолітніх"
               >
                 18+
               </span>
-            ) : null}
-
-            {product.saleType === 'PREORDER' ? (
-              <span className={`${styles.badge} ${styles.badgePreorder}`}>
-                Передзамовлення
-              </span>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
           <div className={styles.cardActions} aria-hidden="true">
             <span className={styles.cardAddBtn}>Докладніше</span>
@@ -165,9 +143,6 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
               <span>{priceLabel}</span>
             </div>
 
-            {availability ? (
-              <span className={styles.cardAvailability}>{availability}</span>
-            ) : null}
           </div>
         </div>
       </Link>

@@ -671,47 +671,8 @@
 .cardFooter {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 8px;
-}
-
-.cardStock {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-}
-
-.cardStockDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.cardStockIn {
-  color: #5a9e6f;
-}
-
-.cardStockIn .cardStockDot {
-  background: #5a9e6f;
-}
-
-.cardStockOut {
-  color: var(--text-muted);
-}
-
-.cardStockOut .cardStockDot {
-  background: var(--silver);
-}
-
-.cardStockPre {
-  color: var(--gold);
-}
-
-.cardStockPre .cardStockDot {
-  background: var(--gold);
 }
 
 .cardAddedDate {

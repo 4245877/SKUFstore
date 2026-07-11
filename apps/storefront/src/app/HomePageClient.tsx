@@ -125,19 +125,6 @@ function buildBrands(products: HomeProductItem[]) {
   return [...unique, ...unique]
 }
 
-function formatSaleTypeLabel(saleType?: HomeProductItem['saleType'] | null) {
-  switch (saleType) {
-    case 'IN_STOCK':
-      return 'В наявності'
-    case 'PREORDER':
-      return 'Передзамовлення'
-    case 'BACKORDER':
-      return 'Під замовлення'
-    default:
-      return '—'
-  }
-}
-
 function formatShowcaseBadge(product: HomeProductItem) {
   if (Number.isFinite(product.qualityScore) && product.qualityScore >= 9) {
     return 'Рекомендовано'
@@ -423,7 +410,7 @@ export default function HomePageClient() {
                         </span>
 
                         <span className={s.cardScale}>
-                          {p.defaultVariant?.sizeLabel || formatSaleTypeLabel(p.saleType)}
+                          {p.defaultVariant?.sizeLabel || 'Фігурка'}
                         </span>
                       </div>
                     </div>

@@ -27,7 +27,6 @@ import {
   parseIsAdult,
   parsePositiveInt,
   parsePrice,
-  parseSaleType,
   resolvePageTitle,
   type SearchParamsMap,
 } from './catalog.utils';
@@ -204,7 +203,6 @@ export default function CatalogPageClient() {
   const currentFranchiseSlug = normalizeOptionalParam(currentSearchParams.franchiseSlug);
   const currentCharacterSlug = normalizeOptionalParam(currentSearchParams.characterSlug);
 
-  const currentSaleType = parseSaleType(getSingleParam(currentSearchParams.saleType));
   const currentIsAdult = parseIsAdult(getSingleParam(currentSearchParams.isAdult));
 
   const parsedMinPrice = parsePrice(getSingleParam(currentSearchParams.minPrice));
@@ -301,7 +299,6 @@ export default function CatalogPageClient() {
         brandSlug: currentBrandSlug,
         franchiseSlug: currentFranchiseSlug,
         characterSlug: currentCharacterSlug,
-        saleType: currentSaleType,
         isAdult: currentIsAdult,
         minPrice: currentMinPrice,
         maxPrice: currentMaxPrice,
@@ -363,7 +360,6 @@ export default function CatalogPageClient() {
     currentMaxPrice,
     currentMinPrice,
     currentQuery,
-    currentSaleType,
     currentSort,
     requestedCategorySlug,
     requestedPage,
@@ -382,6 +378,7 @@ export default function CatalogPageClient() {
   };
 
   delete normalizedSearchParams.search;
+  delete normalizedSearchParams.saleType;
 
   if (currentQuery) {
     normalizedSearchParams.q = currentQuery;
@@ -417,12 +414,6 @@ export default function CatalogPageClient() {
     normalizedSearchParams.characterSlug = currentCharacterSlug;
   } else {
     delete normalizedSearchParams.characterSlug;
-  }
-
-  if (currentSaleType) {
-    normalizedSearchParams.saleType = currentSaleType;
-  } else {
-    delete normalizedSearchParams.saleType;
   }
 
   if (currentIsAdult !== undefined) {
@@ -533,7 +524,6 @@ export default function CatalogPageClient() {
             searchParams={normalizedSearchParams as SearchParamsMap}
             currentQuery={currentQuery}
             currentCategorySlug={currentCategorySlug}
-            currentSaleType={currentSaleType}
             currentIsAdult={currentIsAdult}
             currentMinPrice={currentMinPrice}
             currentMaxPrice={currentMaxPrice}
@@ -577,7 +567,6 @@ export default function CatalogPageClient() {
             searchParams={normalizedSearchParams as SearchParamsMap}
             currentQuery={currentQuery}
             currentCategorySlug={undefined}
-            currentSaleType={currentSaleType}
             currentIsAdult={currentIsAdult}
             currentMinPrice={currentMinPrice}
             currentMaxPrice={currentMaxPrice}
@@ -623,7 +612,6 @@ export default function CatalogPageClient() {
             searchParams={normalizedSearchParams as SearchParamsMap}
             currentQuery={currentQuery}
             currentCategorySlug={currentCategorySlug}
-            currentSaleType={currentSaleType}
             currentIsAdult={currentIsAdult}
             currentMinPrice={currentMinPrice}
             currentMaxPrice={currentMaxPrice}
@@ -685,7 +673,6 @@ export default function CatalogPageClient() {
           searchParams={normalizedSearchParams as SearchParamsMap}
           currentQuery={currentQuery}
           currentCategorySlug={currentCategorySlug}
-          currentSaleType={currentSaleType}
           currentIsAdult={currentIsAdult}
           currentMinPrice={currentMinPrice}
           currentMaxPrice={currentMaxPrice}
@@ -840,7 +827,6 @@ export default function CatalogPageClient() {
           searchParams={normalizedSearchParams as SearchParamsMap}
           currentQuery={currentQuery}
           currentCategorySlug={currentCategorySlug}
-          currentSaleType={currentSaleType}
           currentIsAdult={currentIsAdult}
           currentMinPrice={currentMinPrice}
           currentMaxPrice={currentMaxPrice}

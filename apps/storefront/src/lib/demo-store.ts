@@ -58,8 +58,6 @@ export type FavoriteSnapshot = {
   series?: string | null;
   priceFrom: number;
   currency: string;
-  saleType?: string;
-  stockQty?: number;
   isAdult?: boolean;
   coverImage?: {
     url: string;
