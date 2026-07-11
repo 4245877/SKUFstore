@@ -131,13 +131,16 @@
 }
 
 .mainImagePlaceholderIcon {
-  font-size: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rose);
   filter: drop-shadow(0 8px 24px rgba(201, 107, 107, 0.25));
   animation: floatY 5s ease-in-out infinite;
 }
 
 .mainImagePlaceholderLabel {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.2em;
   color: var(--mauve);
@@ -275,9 +278,11 @@
 }
 
 /* Заголовок */
+/* Український підзаголовок — body-шрифт із letterspacing, а не JP-serif */
 .seriesLabel {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.2em;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -490,8 +495,9 @@
 }
 
 .variantMeta {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.1em;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -792,8 +798,9 @@
 .specsKey {
   padding: 14px 16px 14px 0;
   color: var(--text-muted);
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   min-width: 0;

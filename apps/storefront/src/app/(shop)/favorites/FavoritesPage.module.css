@@ -154,7 +154,9 @@
 }
 
 .headerCountIcon {
-  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--deep-rose);
   animation: floatY 4s ease-in-out infinite;
 }
 
@@ -362,7 +364,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 72px;
+  color: var(--rose);
   animation: floatY 5s ease-in-out infinite;
 }
 
@@ -524,7 +526,8 @@
 }
 
 .cardImageIcon {
-  font-size: 52px;
+  display: flex;
+  color: var(--rose);
   filter: drop-shadow(0 4px 10px rgba(201,107,107,0.25));
   transition: transform 0.5s var(--ease-out-expo);
 }
@@ -551,6 +554,7 @@
   border-radius: 50%;
   background: rgba(253,248,243,0.92);
   border: 1.5px solid var(--blush);
+  color: var(--deep-rose);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -754,7 +758,8 @@
 }
 
 .listCardImagePlaceholderIcon {
-  font-size: 44px;
+  display: flex;
+  color: var(--rose);
 }
 
 .listCardImageFull {
@@ -1101,7 +1106,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 44px;
+  color: var(--rose);
   background: linear-gradient(160deg, var(--lace), var(--parchment));
   transition: transform 0.5s var(--ease-out-expo);
 }
@@ -1146,6 +1151,7 @@
   border-radius: 50%;
   background: var(--lace);
   border: 1px solid var(--blush);
+  color: var(--deep-rose);
   display: flex;
   align-items: center;
   justify-content: center;

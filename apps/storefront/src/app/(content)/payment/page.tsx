@@ -1,4 +1,14 @@
 import Link from 'next/link';
+import {
+  IconBow,
+  IconBox,
+  IconCard,
+  IconCart,
+  IconChatHeart,
+  IconClipboard,
+  IconReceipt,
+  IconShieldCheck,
+} from '../../../components/icons';
 import s from './PaymentPage.module.css';
 
 const TELEGRAM_URL = 'https://t.me/SKUFnya_ua';
@@ -8,13 +18,13 @@ const OLX_PROFILE_URL = 'https://www.olx.ua/uk/';
 
 const paymentOptions = [
   {
-    icon: '🤝',
+    icon: IconChatHeart,
     title: 'Передплата 60%',
     text: '60% від вартості потрібні для закупівлі матеріалів. Решта суми оплачується при отриманні після виготовлення.',
     tag: 'Зручно для першого замовлення',
   },
   {
-    icon: '💳',
+    icon: IconCard,
     title: 'Повна передплата',
     text: '100% вартості можна внести після узгодження деталей замовлення. Це зручно, якщо хочеться одразу закрити оплату.',
     tag: 'Після погодження',
@@ -23,22 +33,22 @@ const paymentOptions = [
 
 const steps = [
   {
-    icon: '🛒',
+    icon: IconCart,
     title: 'Оформи заявку на сайті',
     text: 'Додай фігурку в кошик, заповни контакти, доставку та обери спосіб передплати.',
   },
   {
-    icon: '💬',
+    icon: IconChatHeart,
     title: 'Напиши в OLX або Telegram',
     text: 'Ми підтвердимо модель, комплектацію, строки, доставку та суму передплати.',
   },
   {
-    icon: '🧾',
+    icon: IconReceipt,
     title: 'Внеси передплату після узгодження',
     text: 'Оплата не проходить автоматично на сайті. Реквізити надаються тільки після підтвердження замовлення.',
   },
   {
-    icon: '📦',
+    icon: IconBox,
     title: 'Отримай замовлення',
     text: 'Після виготовлення та пакування ми надсилаємо посилку і передаємо номер для відстеження.',
   },
@@ -66,7 +76,9 @@ export default function PaymentPage() {
             <section className={s.card}>
               <div className={s.cardHeader}>
                 <div className={s.cardHeaderLeft}>
-                  <div className={s.cardIcon}>🎀</div>
+                  <div className={s.cardIcon}>
+                    <IconBow size={17} strokeWidth={1.3} />
+                  </div>
                   <div>
                     <div className={s.cardTitle}>Як працює оплата</div>
                     <div className={s.cardSubtitle}>Без автоматичного списання коштів на сайті</div>
@@ -87,7 +99,9 @@ export default function PaymentPage() {
             <section className={s.card}>
               <div className={s.cardHeader}>
                 <div className={s.cardHeaderLeft}>
-                  <div className={s.cardIcon}>🤝</div>
+                  <div className={s.cardIcon}>
+                    <IconCard size={17} strokeWidth={1.4} />
+                  </div>
                   <div>
                     <div className={s.cardTitle}>Варіанти передплати</div>
                     <div className={s.cardSubtitle}>Обираються під час оформлення заявки</div>
@@ -99,7 +113,9 @@ export default function PaymentPage() {
                 <div className={s.shippingOptions}>
                   {paymentOptions.map((item) => (
                     <div key={item.title} className={s.shippingOption}>
-                      <span className={s.savedCardNet}>{item.icon}</span>
+                      <span className={s.savedCardNet}>
+                        <item.icon size={18} strokeWidth={1.4} />
+                      </span>
                       <div className={s.shippingOptionInfo}>
                         <div className={s.shippingOptionName}>
                           {item.title}
@@ -116,7 +132,9 @@ export default function PaymentPage() {
             <section className={s.card}>
               <div className={s.cardHeader}>
                 <div className={s.cardHeaderLeft}>
-                  <div className={s.cardIcon}>📋</div>
+                  <div className={s.cardIcon}>
+                    <IconClipboard size={17} strokeWidth={1.4} />
+                  </div>
                   <div>
                     <div className={s.cardTitle}>Порядок оформлення</div>
                     <div className={s.cardSubtitle}>Від заявки до отримання</div>
@@ -128,7 +146,9 @@ export default function PaymentPage() {
                 <div className={s.trustCard}>
                   {steps.map((step) => (
                     <div key={step.title} className={s.trustItem}>
-                      <div className={s.trustIcon}>{step.icon}</div>
+                      <div className={s.trustIcon}>
+                        <step.icon size={15} strokeWidth={1.4} />
+                      </div>
                       <div className={s.trustInfo}>
                         <div className={s.trustTitle}>{step.title}</div>
                         <div className={s.trustText}>{step.text}</div>
@@ -183,7 +203,9 @@ export default function PaymentPage() {
 
             <div className={s.trustCard}>
               <div className={s.trustItem}>
-                <div className={s.trustIcon}>🛡️</div>
+                <div className={s.trustIcon}>
+                  <IconShieldCheck size={15} strokeWidth={1.4} />
+                </div>
                 <div className={s.trustInfo}>
                   <div className={s.trustTitle}>Без прихованої онлайн-оплати</div>
                   <div className={s.trustText}>
@@ -193,7 +215,9 @@ export default function PaymentPage() {
               </div>
 
               <div className={s.trustItem}>
-                <div className={s.trustIcon}>💬</div>
+                <div className={s.trustIcon}>
+                  <IconChatHeart size={15} strokeWidth={1.4} />
+                </div>
                 <div className={s.trustInfo}>
                   <div className={s.trustTitle}>Підтвердження перед оплатою</div>
                   <div className={s.trustText}>

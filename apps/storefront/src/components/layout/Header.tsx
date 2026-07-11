@@ -19,6 +19,7 @@ import {
   subscribeToCartChange,
   subscribeToFavoritesChange,
 } from '../../lib/demo-store';
+import { IconBag, IconBow } from '../icons';
 import styles from './Header.module.css';
 
 type MegaLink = {
@@ -98,6 +99,14 @@ const NAV_ITEMS: NavItem[] = [
 
 const SEARCH_PARAM_KEY = 'q';
 const CATALOG_PATH = '/catalog';
+
+// Швидкі підбірки каталогу для мобільного меню
+const MOBILE_QUICK_LINKS = [
+  { label: 'Усі товари', href: '/catalog' },
+  { label: 'Новинки', href: '/catalog?sort=newest' },
+  { label: 'В наявності', href: '/catalog?saleType=IN_STOCK' },
+  { label: 'Передзамовлення', href: '/catalog?saleType=PREORDER' },
+];
 
 const ANNOUNCEMENTS = [
   'Безкоштовна доставка від 1 500 ₴',
@@ -255,7 +264,7 @@ export default function Header() {
         <div className={styles.inner}>
           <Link href="/" className={styles.logo} aria-label="Skufnya — на головну">
             <span className={styles.logoIcon} aria-hidden="true">
-              🎀
+              <IconBow size={24} />
             </span>
             <span className={styles.logoTextWrap}>
               <span className={styles.logoMain}>SKUFNYA</span>
@@ -350,7 +359,7 @@ export default function Header() {
                           <p className={styles.megaFeaturedLabel}>✦ Швидкий перехід</p>
                           <div className={styles.megaFeaturedCard}>
                             <div className={styles.megaFeaturedImage} aria-hidden="true">
-                              <span>🛍️</span>
+                              <IconBag size={44} strokeWidth={1.2} />
                             </div>
                             <div className={styles.megaFeaturedBody}>
                               <p className={styles.megaFeaturedSeries}>Особистий кабінет</p>
@@ -393,7 +402,10 @@ export default function Header() {
               className={`${styles.iconBtn} ${styles.searchToggle} ${
                 searchOpen ? styles.iconBtnActive : ''
               }`}
-              onClick={() => setSearchOpen((v) => !v)}
+              onClick={() => {
+                setMobileOpen(false);
+                setSearchOpen((v) => !v);
+              }}
               aria-label="Пошук"
               aria-expanded={searchOpen}
               aria-controls="search-bar"
@@ -478,7 +490,11 @@ export default function Header() {
             <button
               type="button"
               className={`${styles.burger} ${mobileOpen ? styles.burgerOpen : ''}`}
-              onClick={() => setMobileOpen((v) => !v)}
+              onClick={() => {
+                // Закриваємо пошук, щоб шапка не ставала вищою за top меню
+                setSearchOpen(false);
+                setMobileOpen((v) => !v);
+              }}
               aria-label={mobileOpen ? 'Закрити меню' : 'Відкрити меню'}
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
@@ -591,20 +607,22 @@ export default function Header() {
                   onClick={closeMobileMenu}
                   tabIndex={mobileOpen ? 0 : -1}
                 >
-                  <span className={styles.mobileNavLinkJp}>{item.labelJp}</span>
-                  <span className={styles.mobileNavLinkLabel}>
-                    {item.label}
-                    {item.badge && (
-                      <span
-                        className={`${styles.navBadge} ${
-                          item.badgeVariant === 'sale'
-                            ? styles.navBadgeSale
-                            : styles.navBadgeHot
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
+                  <span className={styles.mobileNavLinkText}>
+                    <span className={styles.mobileNavLinkJp}>{item.labelJp}</span>
+                    <span className={styles.mobileNavLinkLabel}>
+                      {item.label}
+                      {item.badge && (
+                        <span
+                          className={`${styles.navBadge} ${
+                            item.badgeVariant === 'sale'
+                              ? styles.navBadgeSale
+                              : styles.navBadgeHot
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </span>
                   </span>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path
@@ -620,6 +638,23 @@ export default function Header() {
             ))}
           </ul>
 
+          <div className={styles.mobileQuick}>
+            <p className={styles.mobileQuickTitle}>Каталог за добірками</p>
+            <div className={styles.mobileQuickGrid}>
+              {MOBILE_QUICK_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={styles.mobileQuickLink}
+                  onClick={closeMobileMenu}
+                  tabIndex={mobileOpen ? 0 : -1}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
           <div className={styles.mobileNavFooter}>
             <div className={styles.mobileNavLinks}>
               <Link href={accountHref} tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
@@ -633,7 +668,7 @@ export default function Header() {
               </Link>
             </div>
             <p className={styles.mobileNavBrand}>
-              <span>🎀</span> SKUFNYA · スクフニャ
+              <IconBow size={14} /> SKUFNYA · スクフニャ
             </p>
           </div>
         </div>

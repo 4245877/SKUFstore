@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Shippori+Mincho:wght@400;600&display=swap');
+/* Шрифти самохостяться через next/font (див. layout.tsx) —
+   без render-blocking запиту до Google Fonts і без FOUT. */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -8,12 +9,14 @@
 
 :root {
   /* Palette — lace, blush, ink, gold */
+  /* deep-rose і mauve затемнені відносно ранньої версії:
+     ціни та дрібні лейбли мають тримати контраст ≥ 4.5:1 (WCAG AA) */
   --cream:       #fdf8f3;
   --parchment:   #f5ede0;
   --blush:       #f2c9c9;
   --rose:        #e8a0a0;
-  --deep-rose:   #c96b6b;
-  --mauve:       #9b6b7a;
+  --deep-rose:   #b25050;
+  --mauve:       #8a5a6a;
   --ink:         #1e1416;
   --charcoal:    #3a2a30;
   --silver:      #c8bfc4;
@@ -29,14 +32,20 @@
   --border-soft: #f0e8e4;
   --text-primary:   var(--ink);
   --text-secondary: var(--charcoal);
-  --text-muted:     #8a7070;
+  --text-muted:     #7a5f5f;
   --accent:      var(--deep-rose);
   --accent-soft: var(--blush);
 
-  /* Typography */
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body:    'DM Sans', sans-serif;
-  --font-jp:      'Shippori Mincho', serif;
+  /* Typography — самохост через next/font, кирилиця та ₴ гарантовані */
+  --font-display: var(--font-serif, Georgia), Georgia, 'Times New Roman', serif;
+  --font-body:    var(--font-sans, system-ui), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-jp:      var(--font-jp-serif, serif), 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+
+  /* Radii — одна «гостра» шкала для всього сайту */
+  --radius-xs:   1px;
+  --radius-sm:   2px;
+  --radius-md:   3px;
+  --radius-pill: 99px;
 
   /* Motion */
   --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
@@ -60,6 +69,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rose) var(--parchment);
 }
 
 body {
@@ -117,13 +128,6 @@ img {
   border-radius: 4px;
 }
 
-/* Lace texture overlay pattern (subtle) */
-.lace-bg {
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(242,201,201,0.15) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(201,169,110,0.08) 0%, transparent 50%);
-}
-
 /* Utility: hide visually but keep in a11y tree */
 .sr-only {
   position: absolute;
@@ -153,10 +157,6 @@ img {
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-@keyframes petalDrift {
-  0%   { transform: translateY(0) rotate(0deg); opacity: 0.7; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }

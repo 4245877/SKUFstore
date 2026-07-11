@@ -100,8 +100,11 @@
 }
 
 .iconEmoji {
-  font-size: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
+  color: var(--deep-rose);
   filter: drop-shadow(0 2px 8px rgba(201, 107, 107, 0.25));
 }
 
@@ -357,6 +360,7 @@
 .petalBottomLeft {
   position: absolute;
   pointer-events: none;
+  color: var(--rose);
 }
 
 .petalTopRight {

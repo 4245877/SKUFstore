@@ -125,9 +125,10 @@
 }
 
 .brandIcon {
-  font-size: 40px;
   line-height: 1;
-  display: block;
+  display: flex;
+  justify-content: center;
+  color: var(--deep-rose);
   animation: floatY 5s ease-in-out infinite;
   filter: drop-shadow(0 4px 12px rgba(201, 107, 107, 0.3));
 }
@@ -351,6 +352,7 @@
 .petalD {
   position: absolute;
   font-size: 14px;
+  color: var(--rose);
   opacity: 0;
   pointer-events: none;
   z-index: 0;

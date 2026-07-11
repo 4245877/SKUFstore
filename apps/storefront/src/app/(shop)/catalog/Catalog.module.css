@@ -7,9 +7,6 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--cream);
-  --catalog-radius-xs: 4px;
-  --catalog-radius-sm: 6px;
-  --catalog-radius-md: 10px;
 }
 /* ── Page Header ─────────────────────────── */
 .pageHeader {
@@ -76,24 +73,6 @@
 .pageTitleGroup {
   animation: fadeUp 0.7s var(--ease-out-expo) both;
 }
-.pageEyebrow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-body);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  color: var(--mauve);
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-.pageEyebrow::before {
-  content: '';
-  display: block;
-  width: 20px;
-  height: 1px;
-  background: var(--mauve);
-}
 .laceDivider {
   display: block;
   width: 140px;
@@ -106,10 +85,6 @@
   color: var(--ink);
   line-height: 1.1;
   margin-bottom: 8px;
-}
-.pageTitleAccent {
-  font-style: italic;
-  color: var(--deep-rose);
 }
 .pageTotal {
   font-size: 13px;
@@ -130,7 +105,8 @@
 /* ── Sidebar ─────────────────────────────── */
 .sidebar {
   position: sticky;
-  top: 80px;
+  /* Шапка 96px (стрічка 32 + рядок 64) + відступ 16px */
+  top: 112px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -139,7 +115,7 @@
 .sidebarBlock {
   background: var(--surface);
   border: 1px solid var(--border-soft);
-  border-radius: var(--catalog-radius-sm);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 .sidebarBlockHeader {
@@ -162,14 +138,6 @@
   color: var(--text-muted);
   text-transform: uppercase;
 }
-.sidebarBlockChevron {
-  font-size: 10px;
-  color: var(--silver);
-  transition: transform 0.2s var(--ease-in-out);
-}
-.sidebarBlockChevronOpen {
-  transform: rotate(180deg);
-}
 .sidebarBlockBody {
   padding: 14px 16px;
   display: flex;
@@ -187,7 +155,7 @@
   align-items: center;
   gap: 10px;
   padding: 6px 8px;
-  border-radius: var(--catalog-radius-xs);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.15s;
   position: relative;
@@ -214,39 +182,18 @@
   width: 15px;
   height: 15px;
   border: 1.5px solid var(--border);
-  border-radius: var(--catalog-radius-xs);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s;
 }
-.filterCheckActive {
-  border-color: var(--deep-rose);
-  background: var(--deep-rose);
-}
-.filterCheckMark {
-  color: var(--cream);
-  font-size: 9px;
-  line-height: 1;
-}
 .filterLabel {
   font-size: 13px;
   color: var(--text-secondary);
   flex: 1;
   transition: color 0.15s;
-}
-.filterLabelActive {
-  color: var(--ink);
-  font-weight: 500;
-}
-.filterCount {
-  font-size: 10px;
-  color: var(--text-muted);
-  background: var(--parchment);
-  padding: 2px 6px;
-  border-radius: 20px;
-  letter-spacing: 0.04em;
 }
 /* Price range */
 .priceRange {
@@ -262,7 +209,7 @@
 .priceInput {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: var(--catalog-radius-sm);
+  border-radius: var(--radius-sm);
   padding: 8px 10px;
   font-family: var(--font-body);
   font-size: 13px;
@@ -274,6 +221,16 @@
 .priceInput:focus {
   border-color: var(--rose);
   box-shadow: 0 0 0 3px rgba(201,107,107,0.08);
+}
+/* Ховаємо нативні спінери number-інпутів */
+.priceInput::-webkit-outer-spin-button,
+.priceInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.priceInput[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 .priceInputLabel {
   font-size: 10px;
@@ -290,7 +247,7 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   padding: 9px 16px;
-  border-radius: var(--catalog-radius-sm);
+  border-radius: var(--radius-sm);
   text-align: center;
   transition: background 0.15s, transform 0.15s;
 }
@@ -339,30 +296,6 @@
   align-items: center;
   gap: 8px;
 }
-.activeTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--mauve);
-  background: var(--lace);
-  border: 1px solid var(--blush);
-  padding: 4px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-.activeTag:hover {
-  background: var(--blush);
-  border-color: var(--rose);
-}
-.activeTagX {
-  font-size: 13px;
-  color: var(--rose);
-  line-height: 1;
-}
 .toolbarRight {
   display: flex;
   align-items: center;
@@ -386,7 +319,7 @@
   -webkit-appearance: none;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--catalog-radius-sm);
+  border-radius: var(--radius-sm);
   padding: 7px 28px 7px 12px;
   font-family: var(--font-body);
   font-size: 12px;
@@ -401,62 +334,35 @@
 .sortDropdown:focus {
   border-color: var(--rose);
 }
-/* View toggle */
-.viewToggle {
-  display: flex;
-  gap: 2px;
-  border: 1px solid var(--border);
-  border-radius: var(--catalog-radius-sm);
-  overflow: hidden;
-  background: var(--surface);
-}
-.viewBtn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  color: var(--text-muted);
-  transition: background 0.15s, color 0.15s;
-  cursor: pointer;
-}
-.viewBtn:hover {
-  background: var(--surface-alt);
-  color: var(--text-secondary);
-}
-.viewBtnActive {
-  background: var(--ink);
-  color: var(--cream);
-}
-.viewBtnActive:hover {
-  background: var(--charcoal);
-  color: var(--cream);
-}
 /* ── Product Grid ────────────────────────── */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
 }
-.gridList {
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
 /* ── Product Card ────────────────────────── */
 .card {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border-soft);
-  border-radius: var(--catalog-radius-md);
+  border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.2s;
   animation: fadeUp 0.6s var(--ease-out-expo) both;
   display: flex;
   flex-direction: column;
-  text-decoration: none;
   color: inherit;
+}
+
+/* Посилання всередині картки: кнопка обраного лишається окремим елементом */
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
 }
 .card:hover {
   transform: translateY(-5px);
@@ -527,10 +433,6 @@
   background: linear-gradient(160deg, var(--lace), var(--parchment) 60%, #f9e8e8);
   transition: transform 0.5s var(--ease-out-expo);
 }
-.cardImageIcon {
-  font-size: 52px;
-  filter: drop-shadow(0 4px 10px rgba(201,107,107,0.25));
-}
 .cardImageHint {
   font-family: var(--font-body);
   font-size: 10px;
@@ -545,6 +447,15 @@
 }
 .card:hover .cardImageBlur {
   filter: blur(16px);
+}
+/* Затемнення поверх розмитого фото 18+ (раніше клас використовувався
+   в розмітці, але не був визначений) */
+.cardAdultOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(30, 20, 22, 0.12) 0%, rgba(30, 20, 22, 0.4) 100%);
 }
 /* Badges */
 .cardBadges {
@@ -564,16 +475,8 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 3px 8px;
-  border-radius: var(--catalog-radius-xs);
+  border-radius: var(--radius-sm);
   line-height: 1.4;
-}
-.badgeNew {
-  background: var(--ink);
-  color: var(--gold-light);
-}
-.badgeSale {
-  background: var(--deep-rose);
-  color: var(--cream);
 }
 .badgeAdult {
   background: var(--danger, #b91c1c);
@@ -596,12 +499,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  color: var(--text-secondary);
   backdrop-filter: blur(6px);
   cursor: pointer;
   opacity: 0;
   transform: scale(0.8);
-  transition: opacity 0.2s, transform 0.2s var(--ease-spring), background 0.15s;
+  transition: opacity 0.2s, transform 0.2s var(--ease-spring), background 0.15s, color 0.15s;
   z-index: 3;
 }
 .card:hover .cardWishBtn {
@@ -610,6 +513,13 @@
 }
 .cardWishBtn:hover {
   background: var(--lace);
+  border-color: var(--rose);
+  color: var(--deep-rose);
+}
+.cardWishBtnActive {
+  opacity: 1;
+  transform: scale(1);
+  color: var(--deep-rose);
   border-color: var(--rose);
 }
 /* Hover quick-add */
@@ -633,7 +543,7 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   padding: 10px;
-  border-radius: var(--catalog-radius-sm);
+  border-radius: var(--radius-sm);
   text-align: center;
   transition: background 0.15s;
   display: flex;
@@ -653,13 +563,6 @@
   flex: 1;
 }
 .cardEyebrow {
-  font-family: var(--font-body);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-.cardSeries {
   font-family: var(--font-body);
   font-size: 10px;
   letter-spacing: 0.16em;
@@ -698,59 +601,12 @@
   align-items: baseline;
   gap: 4px;
 }
-.cardPriceFrom {
-  font-size: 10px;
-  color: var(--text-muted);
-  font-weight: 400;
-}
-.cardPriceOld {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-decoration: line-through;
-  font-weight: 400;
-}
-.cardScale {
-  font-size: 9px;
-  color: var(--text-muted);
-  background: var(--parchment);
-  border: 1px solid var(--border-soft);
-  padding: 2px 6px;
-  border-radius: var(--catalog-radius-xs);
-  letter-spacing: 0.05em;
-}
 .cardAvailability {
   font-size: 10px;
   color: var(--text-muted);
   text-align: right;
   max-width: 88px;
   line-height: 1.3;
-}
-/* ── List Card (alternate layout) ─────────── */
-.cardList {
-  flex-direction: row;
-  align-items: stretch;
-}
-.cardList .cardImageWrap {
-  width: 120px;
-  aspect-ratio: 3/4;
-  flex-shrink: 0;
-}
-.cardList .cardBody {
-  padding: 16px 20px;
-  flex: 1;
-  justify-content: center;
-}
-.cardList .cardActions {
-  position: static;
-  opacity: 1;
-  transform: none;
-  padding: 0;
-  margin-top: 12px;
-}
-.cardList .cardAddBtn {
-  width: auto;
-  align-self: flex-start;
-  padding: 9px 20px;
 }
 /* ── Empty State ─────────────────────────── */
 .empty {
@@ -790,7 +646,7 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   padding: 12px 24px;
-  border-radius: var(--catalog-radius-sm);
+  border-radius: var(--radius-sm);
   margin-top: 8px;
   transition: background 0.15s, transform 0.2s var(--ease-spring);
 }
@@ -819,7 +675,7 @@
   font-weight: 500;
   color: var(--text-secondary);
   border: 1px solid var(--border);
-  border-radius: var(--catalog-radius-xs);
+  border-radius: var(--radius-sm);
   background: var(--surface);
   padding: 0 8px;
   cursor: pointer;
@@ -855,35 +711,6 @@
   align-items: center;
   height: 36px;
 }
-/* ── Loading skeleton ────────────────────── */
-.skeleton {
-  background: linear-gradient(90deg, var(--parchment) 25%, var(--border-soft) 50%, var(--parchment) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-  border-radius: var(--catalog-radius-xs);
-}
-.skeletonCard {
-  border: 1px solid var(--border-soft);
-  border-radius: var(--catalog-radius-sm);
-  overflow: hidden;
-  background: var(--surface);
-}
-.skeletonImage {
-  aspect-ratio: 3/4;
-  background: linear-gradient(90deg, var(--parchment) 25%, #f0e4dc 50%, var(--parchment) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-}
-.skeletonBody {
-  padding: 14px 15px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.skeletonLine {
-  height: 10px;
-  border-radius: var(--catalog-radius-xs);
-}
 /* ── Mobile filter overlay ───────────────── */
 .filterToggle {
   display: none;
@@ -894,7 +721,7 @@
   color: var(--ink);
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: var(--catalog-radius-sm);
+  border-radius: var(--radius-sm);
   padding: 8px 14px;
   cursor: pointer;
   transition: background 0.15s;
@@ -903,19 +730,9 @@
   background: var(--surface-alt);
 }
 .filterToggleIcon {
-  font-size: 15px;
-}
-.filterBadge {
-  background: var(--deep-rose);
-  color: var(--cream);
-  font-size: 9px;
-  font-weight: 700;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  color: var(--mauve);
 }
 /* Drawer */
 .drawerOverlay {
@@ -941,7 +758,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 24px 0 40px;
-  border-radius: 0 var(--catalog-radius-sm) var(--catalog-radius-sm) 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   transform: translateX(-100%);
   visibility: hidden;
   transition:
@@ -996,7 +813,7 @@
 .pageBtn:focus-visible,
 .sortDropdown:focus-visible,
 .priceInput:focus-visible,
-.card:focus-visible,
+.cardLink:focus-visible,
 .filterToggle:focus-visible,
 .drawerClose:focus-visible,
 .cardWishBtn:focus-visible,
@@ -1038,13 +855,7 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  .gridList {
-    grid-template-columns: 1fr;
-  }
-  .cardList .cardImageWrap {
-    width: 90px;
-  }
-  .toolbar {
+    .toolbar {
     margin-bottom: 16px;
   }
 }

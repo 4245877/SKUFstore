@@ -21,6 +21,14 @@ import {
   subscribeToFavoritesChange,
   type FavoriteSnapshot,
 } from '../../../lib/demo-store';
+import {
+  IconBow,
+  IconCart,
+  IconGrid,
+  IconHeart,
+  IconList,
+  IconTrash,
+} from '../../../components/icons';
 
 type StockStatus = 'in-stock' | 'out-of-stock' | 'pre-order';
 type ViewMode = 'grid' | 'list';
@@ -205,11 +213,15 @@ function GridCard({
             <img
               src={resolveMediaUrl(item.imageUrl) || ''}
               alt={item.imageAlt || item.name}
+              loading="lazy"
+              decoding="async"
               className={s.cardImage}
             />
           ) : (
             <div className={s.cardImagePlaceholder}>
-              <span className={s.cardImageIcon}>🎀</span>
+              <span className={s.cardImageIcon}>
+                <IconBow size={44} strokeWidth={1.2} />
+              </span>
               <span className={s.cardImageLabel}>{item.metaLabel || 'Фігурка'}</span>
             </div>
           )}
@@ -222,7 +234,7 @@ function GridCard({
           title="Прибрати з обраного"
           aria-label="Прибрати з обраного"
         >
-          🩷
+          <IconHeart size={16} filled />
         </button>
 
         <div className={s.cardActions}>
@@ -271,10 +283,14 @@ function ListCard({
           <img
             src={resolveMediaUrl(item.imageUrl) || ''}
             alt={item.imageAlt || item.name}
+            loading="lazy"
+            decoding="async"
             className={s.listCardImageFull}
           />
         ) : (
-          <span className={s.listCardImagePlaceholderIcon}>🎀</span>
+          <span className={s.listCardImagePlaceholderIcon}>
+            <IconBow size={38} strokeWidth={1.2} />
+          </span>
         )}
       </div>
 
@@ -304,7 +320,9 @@ function ListCard({
           className={s.listCardActionBtn}
           onClick={() => onAddToCart(item)}
         >
-          <span className={s.listCardActionIcon}>🛒</span>
+          <span className={s.listCardActionIcon}>
+            <IconCart size={16} />
+          </span>
           У кошик
         </button>
 
@@ -315,7 +333,9 @@ function ListCard({
           title="Прибрати з обраного"
           aria-label="Прибрати з обраного"
         >
-          <span className={s.listCardActionIcon}>🩷</span>
+          <span className={s.listCardActionIcon}>
+            <IconHeart size={16} filled />
+          </span>
           Прибрати
         </button>
       </div>
@@ -509,7 +529,7 @@ export default function FavoritesPage() {
           <div className={s.headerLeft}>
             <nav className={s.breadcrumb} aria-label="Навігація">
               <Link href="/" className={s.breadcrumbLink}>Головна</Link>
-              <span className={s.breadcrumbSep}>❯</span>
+              <span className={s.breadcrumbSep}>›</span>
               <span className={s.breadcrumbCurrent}>Обране</span>
             </nav>
 
@@ -522,7 +542,9 @@ export default function FavoritesPage() {
 
           <div className={s.headerRight}>
             <div className={s.headerCount}>
-              <span className={s.headerCountIcon}>🩷</span>
+              <span className={s.headerCountIcon}>
+                <IconHeart size={17} filled />
+              </span>
               <span className={s.headerCountText}>{items.length}</span>
               <span className={s.headerCountLabel}>{pluralizeFigures(items.length)}</span>
             </div>
@@ -585,7 +607,7 @@ export default function FavoritesPage() {
                   aria-pressed={view === 'grid'}
                   title="Сітка"
                 >
-                  ⊞
+                  <IconGrid size={14} />
                 </button>
                 <button
                   type="button"
@@ -594,7 +616,7 @@ export default function FavoritesPage() {
                   aria-pressed={view === 'list'}
                   title="Список"
                 >
-                  ☰
+                  <IconList size={14} />
                 </button>
               </div>
 
@@ -605,7 +627,8 @@ export default function FavoritesPage() {
                 className={`${s.toolbarBtn} ${s.toolbarBtnDanger}`}
                 onClick={handleClearAll}
               >
-                🗑 Очистити все
+                <IconTrash size={13} />
+                Очистити все
               </button>
             </div>
           </div>
@@ -616,7 +639,9 @@ export default function FavoritesPage() {
         {isLoading ? (
           <div className={s.emptyState} role="status" aria-live="polite">
             <div className={s.emptyIllustration} aria-hidden="true">
-              <div className={s.emptyCircle}>🩷</div>
+              <div className={s.emptyCircle}>
+                <IconHeart size={56} strokeWidth={1} />
+              </div>
               <div className={s.emptyDot} />
               <div className={s.emptyDot} />
             </div>
@@ -626,7 +651,9 @@ export default function FavoritesPage() {
         ) : items.length === 0 ? (
           <div className={s.emptyState} role="status" aria-live="polite">
             <div className={s.emptyIllustration} aria-hidden="true">
-              <div className={s.emptyCircle}>🎀</div>
+              <div className={s.emptyCircle}>
+                <IconBow size={60} strokeWidth={1} />
+              </div>
               <div className={s.emptyDot} />
               <div className={s.emptyDot} />
             </div>
@@ -693,10 +720,14 @@ export default function FavoritesPage() {
                         <img
                           src={resolveMediaUrl(item.coverImage.url) || ''}
                           alt={item.coverImage.alt || item.title}
+                          loading="lazy"
+                          decoding="async"
                           className={s.cardImage}
                         />
                       ) : (
-                        <div className={s.suggestCardImagePlaceholder}>🎀</div>
+                        <div className={s.suggestCardImagePlaceholder}>
+                          <IconBow size={36} strokeWidth={1.2} />
+                        </div>
                       )}
                     </Link>
                   </div>
@@ -728,7 +759,11 @@ export default function FavoritesPage() {
                         title="До обраного"
                         aria-label="До обраного"
                       >
-                        {pendingSuggestionIds.has(item.id) ? '…' : '🤍'}
+                        {pendingSuggestionIds.has(item.id) ? (
+                          '…'
+                        ) : (
+                          <IconHeart size={14} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -780,7 +815,8 @@ export default function FavoritesPage() {
                   items.forEach(handleAddToCart);
                 }}
               >
-                🛒 Додати все до кошика
+                <IconCart size={15} />
+                Додати все до кошика
               </button>
             </div>
           </div>

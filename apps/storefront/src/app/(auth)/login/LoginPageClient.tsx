@@ -4,6 +4,14 @@ import { useEffect, useState, useId } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { buildOAuthStartUrl, loginAccount } from '../../../lib/api';
+import {
+  IconAlert,
+  IconBow,
+  IconEye,
+  IconEyeOff,
+  IconLock,
+  IconMail,
+} from '../../../components/icons';
 import styles from './LoginPage.module.css';
 
 /* ─────────────────────────────────────────
@@ -190,7 +198,9 @@ export default function LoginPage() {
         <div className={styles.panelCenter}>
           <div className={styles.figureFrame}>
             <div className={styles.figureInner}>
-              <span className={styles.figureEmoji}>🎀</span>
+              <span className={styles.figureEmoji}>
+                <IconBow size={52} strokeWidth={1.1} />
+              </span>
               <span className={styles.figureBrand}>
                 SKUf<span className={styles.figureBrandAccent}>nya</span>
               </span>
@@ -257,7 +267,9 @@ export default function LoginPage() {
 
           {globalError && (
             <div className={styles.alertError} role="alert">
-              <span className={styles.alertIcon}>⚠️</span>
+              <span className={styles.alertIcon}>
+                <IconAlert size={16} />
+              </span>
               <span>{globalError}</span>
             </div>
           )}
@@ -269,7 +281,9 @@ export default function LoginPage() {
                   Електронна пошта
                 </label>
                 <div className={styles.inputWrap}>
-                  <span className={styles.inputIcon}>✉</span>
+                  <span className={styles.inputIcon}>
+                    <IconMail size={15} />
+                  </span>
                   <input
                     id={emailId}
                     name="email"
@@ -303,7 +317,9 @@ export default function LoginPage() {
                   </Link>
                 </div>
                 <div className={styles.inputWrap}>
-                  <span className={styles.inputIcon}>🔑</span>
+                  <span className={styles.inputIcon}>
+                    <IconLock size={15} />
+                  </span>
                   <input
                     id={passwordId}
                     name="password"
@@ -327,7 +343,7 @@ export default function LoginPage() {
                     aria-pressed={showPassword}
                     aria-label={showPassword ? 'Приховати пароль' : 'Показати пароль'}
                   >
-                    {showPassword ? '🙈' : '👁'}
+                    {showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                   </button>
                 </div>
                 {errors.password && (

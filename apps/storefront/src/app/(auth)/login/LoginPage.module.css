@@ -170,7 +170,9 @@
 }
 
 .figureEmoji {
-  font-size: 58px;
+  display: flex;
+  justify-content: center;
+  color: var(--deep-rose);
   filter: drop-shadow(0 8px 20px rgba(242, 201, 201, 0.4));
   line-height: 1;
 }

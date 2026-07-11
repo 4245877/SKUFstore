@@ -436,9 +436,10 @@
 }
 
 .emptyCartIcon {
-  font-size: 64px;
-  display: block;
+  display: flex;
+  justify-content: center;
   margin: 0 auto 24px;
+  color: var(--rose);
   animation: floatY 4s ease-in-out infinite;
 }
 

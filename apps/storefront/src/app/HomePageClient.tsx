@@ -9,38 +9,52 @@ import {
   type CatalogCategoryTreeItem,
   type HomeProductItem,
 } from '../lib/api'
+import {
+  IconBow,
+  IconBox,
+  IconChatHeart,
+  IconCrown,
+  IconFlower,
+  IconLightning,
+  IconMailHeart,
+  IconShieldCheck,
+  IconSword,
+  IconTelegram,
+  IconTruck,
+  IconWand,
+} from '../components/icons'
 import s from './Home.module.css'
 
 const FEATURES = [
   {
-    icon: '🛡️',
+    icon: IconShieldCheck,
     title: 'Уважний відбір моделей',
     text: 'Добираємо фігурки та варіанти з акцентом на якість деталей і вдалу презентацію.',
   },
   {
-    icon: '📦',
+    icon: IconBox,
     title: 'Дбайливе пакування',
     text: 'Надійний захист кожної позиції під час доставки.',
   },
   {
-    icon: '✈️',
+    icon: IconTruck,
     title: 'Доставка по Україні',
     text: 'Самовивіз і доставка перевізниками з відстеженням замовлення.',
   },
   {
-    icon: '♻️',
+    icon: IconChatHeart,
     title: 'Підтримка з вибором',
     text: 'Допоможемо зорієнтуватися в каталозі, матеріалах і доступних варіантах.',
   },
 ] as const
 
 const CATEGORY_DECOR = [
-  { emoji: '🗡️', color: '#e8d5aa' },
-  { emoji: '🌸', color: '#f2c9c9' },
-  { emoji: '⚡', color: '#c8bfc4' },
-  { emoji: '👑', color: '#d4e8c9' },
-  { emoji: '🎀', color: '#e7d9f6' },
-  { emoji: '🪄', color: '#cfe7f1' },
+  { icon: IconSword, color: '#e8d5aa' },
+  { icon: IconFlower, color: '#f2c9c9' },
+  { icon: IconLightning, color: '#c8bfc4' },
+  { icon: IconCrown, color: '#d4e8c9' },
+  { icon: IconBow, color: '#e7d9f6' },
+  { icon: IconWand, color: '#cfe7f1' },
 ] as const
 
 function flattenCategoryTree(items: CatalogCategoryTreeItem[]): CatalogCategoryTreeItem[] {
@@ -54,6 +68,15 @@ function pluralizeProducts(count: number) {
   if (mod10 === 1 && mod100 !== 11) return 'товар'
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'товари'
   return 'товарів'
+}
+
+function pluralizeCategories(count: number) {
+  const mod10 = count % 10
+  const mod100 = count % 100
+
+  if (mod10 === 1 && mod100 !== 11) return 'категорія'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'категорії'
+  return 'категорій'
 }
 
 function formatProductCount(count?: number) {
@@ -84,7 +107,7 @@ function buildHomeCategories(items: CatalogCategoryTreeItem[]) {
       slug: item.slug,
       title: item.name,
       countLabel: formatProductCount(item.productCount),
-      emoji: decor.emoji,
+      icon: decor.icon,
       color: decor.color,
     }
   })
@@ -194,9 +217,9 @@ export default function HomePageClient() {
           <p className={s.heroEyebrow}>フィギュアコレクション</p>
 
           <h1 className={s.heroTitle} id="hero-title">
-            Кожна фігурка —
+            Кожна фігурка&nbsp;—
             <br />
-            <span className={s.heroTitleItalic}>маленький шедевр</span>
+            <span className={s.heroTitleItalic}>маленький&nbsp;шедевр</span>
             <span className={s.heroTitleJp}>あなたのコレクションを飾る</span>
           </h1>
 
@@ -245,14 +268,18 @@ export default function HomePageClient() {
               <span className={s.heroStatNum}>
                 {isLoading ? '—' : totalProducts.toLocaleString('uk-UA')}
               </span>
-              <span className={s.heroStatLabel}>Товарів у каталозі</span>
+              <span className={s.heroStatLabel}>
+                {isLoading ? 'Товарів' : pluralizeProducts(totalProducts)} у каталозі
+              </span>
             </div>
 
             <div className={s.heroStat}>
               <span className={s.heroStatNum}>
                 {isLoading ? '—' : totalCategories.toLocaleString('uk-UA')}
               </span>
-              <span className={s.heroStatLabel}>Категорій</span>
+              <span className={s.heroStatLabel}>
+                {isLoading ? 'Категорій' : pluralizeCategories(totalCategories)}
+              </span>
             </div>
 
             <div className={s.heroStat}>
@@ -282,6 +309,7 @@ export default function HomePageClient() {
                     loading="eager"
                     decoding="async"
                   />
+                  <div className={s.heroImageVeil} aria-hidden="true" />
                 </div>
 
                 <div className={s.heroBadge}>{formatShowcaseBadge(showcaseProduct)}</div>
@@ -301,7 +329,9 @@ export default function HomePageClient() {
               <>
                 <div className={s.heroImageMedia}>
                   <div className={s.heroImagePlaceholder}>
-                    <span className={s.heroImageIcon}>🌸</span>
+                    <span className={s.heroImageIcon}>
+                      <IconFlower size={56} />
+                    </span>
                     <span className={s.heroImageLabel}>Вітрина магазину</span>
                   </div>
                 </div>
@@ -362,10 +392,12 @@ export default function HomePageClient() {
                           src={resolveMediaUrl(p.coverImage.url) || ''}
                           alt={p.coverImage.alt || p.title}
                           className={s.cardImage}
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className={s.cardImagePlaceholder}>
-                          <span>🎀</span>
+                          <IconBow size={44} />
                         </div>
                       )}
 
@@ -435,29 +467,45 @@ export default function HomePageClient() {
             <div className={s.sectionNotice}>Завантаження категорій…</div>
           ) : homeCategories.length > 0 ? (
             <div className={s.catGrid}>
-              {homeCategories.map((cat) => (
-                <Link
-                  key={cat.slug}
-                  href={`/catalog?categorySlug=${encodeURIComponent(cat.slug)}`}
-                  className={s.catCard}
-                  aria-label={`${cat.title} — ${cat.countLabel}`}
-                >
-                  <div
-                    className={s.catBg}
-                    aria-hidden="true"
-                    style={{
-                      background: `linear-gradient(160deg, ${cat.color}55, ${cat.color}22)`,
-                    }}
+              {homeCategories.map((cat) => {
+                const CatIcon = cat.icon
+
+                return (
+                  <Link
+                    key={cat.slug}
+                    href={`/catalog?categorySlug=${encodeURIComponent(cat.slug)}`}
+                    className={s.catCard}
+                    aria-label={`${cat.title} — ${cat.countLabel}`}
                   >
-                    <span>{cat.emoji}</span>
-                  </div>
-                  <div className={s.catOverlay} aria-hidden="true" />
-                  <div className={s.catContent}>
-                    <p className={s.catTitle}>{cat.title}</p>
-                    <p className={s.catCount}>{cat.countLabel}</p>
-                  </div>
-                </Link>
-              ))}
+                    <div
+                      className={s.catBg}
+                      aria-hidden="true"
+                      style={{
+                        background: `linear-gradient(160deg, ${cat.color}66, ${cat.color}1f)`,
+                      }}
+                    >
+                      <span className={s.catIcon}>
+                        <CatIcon size={40} strokeWidth={1.2} />
+                      </span>
+                    </div>
+                    <div className={s.catContent}>
+                      <p className={s.catTitle}>{cat.title}</p>
+                      <p className={s.catCount}>{cat.countLabel}</p>
+                      <span className={s.catArrow} aria-hidden="true">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path
+                            d="M2 7h10M8 3l4 4-4 4"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           ) : (
             <div className={s.sectionNotice}>
@@ -473,15 +521,19 @@ export default function HomePageClient() {
         </h2>
 
         <div className={s.featuresGrid}>
-          {FEATURES.map((f) => (
-            <div className={s.featureItem} key={f.title}>
-              <div className={s.featureIcon} aria-hidden="true">
-                {f.icon}
+          {FEATURES.map((f) => {
+            const FeatureIcon = f.icon
+
+            return (
+              <div className={s.featureItem} key={f.title}>
+                <div className={s.featureIcon} aria-hidden="true">
+                  <FeatureIcon size={20} />
+                </div>
+                <p className={s.featureTitle}>{f.title}</p>
+                <p className={s.featureText}>{f.text}</p>
               </div>
-              <p className={s.featureTitle}>{f.title}</p>
-              <p className={s.featureText}>{f.text}</p>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 
@@ -520,7 +572,7 @@ export default function HomePageClient() {
       <section className={`${s.section} ${s.newsletter}`} aria-labelledby="newsletter-title">
         <div className={s.newsletterInner}>
           <span className={s.newsletterIcon} aria-hidden="true">
-            💌
+            <IconMailHeart size={36} strokeWidth={1.2} />
           </span>
           <h2 className={s.newsletterTitle} id="newsletter-title">
             Новинки першими
@@ -536,7 +588,7 @@ export default function HomePageClient() {
             rel="noopener noreferrer"
             className={s.newsletterCta}
           >
-            <span aria-hidden="true">✈</span>
+            <IconTelegram size={16} />
             Підписатися в Telegram
           </Link>
 

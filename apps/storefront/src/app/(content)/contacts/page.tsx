@@ -1,6 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  IconInstagram,
+  IconMegaphone,
+  IconTelegram,
+  IconTiktok,
+  IconViber,
+} from '../../../components/icons';
 import styles from './ContactsPage.module.css';
 
 /* ─── Дані ─────────────────────────────────────────── */
@@ -34,35 +41,35 @@ const FAQ_ITEMS = [
 
 const CONTACTS = [
   {
-    icon: '✈️',
+    icon: IconTelegram,
     title: 'Telegram',
     text: 'Найшвидший спосіб зв’язку з питань замовлення, наявності, доставки та підбору фігурок.',
     label: '@SKUFnya_ua',
     href: 'https://t.me/SKUFnya_ua',
   },
   {
-    icon: '📢',
+    icon: IconMegaphone,
     title: 'Telegram-канал',
     text: 'Анонси, новинки, оновлення асортименту та важливі повідомлення магазину.',
     label: 'Перейти в канал',
     href: 'https://t.me/+l3_CI64EkuxlZmYy',
   },
   {
-    icon: '💬',
+    icon: IconViber,
     title: 'Viber',
     text: 'Номер для зв’язку у Viber. Підходить для швидких уточнень і листування.',
     label: '+380 93 821 31 02',
     href: 'tel:+380938213102',
   },
   {
-    icon: '📸',
+    icon: IconInstagram,
     title: 'Instagram',
     text: 'Фото готових фігурок, новинки, добірки та короткі оновлення магазину.',
     label: '@skufnya_ua',
     href: 'https://www.instagram.com/skufnya_ua',
   },
   {
-    icon: '🎵',
+    icon: IconTiktok,
     title: 'TikTok',
     text: 'Короткі відео, процеси, огляди фігурок і швидкі анонси новинок.',
     label: '@skuf_nya',
@@ -103,10 +110,10 @@ export default function ContactsPage() {
     <>
       {/* ── Hero ── */}
       <section className={styles.pageHero}>
-        <span className={styles.heroPetal} aria-hidden="true">🌸</span>
-        <span className={styles.heroPetal} aria-hidden="true">🌸</span>
         <span className={styles.heroPetal} aria-hidden="true">✿</span>
         <span className={styles.heroPetal} aria-hidden="true">❀</span>
+        <span className={styles.heroPetal} aria-hidden="true">✾</span>
+        <span className={styles.heroPetal} aria-hidden="true">❁</span>
 
         <div className={styles.pageHeroInner}>
           <p className={styles.pageEyebrow}>Контакти</p>
@@ -125,7 +132,7 @@ export default function ContactsPage() {
         <div className={styles.contactsInner}>
           <div className={styles.contactIntroCard}>
             <div className={styles.contactIntroHeader}>
-              <p className={styles.contactIntroLabel}>✉️ Контакти</p>
+              <p className={styles.contactIntroLabel}>Контакти</p>
               <h2 className={styles.contactIntroTitle}>
                 Актуальні <span className={styles.contactIntroTitleAccent}>способи зв’язку</span>
               </h2>
@@ -209,7 +216,7 @@ export default function ContactsPage() {
             {CONTACTS.map(contact => (
               <div className={styles.infoCard} key={contact.title}>
                 <div className={styles.infoCardIcon} aria-hidden="true">
-                  {contact.icon}
+                  <contact.icon size={20} strokeWidth={1.4} />
                 </div>
                 <h3 className={styles.infoCardTitle}>{contact.title}</h3>
                 <p className={styles.infoCardText}>{contact.text}</p>

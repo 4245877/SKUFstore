@@ -11,6 +11,7 @@ import {
   type CatalogProductsResponse,
 } from '../../../lib/api';
 
+import { IconFilter } from '../../../components/icons';
 import CatalogPagination from './_components/CatalogPagination';
 import { CatalogProductCard } from './_components/CatalogProductCard';
 import { CatalogSidebar } from './_components/CatalogSidebar';
@@ -702,7 +703,7 @@ export default function CatalogPageClient() {
                 aria-controls="catalog-filters-drawer"
               >
                 <span className={styles.filterToggleIcon} aria-hidden="true">
-                  ⚙
+                  <IconFilter size={15} />
                 </span>
                 Фільтри
               </button>

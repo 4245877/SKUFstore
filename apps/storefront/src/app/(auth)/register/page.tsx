@@ -8,6 +8,13 @@ import {
   registerAccount,
   requestRegisterCode,
 } from '../../../lib/api';
+import {
+  IconAlert,
+  IconBow,
+  IconEye,
+  IconEyeOff,
+  IconLock,
+} from '../../../components/icons';
 import s from './RegisterPage.module.css';
 
 type StrengthLevel = 0 | 1 | 2 | 3;
@@ -274,7 +281,9 @@ export default function RegisterPage() {
 
           {globalError && (
             <div className={s.alertError} role="alert">
-              <span className={s.alertIcon}>⚠️</span>
+              <span className={s.alertIcon}>
+                <IconAlert size={15} />
+              </span>
               {globalError}
             </div>
           )}
@@ -402,7 +411,7 @@ export default function RegisterPage() {
               </label>
               <div className={s.inputWrap}>
                 <span className={s.inputIcon} aria-hidden="true">
-                  🔒
+                  <IconLock size={15} />
                 </span>
                 <input
                   id={`${uid}-pw`}
@@ -421,7 +430,7 @@ export default function RegisterPage() {
                   onClick={() => setShowPw((v) => !v)}
                   aria-label={showPw ? 'Сховати пароль' : 'Показати пароль'}
                 >
-                  {showPw ? '🙈' : '👁'}
+                  {showPw ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                 </button>
               </div>
 
@@ -453,7 +462,7 @@ export default function RegisterPage() {
               </label>
               <div className={s.inputWrap}>
                 <span className={s.inputIcon} aria-hidden="true">
-                  🔒
+                  <IconLock size={15} />
                 </span>
                 <input
                   id={`${uid}-confirm`}
@@ -475,7 +484,7 @@ export default function RegisterPage() {
                       : 'Показати підтвердження пароля'
                   }
                 >
-                  {showConfirm ? '🙈' : '👁'}
+                  {showConfirm ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                 </button>
               </div>
               {errors.confirm && (
@@ -524,7 +533,7 @@ export default function RegisterPage() {
               />
               <span className={s.checkboxBox} aria-hidden="true" />
               <span className={s.checkLabel}>
-                Надсилайте мені новинки, поповнення асортименту та ексклюзивні пропозиції 🌸
+                Надсилайте мені новинки, поповнення асортименту та ексклюзивні пропозиції ✿
               </span>
             </label>
 
@@ -610,7 +619,7 @@ function Field({
 function PetalsLayer() {
   return (
     <div className={s.petalsLayer} aria-hidden="true">
-      {['🌸', '🌺', '🌸', '🌷', '🌸'].map((p, i) => (
+      {['✿', '❀', '✾', '❁', '✿'].map((p, i) => (
         <span key={i} className={s.petal}>
           {p}
         </span>
@@ -624,7 +633,9 @@ function DecoContent() {
     <div className={s.decoContent}>
       <div className={s.decoFrame}>
         <div className={s.decoFigure}>
-          <span className={s.decoFigureIcon}>🎀</span>
+          <span className={s.decoFigureIcon}>
+            <IconBow size={60} strokeWidth={1} />
+          </span>
           <span className={s.decoFigureLabel}>フィギュア</span>
         </div>
         <span className={s.decoBadge}>Нові надходження</span>

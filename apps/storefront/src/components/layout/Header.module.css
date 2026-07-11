@@ -95,7 +95,9 @@
 }
 
 .logoIcon {
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  color: var(--deep-rose);
   filter: drop-shadow(0 2px 6px rgba(201,107,107,0.25));
   animation: floatY 5s ease-in-out infinite;
 }
@@ -271,9 +273,11 @@
   gap: 12px;
 }
 
+/* Українські заголовки колонок — body-шрифт, не JP-serif */
 .megaColHeading {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 10px;
+  font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--mauve);
@@ -320,8 +324,9 @@
 }
 
 .megaFeaturedLabel {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 10px;
+  font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--mauve);
@@ -349,7 +354,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  color: var(--mauve);
 }
 
 .megaFeaturedBody {
@@ -360,8 +365,9 @@
 }
 
 .megaFeaturedSeries {
-  font-family: var(--font-jp);
+  font-family: var(--font-body);
   font-size: 9px;
+  font-weight: 600;
   letter-spacing: 0.15em;
   color: var(--mauve);
   text-transform: uppercase;
@@ -703,9 +709,8 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  padding: 0 12px;
+  padding: 0 12px 12px;
   gap: 2px;
-  flex: 1;
 }
 
 .mobileNavItem {
@@ -735,16 +740,24 @@
   background: var(--lace);
 }
 
+/* JP-мітка над назвою: усі пункти починаються з рівної лівої кромки */
+.mobileNavLinkText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .mobileNavLinkJp {
   font-family: var(--font-jp);
-  font-size: 9.5px;
+  font-size: 9px;
   letter-spacing: 0.15em;
   color: var(--mauve);
-  min-width: 36px;
+  opacity: 0.85;
 }
 
 .mobileNavLinkLabel {
-  flex: 1;
   font-size: 15px;
   font-weight: 500;
   color: var(--ink);
@@ -762,6 +775,50 @@
 .mobileNavLink:hover svg {
   transform: translateX(4px);
   color: var(--mauve);
+}
+
+/* Швидкі підбірки каталогу — заповнюють порожнечу меню корисними переходами */
+.mobileQuick {
+  padding: 20px 20px 24px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.mobileQuickTitle {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mauve);
+  margin-bottom: 12px;
+}
+
+.mobileQuickGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mobileQuickLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.mobileQuickLink:hover {
+  border-color: var(--rose);
+  color: var(--deep-rose);
+  background: var(--lace);
 }
 
 /* Mobile footer */

@@ -17,6 +17,7 @@ import {
   removeFavorite,
 } from '../../../../lib/demo-store';
 import { buildAgeVerifyPath, isAgeVerifiedClient } from '../../../../lib/age-gate';
+import { IconBag, IconBow, IconHeart, IconShare } from '../../../../components/icons';
 import styles from './ProductDetails.module.css';
 
 type Product = Awaited<ReturnType<typeof getCatalogProductBySlug>>;
@@ -333,7 +334,9 @@ function Gallery({
           </>
         ) : (
           <div className={styles.mainImagePlaceholder}>
-            <span className={styles.mainImagePlaceholderIcon}>🎀</span>
+            <span className={styles.mainImagePlaceholderIcon}>
+              <IconBow size={72} strokeWidth={1.1} />
+            </span>
             <span className={styles.mainImagePlaceholderLabel}>Фото скоро буде</span>
           </div>
         )}
@@ -1064,17 +1067,23 @@ function ProductInfo({
 
       <QuantitySelector value={quantity} onChange={setQuantity} max={maxQty} />
 
+      {/* Вкладки винесено на рівень сторінки (на всю ширину під гридом) */}
       <div className={styles.actions}>
         <button
           type="button"
           className={styles.btnPrimary}
           onClick={handleAddToCart}
         >
-          {product.isAdult && !isAgeVerified
-            ? 'Підтвердити 18+ для покупки'
-            : cartAdded
-              ? '✓ Додано до кошика'
-              : '🛍 Додати до кошика'}
+          {product.isAdult && !isAgeVerified ? (
+            'Підтвердити 18+ для покупки'
+          ) : cartAdded ? (
+            '✓ Додано до кошика'
+          ) : (
+            <>
+              <IconBag size={16} />
+              Додати до кошика
+            </>
+          )}
         </button>
 
         <div className={styles.btnRow}>
@@ -1084,7 +1093,8 @@ function ProductInfo({
             onClick={() => void handleWishlist()}
             disabled={wishPending}
           >
-            {wishAdded ? '❤ В обраному' : '♡ Додати до обраного'}
+            <IconHeart size={15} filled={wishAdded} />
+            {wishAdded ? 'В обраному' : 'Додати до обраного'}
           </button>
 
           <button
@@ -1092,18 +1102,17 @@ function ProductInfo({
             className={styles.btnSecondary}
             onClick={() => void handleShare()}
           >
-            {shareCopied ? '✓ Посилання скопійовано' : '↗ Поділитися'}
+            {shareCopied ? (
+              '✓ Посилання скопійовано'
+            ) : (
+              <>
+                <IconShare size={15} />
+                Поділитися
+              </>
+            )}
           </button>
         </div>
       </div>
-
-      <TabPanel
-        product={product}
-        selectedVariant={selectedVariant}
-        selectedFinish={selectedFinish}
-        selectedColor={selectedColor}
-        estimatedShippingLabel={estimatedShippingLabel}
-      />
     </div>
   );
 }
@@ -1149,6 +1158,10 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
     );
   }, [product.images, selectedVariant, selectedFinish, selectedColor]);
 
+  const finishOption =
+    FINISHES.find((item) => item.code === selectedFinish) ?? FINISHES[0];
+  const estimatedShippingLabel = formatLeadTime(finishOption.leadTimeDays);
+
   return (
     <main className={styles.page}>
       <div className={styles.container}>
@@ -1175,6 +1188,16 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
             verifyHref={verifyHref}
           />
         </div>
+
+        {/* Вкладки на всю ширину контейнера: під галереєю більше немає
+            порожньої лівої половини екрана */}
+        <TabPanel
+          product={product}
+          selectedVariant={selectedVariant}
+          selectedFinish={selectedFinish}
+          selectedColor={selectedColor}
+          estimatedShippingLabel={estimatedShippingLabel}
+        />
       </div>
     </main>
   );

@@ -3,13 +3,29 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import {
+  IconBow,
+  IconBox,
+  IconChatHeart,
+  IconClipboard,
+  IconGlobe,
+  IconMail,
+  IconMap,
+  IconMegaphone,
+  IconPencil,
+  IconPuzzle,
+  IconTelegram,
+  IconTruck,
+  IconViber,
+  IconWrench,
+} from '../../../components/icons';
 import styles from './DeliveryPage.module.css';
 
 /* ─── Data ─────────────────────────────────────── */
 
 const deliveryZones = [
   {
-    flag: '🇺🇦',
+    flag: 'UA',
     region: 'Україна — Нова Пошта',
     days: '1–3 роб. дні',
     price: 'за тарифом перевізника',
@@ -18,7 +34,7 @@ const deliveryZones = [
     badgeType: 'popular',
   },
   {
-    flag: '🇺🇦',
+    flag: 'UA',
     region: 'Україна — Укрпошта',
     days: '3–6 роб. днів',
     price: 'за тарифом перевізника',
@@ -27,7 +43,7 @@ const deliveryZones = [
     badgeType: null,
   },
   {
-    flag: '🌍',
+    flag: 'INT',
     region: 'Міжнародна доставка',
     days: 'індивідуально',
     price: 'розрахунок перед оплатою',
@@ -39,13 +55,13 @@ const deliveryZones = [
 
 const packageFormats = [
   {
-    icon: '🧩',
+    icon: IconPuzzle,
     name: 'Набір у деталях',
     desc: 'Найбезпечніший формат для перевезення. Деталі пакуються окремо, дрібні елементи додатково захищаються.',
     tag: 'Оптимально для доставки',
   },
   {
-    icon: '🛠️',
+    icon: IconWrench,
     name: 'Зі складанням і склеюванням',
     desc: 'Базова збірка і склеювання доступні за погодженням. Це ручна робота, тому на складних моделях можуть залишатися невеликі технологічні шви або сліди підгонки деталей. Якщо потрібен максимально безпечний варіант доставки, радимо замовляти модель набором у деталях.',
     tag: 'За погодженням',
@@ -54,25 +70,25 @@ const packageFormats = [
 
 const deliveryMethods = [
   {
-    icon: '📦',
+    icon: IconBox,
     name: 'Нова Пошта — відділення',
     desc: 'Базовий і найзручніший варіант по Україні. Підходить для більшості замовлень.',
     tag: 'Основний спосіб',
   },
   {
-    icon: '🚚',
+    icon: IconTruck,
     name: 'Нова Пошта — курʼєр',
     desc: 'Зручний варіант для зібраних і склеєних моделей, коли важливо мінімізувати зайві переміщення посилки.',
     tag: 'Для делікатних моделей',
   },
   {
-    icon: '✉️',
+    icon: IconMail,
     name: 'Укрпошта',
     desc: 'Доступний варіант для частини замовлень. Найкраще підходить для наборів у деталях.',
     tag: 'За погодженням',
   },
   {
-    icon: '🌐',
+    icon: IconGlobe,
     name: 'Міжнародна доставка',
     desc: 'Доступна за запитом. Підсумкова вартість і строки залежать від країни, габаритів та обраного формату відправлення.',
     tag: 'Розрахунок перед оплатою',
@@ -81,25 +97,25 @@ const deliveryMethods = [
 
 const processSteps = [
   {
-    icon: '📝',
+    icon: IconPencil,
     title: 'Підтвердження замовлення',
     text: 'Після оформлення ми перевіряємо склад замовлення, формат відправлення та уточнюємо деталі, якщо це потрібно.',
     tag: 'Після оформлення',
   },
   {
-    icon: '🛠️',
+    icon: IconWrench,
     title: 'Виготовлення і підготовка',
     text: 'Фігурка проходить виготовлення та базову підготовку. Якщо обрана послуга складання і склеювання, закладається додатковий час на ручну роботу та підгонку деталей.',
     tag: 'Залежить від комплектації',
   },
   {
-    icon: '📦',
+    icon: IconBox,
     title: 'Пакування',
     text: 'Кожне замовлення пакується з урахуванням крихких елементів. Для дрібних деталей і тонких частин використовується додатковий захист.',
     tag: 'Безпечне пакування',
   },
   {
-    icon: '📮',
+    icon: IconMap,
     title: 'Відправлення та трекінг',
     text: 'Після передачі перевізнику ви отримуєте номер відстеження. Для зібраних моделей радимо перевіряти посилку під час отримання.',
     tag: 'ТТН після відправлення',
@@ -140,19 +156,19 @@ const trustItems = [
 
 const supportLinks = [
   {
-    icon: '💬',
+    icon: IconTelegram,
     title: 'Telegram-підтримка',
     sub: '@SKUFnya_ua',
     href: 'https://t.me/SKUFnya_ua',
   },
   {
-    icon: '📱',
+    icon: IconViber,
     title: 'Viber',
     sub: '+380 93 821 31 02',
     href: 'viber://chat?number=%2B380938213102',
   },
   {
-    icon: '📣',
+    icon: IconMegaphone,
     title: 'Telegram-канал',
     sub: 'Новини, оновлення та анонси',
     href: 'https://t.me/+l3_CI64EkuxlZmYy',
@@ -279,7 +295,9 @@ export default function DeliveryPage() {
             {/* Delivery zones */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
-                <div className={styles.cardHeaderIcon}>🗺️</div>
+                <div className={styles.cardHeaderIcon}>
+                  <IconGlobe size={19} strokeWidth={1.4} />
+                </div>
                 <div>
                   <div className={styles.cardHeaderTitle}>Напрямки та строки</div>
                   <div className={styles.cardHeaderSub}>Умови доставки</div>
@@ -329,7 +347,9 @@ export default function DeliveryPage() {
             {/* Package formats */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
-                <div className={styles.cardHeaderIcon}>🧷</div>
+                <div className={styles.cardHeaderIcon}>
+                  <IconBox size={19} strokeWidth={1.4} />
+                </div>
                 <div>
                   <div className={styles.cardHeaderTitle}>Формати відправлення</div>
                   <div className={styles.cardHeaderSub}>Комплектація замовлення</div>
@@ -340,7 +360,9 @@ export default function DeliveryPage() {
                 <div className={styles.methodGrid}>
                   {packageFormats.map((item) => (
                     <div key={item.name} className={styles.infoCard}>
-                      <span className={styles.methodIcon}>{item.icon}</span>
+                      <span className={styles.methodIcon}>
+                        <item.icon size={24} strokeWidth={1.3} />
+                      </span>
                       <div className={styles.methodName}>{item.name}</div>
                       <div className={styles.methodDesc}>{item.desc}</div>
                       <span className={styles.methodTag}>{item.tag}</span>
@@ -353,7 +375,9 @@ export default function DeliveryPage() {
             {/* Delivery methods */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
-                <div className={styles.cardHeaderIcon}>🚚</div>
+                <div className={styles.cardHeaderIcon}>
+                  <IconTruck size={19} strokeWidth={1.4} />
+                </div>
                 <div>
                   <div className={styles.cardHeaderTitle}>Способи доставки</div>
                   <div className={styles.cardHeaderSub}>Як краще отримати замовлення</div>
@@ -374,7 +398,9 @@ export default function DeliveryPage() {
                       onClick={() => setActiveMethod(i)}
                       aria-pressed={i === activeMethod}
                     >
-                      <span className={styles.methodIcon}>{m.icon}</span>
+                      <span className={styles.methodIcon}>
+                        <m.icon size={24} strokeWidth={1.3} />
+                      </span>
                       <span className={styles.methodName}>{m.name}</span>
                       <span className={styles.methodDesc}>{m.desc}</span>
                       <span className={styles.methodTag}>{m.tag}</span>
@@ -387,7 +413,9 @@ export default function DeliveryPage() {
             {/* Process steps */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
-                <div className={styles.cardHeaderIcon}>📋</div>
+                <div className={styles.cardHeaderIcon}>
+                  <IconClipboard size={19} strokeWidth={1.4} />
+                </div>
                 <div>
                   <div className={styles.cardHeaderTitle}>Як відбувається відправлення</div>
                   <div className={styles.cardHeaderSub}>Етапи підготовки замовлення</div>
@@ -399,7 +427,7 @@ export default function DeliveryPage() {
                   {processSteps.map((s, i) => (
                     <div key={s.title} className={styles.step}>
                       <div className={styles.stepDot}>
-                        {s.icon}
+                        <s.icon size={16} strokeWidth={1.4} />
                         <span className={styles.stepNum}>{i + 1}</span>
                       </div>
                       <div className={styles.stepContent}>
@@ -416,7 +444,9 @@ export default function DeliveryPage() {
             {/* FAQ */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
-                <div className={styles.cardHeaderIcon}>💭</div>
+                <div className={styles.cardHeaderIcon}>
+                  <IconChatHeart size={19} strokeWidth={1.4} />
+                </div>
                 <div>
                   <div className={styles.cardHeaderTitle}>Поширені запитання</div>
                   <div className={styles.cardHeaderSub}>FAQ</div>
@@ -544,7 +574,9 @@ export default function DeliveryPage() {
             {/* Support */}
             <div className={`${styles.sideCard} ${styles.supportCard}`}>
               <div className={styles.sideCardHeader}>
-                <span className={styles.sideCardHeaderIcon}>🎀</span>
+                <span className={styles.sideCardHeaderIcon}>
+                  <IconBow size={18} strokeWidth={1.3} />
+                </span>
                 <span className={styles.sideCardTitle}>Звʼязок з нами</span>
               </div>
 
@@ -557,7 +589,9 @@ export default function DeliveryPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <div className={styles.supportItemIcon}>{s.icon}</div>
+                    <div className={styles.supportItemIcon}>
+                      <s.icon size={17} strokeWidth={1.4} />
+                    </div>
                     <div className={styles.supportItemText}>
                       <div className={styles.supportItemTitle}>{s.title}</div>
                       <div className={styles.supportItemSub}>{s.sub}</div>

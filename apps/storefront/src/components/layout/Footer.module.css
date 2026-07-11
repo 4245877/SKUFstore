@@ -66,10 +66,10 @@
 }
 
 .logoMark {
-  font-size: 22px;
   color: var(--rose);
   animation: floatY 5s ease-in-out infinite;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 .logoText {
@@ -92,7 +92,7 @@
 .brandDesc {
   font-size: 13px;
   line-height: 1.75;
-  color: rgba(253, 248, 243, 0.62);
+  color: rgba(253, 248, 243, 0.72);
   max-width: 280px;
   margin-bottom: 24px;
 }
@@ -110,7 +110,7 @@
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: rgba(253, 248, 243, 0.55);
+  color: rgba(253, 248, 243, 0.7);
   transition: color 0.2s;
   word-break: break-word;
 }
@@ -120,10 +120,12 @@
 }
 
 .contactIcon {
-  font-size: 14px;
   width: 20px;
-  text-align: center;
-  color: var(--mauve);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rose);
+  opacity: 0.8;
   flex-shrink: 0;
 }
 
@@ -142,8 +144,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  color: rgba(253, 248, 243, 0.5);
+  color: rgba(253, 248, 243, 0.7);
   transition:
     background 0.2s,
     border-color 0.2s,
@@ -204,7 +205,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: rgba(253, 248, 243, 0.45);
+  color: rgba(253, 248, 243, 0.72);
   padding: 5px 0;
   transition: color 0.18s, gap 0.18s var(--ease-spring);
   position: relative;
@@ -257,7 +258,7 @@
 
 .copyright {
   font-size: 12px;
-  color: rgba(253, 248, 243, 0.3);
+  color: rgba(253, 248, 243, 0.55);
   letter-spacing: 0.02em;
 }
 
@@ -268,7 +269,7 @@
 
 .legalLink {
   font-size: 12px;
-  color: rgba(253, 248, 243, 0.35);
+  color: rgba(253, 248, 243, 0.62);
   letter-spacing: 0.02em;
   transition: color 0.2s;
 }
@@ -290,8 +291,8 @@
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.06em;
-  color: rgba(253, 248, 243, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(253, 248, 243, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 2px;
   padding: 3px 8px;
   background: rgba(255, 255, 255, 0.03);
@@ -299,8 +300,8 @@
 }
 
 .paymentBadge:hover {
-  border-color: rgba(242, 201, 201, 0.25);
-  color: rgba(253, 248, 243, 0.6);
+  border-color: rgba(242, 201, 201, 0.35);
+  color: rgba(253, 248, 243, 0.85);
 }
 
 /* ── Petal decoration ─────────────────────── */
@@ -311,7 +312,8 @@
   display: flex;
   gap: 16px;
   pointer-events: none;
-  opacity: 0.07;
+  color: var(--rose);
+  opacity: 0.35;
 }
 
 .petalItem {

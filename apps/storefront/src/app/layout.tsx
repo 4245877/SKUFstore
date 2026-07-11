@@ -1,7 +1,31 @@
 import type { Metadata } from "next";
+import { Manrope, Playfair_Display, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+
+// Body-гротеск із повною українською кирилицею та символом ₴ (U+20B4)
+const fontSans = Manrope({
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const fontSerif = Playfair_Display({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  style: ["normal", "italic"],
+  weight: ["400", "600"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+// Лише для японських акцентів — українському тексту цей шрифт не призначається
+const fontJp = Shippori_Mincho({
+  weight: ["400", "600"],
+  variable: "--font-jp-serif",
+  display: "swap",
+  preload: false,
+});
 
 const siteUrl = "https://www.skufnya.com";
 const ogImageUrl = `${siteUrl}/opengraph-image.png`;
@@ -61,7 +85,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="uk">
+    <html
+      lang="uk"
+      className={`${fontSans.variable} ${fontSerif.variable} ${fontJp.variable}`}
+    >
       <body>
         <Header />
         {children}

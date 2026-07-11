@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './CheckoutSuccessPage.module.css';
+import { IconBow } from '../../../../components/icons';
 import {
   formatDate,
   formatPrice,
@@ -41,14 +42,16 @@ function CardShell({ badge, title, subtitle, children }: CardShellProps) {
       <div className={styles.container}>
         <section className={styles.card}>
           <span className={styles.petalTopRight} aria-hidden="true">
-            🌸
+            ❀
           </span>
           <span className={styles.petalBottomLeft} aria-hidden="true">
             ✿
           </span>
 
           <div className={styles.iconWrap} aria-hidden="true">
-            <span className={styles.iconEmoji}>🎀</span>
+            <span className={styles.iconEmoji}>
+              <IconBow size={30} strokeWidth={1.2} />
+            </span>
           </div>
 
           <div className={styles.badge}>{badge}</div>

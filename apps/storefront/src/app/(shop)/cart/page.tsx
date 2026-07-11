@@ -23,6 +23,7 @@ import {
   updateCartItemQuantity,
 } from "../../../lib/demo-store";
 
+import { IconCart } from "../../../components/icons";
 import styles from "./CartPage.module.css";
 
 type RecommendedItem = {
@@ -63,7 +64,6 @@ const PAGE_COPY = {
     loading: "Завантаження кошика…",
   },
   empty: {
-    icon: "🛒",
     title: "Кошик порожній",
     text: "Схоже, у кошику поки нічого немає. Загляньте до каталогу.",
     cta: "Перейти до каталогу →",
@@ -173,6 +173,8 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
             <img
               src={imageSrc}
               alt={item.imageAlt || item.name}
+              loading="lazy"
+              decoding="async"
               className={styles.cartItemThumbImg}
             />
           ) : (
@@ -552,8 +554,8 @@ export default function CartPage() {
           <div>
             {isEmpty ? (
               <div className={styles.emptyCart}>
-                <span className={styles.emptyCartIcon}>
-                  {PAGE_COPY.empty.icon}
+                <span className={styles.emptyCartIcon} aria-hidden="true">
+                  <IconCart size={48} strokeWidth={1.2} />
                 </span>
                 <h2 className={styles.emptyCartTitle}>
                   {PAGE_COPY.empty.title}
@@ -622,6 +624,8 @@ export default function CartPage() {
                             <img
                               src={imageSrc}
                               alt={item.imageAlt || item.name}
+                              loading="lazy"
+                              decoding="async"
                               className={styles.recommendThumbImg}
                             />
                           ) : (

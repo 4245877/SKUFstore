@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { IconCart } from "../../../components/icons";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
@@ -292,7 +293,7 @@ export default function CheckoutPage() {
 
           <section className={styles.emptyCard}>
             <span className={styles.emptyIcon} aria-hidden="true">
-              🛒
+              <IconCart size={40} strokeWidth={1.2} />
             </span>
 
             <h1>Кошик порожній</h1>
@@ -553,6 +554,8 @@ export default function CheckoutPage() {
                           <img
                             src={imageUrl}
                             alt={item.imageAlt || item.name}
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <span>Фото</span>

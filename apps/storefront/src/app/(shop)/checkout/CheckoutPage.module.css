@@ -536,9 +536,10 @@
 }
 
 .emptyIcon {
-  display: block;
+  display: flex;
+  justify-content: center;
   margin-bottom: 15px;
-  font-size: 42px;
+  color: var(--rose);
 }
 
 .emptyCard h1 {

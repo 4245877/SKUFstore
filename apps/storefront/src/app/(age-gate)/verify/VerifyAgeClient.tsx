@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { isSafeReturnTo, setAgeVerifiedClient } from '../../../lib/age-gate';
+import { IconBow } from '../../../components/icons';
 import styles from './Verify.module.css';
 
 export default function VerifyAgeClient() {
@@ -48,14 +49,16 @@ export default function VerifyAgeClient() {
       <div className={`${styles.laceBorder} ${styles.laceBorderTop}`} aria-hidden="true" />
       <div className={`${styles.laceBorder} ${styles.laceBorderBottom}`} aria-hidden="true" />
 
-      <span className={styles.petalA} aria-hidden="true">🌸</span>
-      <span className={styles.petalB} aria-hidden="true">✿</span>
-      <span className={styles.petalC} aria-hidden="true">🌸</span>
-      <span className={styles.petalD} aria-hidden="true">✿</span>
+      <span className={styles.petalA} aria-hidden="true">✿</span>
+      <span className={styles.petalB} aria-hidden="true">❀</span>
+      <span className={styles.petalC} aria-hidden="true">✾</span>
+      <span className={styles.petalD} aria-hidden="true">❁</span>
 
       <main className={styles.card}>
         <div className={styles.brandMark}>
-          <span className={styles.brandIcon} aria-hidden="true">🎀</span>
+          <span className={styles.brandIcon} aria-hidden="true">
+            <IconBow size={34} strokeWidth={1.2} />
+          </span>
           <span className={styles.brandName}>Skufnya</span>
           <span className={styles.brandSub}>アニメフィギュア</span>
         </div>
