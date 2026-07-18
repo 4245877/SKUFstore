@@ -15,6 +15,7 @@ import {
   IconChatHeart,
   IconCrown,
   IconFlower,
+  IconGrid,
   IconLightning,
   IconMailHeart,
   IconShieldCheck,
@@ -22,8 +23,12 @@ import {
   IconTelegram,
   IconTruck,
   IconWand,
+  IconWrench,
 } from '../components/icons'
 import s from './Home.module.css'
+
+const THREE_D_PRINTING_URL =
+  'https://4245877.github.io/3D-Drukarnya/?utm_source=skufnya&utm_medium=referral&utm_campaign=3d_drukarnya&utm_content=homepage_promo'
 
 const FEATURES = [
   {
@@ -45,6 +50,21 @@ const FEATURES = [
     icon: IconChatHeart,
     title: 'Підтримка з вибором',
     text: 'Допоможемо зорієнтуватися в каталозі, матеріалах і доступних варіантах.',
+  },
+] as const
+
+const THREE_D_PRINTING_DIRECTIONS = [
+  {
+    icon: IconBox,
+    label: 'Корпуси для NAS та електроніки',
+  },
+  {
+    icon: IconGrid,
+    label: 'Mini-rack і деталі для стійок',
+  },
+  {
+    icon: IconWrench,
+    label: 'Кріплення й адаптери під конфігурацію',
   },
 ] as const
 
@@ -580,6 +600,108 @@ export default function HomePageClient() {
           </Link>
 
           <p className={s.newsletterDisclaimer}>Без спаму — лише новини магазину.</p>
+        </div>
+      </section>
+
+      <section
+        className={`${s.section} ${s.threeDPrinting}`}
+        aria-labelledby="three-d-printing-title"
+      >
+        <div className={s.threeDPrintingInner}>
+          <div className={s.threeDPrintingContent}>
+            <p className={s.sectionLabel}>Інший наш проєкт</p>
+
+            <h2 className={s.threeDPrintingTitle} id="three-d-printing-title">
+              Потрібен корпус, mini-rack або нестандартне кріплення?
+            </h2>
+
+            <p className={s.threeDPrintingText}>
+              3D Друкарня — окремий технічний проєкт нашої команди. Там можна замовити
+              функціональні деталі для NAS, HomeLab, серверного й мережевого обладнання.
+            </p>
+
+            <ul className={s.threeDPrintingDirections}>
+              {THREE_D_PRINTING_DIRECTIONS.map((direction) => {
+                const DirectionIcon = direction.icon
+
+                return (
+                  <li className={s.threeDPrintingDirection} key={direction.label}>
+                    <span className={s.threeDPrintingDirectionIcon} aria-hidden="true">
+                      <DirectionIcon size={18} strokeWidth={1.5} />
+                    </span>
+                    <span>{direction.label}</span>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <div className={s.threeDPrintingActions}>
+              <a
+                href={THREE_D_PRINTING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={s.threeDPrintingCta}
+                aria-describedby="three-d-printing-note"
+              >
+                Перейти до 3D Друкарні
+                <span className={s.threeDPrintingExternalIcon} aria-hidden="true">
+                  ↗
+                </span>
+                <span className="sr-only"> (відкриється в новій вкладці)</span>
+              </a>
+
+              <p className={s.threeDPrintingNote} id="three-d-printing-note">
+                Окремий каталог і окреме оформлення замовлення.
+              </p>
+            </div>
+          </div>
+
+          <div className={s.threeDPrintingVisual} aria-hidden="true">
+            <div className={s.threeDPrintingCard}>
+              <div className={s.threeDPrintingCardHead}>
+                <span>3D ДРУКАРНЯ</span>
+                <span className={s.threeDPrintingBadge}>FDM</span>
+              </div>
+
+              <div className={s.threeDPrintingScene}>
+                <span className={`${s.threeDPrintingTag} ${s.threeDPrintingTagNas}`}>
+                  NAS
+                </span>
+                <span className={`${s.threeDPrintingTag} ${s.threeDPrintingTagLab}`}>
+                  HomeLab
+                </span>
+
+                <div className={s.threeDPrintingLayers} />
+
+                <div className={s.threeDPrintingRack}>
+                  <span className={s.threeDPrintingRackTop} />
+
+                  <div className={s.threeDPrintingRackUnit}>
+                    <span className={s.threeDPrintingRackLed} />
+                    <span className={s.threeDPrintingRackSlots} />
+                  </div>
+
+                  <div className={s.threeDPrintingRackUnit}>
+                    <span className={s.threeDPrintingRackLed} />
+                    <span className={s.threeDPrintingRackSlots} />
+                  </div>
+
+                  <div className={s.threeDPrintingRackUnit}>
+                    <span className={s.threeDPrintingRackLed} />
+                    <span className={s.threeDPrintingRackSlots} />
+                  </div>
+
+                  <span className={s.threeDPrintingRackFoot} />
+                </div>
+              </div>
+
+              <div className={s.threeDPrintingCardFoot}>
+                <span>Корпуси</span>
+                <span>Mini-rack</span>
+                <span>Кріплення</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>

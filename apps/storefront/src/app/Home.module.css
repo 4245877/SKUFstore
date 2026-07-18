@@ -1029,6 +1029,306 @@
   letter-spacing: 0.02em;
 }
 
+/* ── 3D printing project ─────────────────── */
+.threeDPrinting {
+  background: var(--parchment);
+  border-top: 1px solid var(--border);
+}
+
+.threeDPrintingInner {
+  max-width: var(--container);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  align-items: center;
+  gap: clamp(40px, 7vw, 96px);
+  padding: clamp(32px, 5vw, 64px);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-xs);
+}
+
+.threeDPrintingContent {
+  min-width: 0;
+  max-width: 700px;
+}
+
+.threeDPrintingTitle {
+  max-width: 680px;
+  margin-bottom: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 600;
+  line-height: 1.12;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.threeDPrintingText {
+  max-width: 650px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.threeDPrintingDirections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 30px;
+  list-style: none;
+}
+
+.threeDPrintingDirection {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--blush);
+  color: var(--charcoal);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.threeDPrintingDirectionIcon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -4px;
+  color: var(--deep-rose);
+  background: var(--lace);
+  border: 1px solid var(--blush);
+  border-radius: var(--radius-sm);
+}
+
+.threeDPrintingActions {
+  display: flex;
+  align-items: center;
+  gap: 16px 20px;
+  flex-wrap: wrap;
+  margin-top: 34px;
+}
+
+.threeDPrintingCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 14px 26px;
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-align: center;
+  transition:
+    background 0.2s,
+    transform 0.2s var(--ease-spring),
+    box-shadow 0.2s;
+}
+
+.threeDPrintingCta:hover {
+  background: var(--charcoal);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.threeDPrintingExternalIcon {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.threeDPrintingCta:hover .threeDPrintingExternalIcon {
+  transform: translate(2px, -2px);
+}
+
+.threeDPrintingNote {
+  max-width: 260px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.threeDPrintingVisual {
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.threeDPrintingCard {
+  position: relative;
+  width: min(100%, 430px);
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(242, 201, 201, 0.7), transparent 34%),
+    linear-gradient(145deg, var(--cream), var(--lace));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 14px 14px 0 rgba(201, 169, 110, 0.12), var(--shadow-sm);
+}
+
+.threeDPrintingCardHead,
+.threeDPrintingCardFoot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--mauve);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.threeDPrintingCardHead {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.threeDPrintingBadge {
+  padding: 3px 7px;
+  color: var(--deep-rose);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--blush);
+  border-radius: var(--radius-xs);
+}
+
+.threeDPrintingScene {
+  position: relative;
+  flex: 1;
+  min-height: 292px;
+  display: grid;
+  place-items: center;
+  padding: 36px 28px 26px;
+}
+
+.threeDPrintingLayers {
+  position: absolute;
+  width: min(76%, 280px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle,
+    transparent 0 9px,
+    rgba(178, 80, 80, 0.08) 10px 11px
+  );
+}
+
+.threeDPrintingRack {
+  position: relative;
+  z-index: 1;
+  width: min(58%, 190px);
+  padding: 16px 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(253, 248, 243, 0.92);
+  border: 6px solid var(--ink);
+  box-shadow: 8px 8px 0 rgba(178, 80, 80, 0.18);
+}
+
+.threeDPrintingRackTop,
+.threeDPrintingRackFoot {
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  height: 6px;
+  background: var(--ink);
+}
+
+.threeDPrintingRackTop {
+  top: -10px;
+}
+
+.threeDPrintingRackFoot {
+  bottom: -10px;
+}
+
+.threeDPrintingRackUnit {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--silver);
+  box-shadow: inset 0 -4px 0 var(--parchment);
+}
+
+.threeDPrintingRackLed {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: var(--deep-rose);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(178, 80, 80, 0.12);
+}
+
+.threeDPrintingRackSlots {
+  width: 100%;
+  height: 16px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--silver) 0 2px,
+    transparent 2px 7px
+  );
+  opacity: 0.7;
+}
+
+.threeDPrintingTag {
+  position: absolute;
+  z-index: 2;
+  padding: 5px 9px;
+  color: var(--mauve);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--blush);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-xs);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.threeDPrintingTagNas {
+  top: 26%;
+  left: 8%;
+}
+
+.threeDPrintingTagLab {
+  right: 7%;
+  bottom: 20%;
+}
+
+.threeDPrintingCardFoot {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-soft);
+}
+
+.threeDPrintingCardFoot span:not(:last-child)::after {
+  content: '·';
+  margin-left: 12px;
+  color: var(--rose);
+}
+
 /* ── Stagger animation helpers ───────────── */
 .card:nth-child(1) { animation-delay: 0.05s; }
 .card:nth-child(2) { animation-delay: 0.12s; }
@@ -1060,6 +1360,21 @@
 
   .featuresGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .threeDPrintingInner {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.75fr);
+    gap: 40px;
+  }
+
+  .threeDPrintingDirections {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .threeDPrintingDirection {
+    align-items: center;
+    padding-top: 10px;
   }
 }
 
@@ -1138,6 +1453,34 @@
     gap: 16px;
     margin-bottom: 28px;
   }
+
+  .threeDPrintingInner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .threeDPrintingContent {
+    max-width: none;
+  }
+
+  .threeDPrintingDirections {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .threeDPrintingDirection {
+    align-items: flex-start;
+    padding-top: 12px;
+  }
+
+  .threeDPrintingVisual {
+    width: 100%;
+  }
+
+  .threeDPrintingCard {
+    width: min(100%, 480px);
+    min-height: 360px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1179,6 +1522,53 @@
   .heroActions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .threeDPrintingInner {
+    padding: 28px 20px;
+  }
+
+  .threeDPrintingTitle {
+    font-size: clamp(28px, 9vw, 36px);
+    text-wrap: wrap;
+  }
+
+  .threeDPrintingDirections {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .threeDPrintingDirection {
+    align-items: center;
+    padding-top: 10px;
+  }
+
+  .threeDPrintingActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .threeDPrintingCta {
+    width: 100%;
+  }
+
+  .threeDPrintingNote {
+    max-width: none;
+    text-align: center;
+  }
+
+  .threeDPrintingCard {
+    min-height: 310px;
+    box-shadow: 8px 8px 0 rgba(201, 169, 110, 0.12), var(--shadow-sm);
+  }
+
+  .threeDPrintingScene {
+    min-height: 234px;
+    padding-inline: 18px;
+  }
+
+  .threeDPrintingRack {
+    width: min(62%, 170px);
   }
 
   .cardBtn {
