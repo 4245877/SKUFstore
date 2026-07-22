@@ -3,6 +3,7 @@ import { Manrope, Playfair_Display, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import StoreAnalytics from "../components/StoreAnalytics";
 
 // Body-гротеск із повною українською кирилицею та символом ₴ (U+20B4)
 const fontSans = Manrope({
@@ -90,6 +91,7 @@ export default function RootLayout({
       className={`${fontSans.variable} ${fontSerif.variable} ${fontJp.variable}`}
     >
       <body>
+        <StoreAnalytics />
         <Header />
         {children}
         <Footer />
