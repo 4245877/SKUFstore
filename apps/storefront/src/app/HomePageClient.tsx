@@ -612,18 +612,6 @@ export default function HomePageClient() {
         aria-labelledby="three-d-printing-title"
       >
         <div className={s.threeDPrintingInner}>
-          <div className={s.threeDPrintingBackdrop} aria-hidden="true">
-            <img
-              src={threeDPrintingArt.src}
-              alt=""
-              width={threeDPrintingArt.width}
-              height={threeDPrintingArt.height}
-              className={s.threeDPrintingBackdropImage}
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-
           <div className={s.threeDPrintingContent}>
             <p className={s.sectionLabel}>Інший наш проєкт</p>
 
@@ -675,6 +663,49 @@ export default function HomePageClient() {
           </div>
 
           <div className={s.threeDPrintingVisual}>
+            <div className={s.threeDPrintingBackdrop} aria-hidden="true">
+              <img
+                src={threeDPrintingArt.src}
+                alt=""
+                width={threeDPrintingArt.width}
+                height={threeDPrintingArt.height}
+                className={s.threeDPrintingBackdropImage}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+
+            <div className={s.threeDPrintingStage} aria-hidden="true">
+              <span className={s.threeDPrintingHalo} />
+
+              <div className={s.threeDPrintingRack}>
+                <span className={s.threeDPrintingRackTop} />
+
+                <p className={s.threeDPrintingRackPlate}>mini-rack</p>
+
+                <div className={s.threeDPrintingRackUnit}>
+                  <span className={s.threeDPrintingRackLed} />
+                  <span className={s.threeDPrintingRackBays}>
+                    <span className={s.threeDPrintingRackBay} />
+                    <span className={s.threeDPrintingRackBay} />
+                    <span className={s.threeDPrintingRackBay} />
+                  </span>
+                </div>
+
+                <div className={s.threeDPrintingRackUnit}>
+                  <span className={s.threeDPrintingRackLed} />
+                  <span className={s.threeDPrintingRackPorts} />
+                </div>
+
+                <div className={s.threeDPrintingRackUnit}>
+                  <span className={s.threeDPrintingRackLed} />
+                  <span className={s.threeDPrintingRackVents} />
+                </div>
+
+                <span className={s.threeDPrintingRackFoot} />
+              </div>
+            </div>
+
             <div className={s.threeDPrintingCard}>
               <p className={s.threeDPrintingCardHead}>
                 <span>3D Друкарня</span>

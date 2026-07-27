@@ -1036,16 +1036,19 @@
 }
 
 .threeDPrintingInner {
+  /* Падінг панелі винесений у змінну: фотоколонка виходить у нього
+     від'ємним margin, і обидва значення мають лишатися однаковими. */
+  --three-d-pad: clamp(32px, 5vw, 64px);
   position: relative;
   isolation: isolate;
   overflow: hidden;
   max-width: var(--container);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   align-items: stretch;
   gap: clamp(32px, 5vw, 72px);
-  padding: clamp(32px, 5vw, 64px);
+  padding: var(--three-d-pad);
   background: linear-gradient(140deg, var(--cream) 0%, var(--lace) 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -1082,52 +1085,10 @@
   }
 }
 
-/* Артворк-фон живе в правій частині панелі й згасає в кремовий,
-   щоб текстова колонка лишалася на чистому тлі (контраст ≥ AA). */
-.threeDPrintingBackdrop {
-  position: absolute;
-  z-index: -1;
-  inset: 0 0 0 auto;
-  width: min(58%, 620px);
-  pointer-events: none;
-}
-
-.threeDPrintingBackdropImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Кроп ширший за вихідний портрет, тому зсув по вертикалі: тримаємо
-     обличчя у верхній, вільній від скляної панелі частині смуги. */
-  object-position: 50% 4%;
-  filter: saturate(0.85) contrast(0.95);
-}
-
-.threeDPrintingBackdrop::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      var(--cream) 0%,
-      rgba(253, 248, 243, 0.86) 22%,
-      rgba(253, 248, 243, 0.26) 62%,
-      rgba(253, 248, 243, 0.08) 100%
-    ),
-    /* Прозорі стопи задані тим самим кольором, а не keyword transparent:
-       інакше градієнт інтерполює через чорний і дає сірий наліт. */
-    linear-gradient(
-      180deg,
-      rgba(254, 244, 244, 0.5) 0%,
-      rgba(254, 244, 244, 0) 28%,
-      rgba(254, 244, 244, 0) 72%,
-      rgba(254, 244, 244, 0.5) 100%
-    ),
-    linear-gradient(0deg, rgba(242, 201, 201, 0.2), rgba(242, 201, 201, 0.2));
-}
-
 .threeDPrintingContent {
   position: relative;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   max-width: 640px;
 }
@@ -1252,15 +1213,257 @@
   line-height: 1.55;
 }
 
-/* Панель тримається низу колонки: верх смуги з артворком лишається
-   вільним, щоб скло не накривало обличчя на фото. */
+/* Ліва колонка — фотосцена: знімок виходить у падінги панелі й тримає
+   її ліву кромку, а стійка з карткою притиснуті до правого краю колонки,
+   де вуаль уже майже кремова. Обличчя на фото лишається відкритим. */
 .threeDPrintingVisual {
   position: relative;
+  grid-column: 1;
+  grid-row: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-end;
+  gap: clamp(16px, 2vw, 24px);
+  margin: calc(-1 * var(--three-d-pad)) 0 calc(-1 * var(--three-d-pad))
+    calc(-1 * var(--three-d-pad));
+  padding: var(--three-d-pad) 0 var(--three-d-pad) var(--three-d-pad);
+}
+
+/* aspect-ratio дорівнює пропорціям вихідного знімка (1024×1536), тож кроп
+   не залежить від висоти панелі: героїня скрізь однакового розміру
+   відносно смуги, і стійка не наїжджає на обличчя. Знизу смуга просто
+   згасає в панель — там, де вона коротша за колонку. */
+.threeDPrintingBackdrop {
+  position: absolute;
+  z-index: -1;
+  inset: 0 auto auto 0;
+  width: min(78%, 430px);
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.threeDPrintingBackdropImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.86) contrast(0.94);
+}
+
+/* Вуаль гасить фото до кремового праворуч: текстова колонка лишається
+   на чистому тлі (контраст ≥ AA), а стійка стоїть на межі — світлий
+   корпус із чорнильним контуром читається і на знімку, і на кремі. */
+.threeDPrintingBackdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(253, 248, 243, 0.16) 0%,
+      rgba(253, 248, 243, 0.28) 46%,
+      rgba(253, 248, 243, 0.74) 84%,
+      var(--cream) 100%
+    ),
+    /* Прозорі стопи задані тим самим кольором, а не keyword transparent:
+       інакше градієнт інтерполює через чорний і дає сірий наліт. */
+    linear-gradient(
+      180deg,
+      rgba(253, 248, 243, 0.42) 0%,
+      rgba(253, 248, 243, 0) 18%,
+      rgba(253, 248, 243, 0) 58%,
+      rgba(253, 248, 243, 0.88) 92%,
+      var(--cream) 100%
+    ),
+    linear-gradient(0deg, rgba(242, 201, 201, 0.16), rgba(242, 201, 201, 0.16));
+}
+
+.threeDPrintingStage {
+  position: relative;
+  width: min(100%, 268px);
+  display: grid;
+  place-items: center;
+  padding: 14px 0 12px;
+}
+
+/* Кільця — мотив шарів FDM-друку. Заодно підсвічують ділянку під
+   стійкою, щоб та не зливалася з темними місцями знімка. */
+.threeDPrintingHalo {
+  position: absolute;
+  z-index: 0;
+  width: min(130%, 380px);
+  aspect-ratio: 1;
+  /* Радіус — запасний варіант для рушіїв без mask-image: кільця тоді
+     обріжуться колом, а не квадратом. */
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle,
+      rgba(178, 80, 80, 0) 0 9px,
+      rgba(178, 80, 80, 0.16) 10px 11px
+    ),
+    radial-gradient(
+      circle,
+      rgba(253, 248, 243, 0.92) 0%,
+      rgba(253, 248, 243, 0.6) 42%,
+      rgba(253, 248, 243, 0) 70%
+    );
+  -webkit-mask-image: radial-gradient(circle, #000 30%, rgba(0, 0, 0, 0) 68%);
+  mask-image: radial-gradient(circle, #000 30%, rgba(0, 0, 0, 0) 68%);
+  pointer-events: none;
+}
+
+/* Стійка зібрана на блоках, а не тонкою іконкою: товстий чорнильний
+   контур і зміщена тінь тримають силует поверх фото. */
+.threeDPrintingRack {
+  /* Виліт рейок за корпус: на вузьких екранах його підрізаємо,
+     щоб стійка не впиралася в кромку панелі. */
+  --rack-ear: 18px;
+  position: relative;
+  z-index: 1;
+  width: min(100%, 268px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(253, 248, 243, 0.96);
+  border: 6px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: 12px 12px 0 rgba(178, 80, 80, 0.2), var(--shadow-md);
+}
+
+/* Верхня й нижня рейки виступають за корпус — саме вони читаються
+   як стійка, а не як стос коробок. */
+.threeDPrintingRackTop,
+.threeDPrintingRackFoot {
+  position: absolute;
+  left: calc(-1 * var(--rack-ear));
+  right: calc(-1 * var(--rack-ear));
+  height: 7px;
+  background: var(--ink);
+  border-radius: var(--radius-xs);
+}
+
+.threeDPrintingRackTop {
+  top: calc(1px - var(--rack-ear));
+}
+
+.threeDPrintingRackFoot {
+  bottom: calc(1px - var(--rack-ear));
+}
+
+.threeDPrintingRackPlate {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  color: var(--cream);
+  background: var(--ink);
+  border-radius: var(--radius-xs);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.threeDPrintingRackPlate::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  background: var(--gold-light);
+  border-radius: 50%;
+}
+
+.threeDPrintingRackUnit {
+  height: clamp(40px, 4vw, 50px);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--silver);
+  border-radius: var(--radius-xs);
+  box-shadow: inset 0 -4px 0 var(--parchment);
+}
+
+.threeDPrintingRackLed {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  background: var(--deep-rose);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(178, 80, 80, 0.14);
+  animation: threeDPrintingLed 2.6s var(--ease-in-out) infinite;
+}
+
+.threeDPrintingRackUnit:nth-of-type(2) .threeDPrintingRackLed {
+  animation-delay: 0.5s;
+}
+
+.threeDPrintingRackUnit:nth-of-type(3) .threeDPrintingRackLed {
+  animation-delay: 1s;
+}
+
+@keyframes threeDPrintingLed {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Три відсіки під диски — юніт читається як NAS */
+.threeDPrintingRackBays {
+  flex: 1;
+  height: 24px;
+  display: flex;
+  gap: 4px;
+}
+
+.threeDPrintingRackBay {
+  position: relative;
+  flex: 1;
+  background: linear-gradient(180deg, var(--lace), var(--parchment));
+  border: 1px solid var(--silver);
+  border-radius: var(--radius-xs);
+}
+
+.threeDPrintingRackBay::after {
+  content: '';
+  position: absolute;
+  inset: auto 3px 4px;
+  height: 2px;
+  background: var(--silver);
+}
+
+/* Ряд портів — комутатор */
+.threeDPrintingRackPorts {
+  flex: 1;
+  height: 14px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--charcoal) 0 7px,
+    rgba(58, 42, 48, 0) 7px 12px
+  );
+  opacity: 0.5;
+}
+
+/* Перфорація — вентиляційна панель */
+.threeDPrintingRackVents {
+  flex: 1;
+  height: 18px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--silver) 0 2px,
+    rgba(200, 191, 196, 0) 2px 7px
+  );
+  opacity: 0.75;
 }
 
 /* Скло лежить поверх артворку, тому темне: світлий текст на ньому
@@ -1367,42 +1570,55 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Дві колонки тут уже тісні, а смуга з артворком заходила під текст —
-     переходимо на одну колонку й водяний знак на всю панель. */
+  /* Дві колонки тут уже тісні: розкладаємо в одну, фото стає нижньою
+     смугою панелі. Знімок ніде не заходить під текст — він лишається
+     на чистому кремі, а стійка й далі стоїть на фотографії. */
   .threeDPrintingInner {
     grid-template-columns: 1fr;
     gap: 32px;
+  }
+
+  .threeDPrintingContent,
+  .threeDPrintingVisual {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .threeDPrintingContent {
     max-width: none;
   }
 
-  .threeDPrintingBackdrop {
-    inset: 0;
-    width: 100%;
+  /* Колонка розтяглася на всю панель, і стійка, притиснута до правої
+     кромки, відірвалася б від фото. Праве поле стягує групу назад до
+     знімка: воно росте разом із панеллю, тож стійка завжди стоїть на
+     згасаючому краю смуги. */
+  .threeDPrintingVisual {
+    margin: 0 calc(-1 * var(--three-d-pad)) calc(-1 * var(--three-d-pad));
+    padding: clamp(30px, 7vw, 52px) var(--three-d-pad) var(--three-d-pad);
+    padding-right: clamp(var(--three-d-pad), calc(100% - 570px), 320px);
   }
 
-  .threeDPrintingBackdropImage {
-    object-position: 74% 8%;
-    opacity: 0.42;
-  }
-
-  /* Вуаль густішає згори вниз: угорі великий серифний заголовок і сам
-     витримає фон, а дрібний текст нижче має лежати майже на чистому кремі. */
+  /* Тут смуга починається одразу під текстом, тому верх розчиняємо
+     в кремовому — щоб фото не обрізалося різкою горизонталлю. */
   .threeDPrintingBackdrop::after {
     background:
       linear-gradient(
-        180deg,
-        rgba(253, 248, 243, 0.5) 0%,
-        rgba(253, 248, 243, 0.82) 58%,
-        rgba(253, 248, 243, 0.96) 100%
+        90deg,
+        rgba(253, 248, 243, 0.16) 0%,
+        rgba(253, 248, 243, 0.28) 52%,
+        rgba(253, 248, 243, 0.78) 86%,
+        var(--cream) 100%
       ),
-      linear-gradient(0deg, rgba(242, 201, 201, 0.18), rgba(242, 201, 201, 0.18));
-  }
-
-  .threeDPrintingVisual {
-    align-items: flex-start;
+      linear-gradient(
+        180deg,
+        var(--cream) 0%,
+        rgba(253, 248, 243, 0.5) 12%,
+        rgba(253, 248, 243, 0) 34%,
+        rgba(253, 248, 243, 0) 76%,
+        rgba(253, 248, 243, 0.9) 96%,
+        var(--cream) 100%
+      ),
+      linear-gradient(0deg, rgba(242, 201, 201, 0.16), rgba(242, 201, 201, 0.16));
   }
 
   .threeDPrintingCard {
@@ -1486,6 +1702,20 @@
     margin-bottom: 28px;
   }
 
+  /* Панель звузилася — стійка й смуга з фото стискаються разом,
+     щоб героїня лишалася зліва, а не ховалася за корпусом. */
+  .threeDPrintingVisual {
+    padding-right: clamp(var(--three-d-pad), calc(100% - 480px), 160px);
+  }
+
+  .threeDPrintingBackdrop {
+    width: min(78%, 320px);
+  }
+
+  .threeDPrintingStage {
+    width: clamp(172px, 40vw, 268px);
+  }
+
   .threeDPrintingCard {
     width: min(100%, 480px);
   }
@@ -1533,7 +1763,8 @@
   }
 
   .threeDPrintingInner {
-    padding: 28px 20px;
+    --three-d-pad: 20px;
+    padding: 28px var(--three-d-pad) var(--three-d-pad);
   }
 
   .threeDPrintingTitle {
@@ -1553,6 +1784,14 @@
   .threeDPrintingNote {
     max-width: none;
     text-align: center;
+  }
+
+  .threeDPrintingBackdrop {
+    width: min(74%, 340px);
+  }
+
+  .threeDPrintingRack {
+    --rack-ear: 10px;
   }
 
   .threeDPrintingCard {
