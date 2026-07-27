@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import {
   getCatalogCategories,
@@ -66,7 +67,7 @@ const THREE_D_PRINTING_DIRECTIONS = [
   },
   {
     icon: IconWrench,
-    label: 'Кріплення й адаптери під конфігурацію',
+    label: 'Кріплення й адаптери для вашої конфігурації',
   },
 ] as const
 
@@ -613,16 +614,16 @@ export default function HomePageClient() {
       >
         <div className={s.threeDPrintingInner}>
           <div className={s.threeDPrintingContent}>
-            <p className={s.sectionLabel}>Інший наш проєкт</p>
+            <p className={s.sectionLabel}>Ще один наш проєкт</p>
 
             <h2 className={s.threeDPrintingTitle} id="three-d-printing-title">
-              Потрібен корпус,{' '}
-              <span className={s.threeDPrintingTitleTerm}>mini-rack</span> або нестандартне
+              Шукаєте корпус,{' '}
+              <span className={s.threeDPrintingTitleTerm}>mini-rack</span> чи нестандартне
               кріплення?
             </h2>
 
             <p className={s.threeDPrintingText}>
-              3D Друкарня — окремий технічний проєкт нашої команди. Там можна замовити
+              «3D Друкарня» — окремий технічний проєкт нашої команди, де можна замовити
               функціональні деталі для NAS, HomeLab, серверного й мережевого обладнання.
             </p>
 
@@ -657,21 +658,19 @@ export default function HomePageClient() {
               </a>
 
               <p className={s.threeDPrintingNote} id="three-d-printing-note">
-                Окремий каталог і окреме оформлення замовлення.
+                Каталог і оформлення замовлення — на окремому сайті.
               </p>
             </div>
           </div>
 
           <div className={s.threeDPrintingVisual}>
             <div className={s.threeDPrintingBackdrop} aria-hidden="true">
-              <img
-                src={threeDPrintingArt.src}
+              <Image
+                src={threeDPrintingArt}
                 alt=""
-                width={threeDPrintingArt.width}
-                height={threeDPrintingArt.height}
                 className={s.threeDPrintingBackdropImage}
+                sizes="(max-width: 900px) 72vw, (max-width: 1440px) 46vw, 600px"
                 loading="lazy"
-                decoding="async"
               />
             </div>
 
@@ -706,14 +705,17 @@ export default function HomePageClient() {
               </div>
             </div>
 
-            <div className={s.threeDPrintingCard}>
+            <aside
+              className={s.threeDPrintingCard}
+              aria-label="Можливості та матеріали 3D Друкарні"
+            >
               <p className={s.threeDPrintingCardHead}>
                 <span>3D Друкарня</span>
                 <span className={s.threeDPrintingBadge}>FDM</span>
               </p>
 
               <p className={s.threeDPrintingCardText}>
-                Друкуємо за вашими розмірами — від однієї деталі.
+                Друкуємо за вашими розмірами — навіть одну деталь.
               </p>
 
               <ul className={s.threeDPrintingCardTags}>
@@ -723,7 +725,7 @@ export default function HomePageClient() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </aside>
           </div>
         </div>
       </section>
