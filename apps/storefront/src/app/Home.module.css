@@ -1903,6 +1903,16 @@
   }
 }
 
+/* На десктопі права колонка лишається чистим портретом: макет стійки
+   й скляна картка «3D Друкарня» ховаються. Нижче 900px — той самий
+   мобільний вигляд, що й був: обидва блоки стоять на знімку. */
+@media (min-width: 901px) {
+  .threeDPrintingStage,
+  .threeDPrintingCard {
+    display: none;
+  }
+}
+
 .sectionNotice {
   padding: 18px 20px;
   border: 1px solid var(--border);
