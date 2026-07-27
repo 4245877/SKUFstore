@@ -10,6 +10,7 @@ import {
   type HomeProductItem,
 } from '../lib/api'
 import {
+  IconArrowUpRight,
   IconBow,
   IconBox,
   IconChatHeart,
@@ -25,6 +26,7 @@ import {
   IconWand,
   IconWrench,
 } from '../components/icons'
+import threeDPrintingArt from './_media/three-d-drukarnya.webp'
 import s from './Home.module.css'
 
 const THREE_D_PRINTING_URL =
@@ -67,6 +69,8 @@ const THREE_D_PRINTING_DIRECTIONS = [
     label: 'Кріплення й адаптери під конфігурацію',
   },
 ] as const
+
+const THREE_D_PRINTING_MATERIALS = ['PETG', 'PLA', 'ABS'] as const
 
 const CATEGORY_DECOR = [
   { icon: IconSword, color: '#e8d5aa' },
@@ -608,11 +612,25 @@ export default function HomePageClient() {
         aria-labelledby="three-d-printing-title"
       >
         <div className={s.threeDPrintingInner}>
+          <div className={s.threeDPrintingBackdrop} aria-hidden="true">
+            <img
+              src={threeDPrintingArt.src}
+              alt=""
+              width={threeDPrintingArt.width}
+              height={threeDPrintingArt.height}
+              className={s.threeDPrintingBackdropImage}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+
           <div className={s.threeDPrintingContent}>
             <p className={s.sectionLabel}>Інший наш проєкт</p>
 
             <h2 className={s.threeDPrintingTitle} id="three-d-printing-title">
-              Потрібен корпус, mini-rack або нестандартне кріплення?
+              Потрібен корпус,{' '}
+              <span className={s.threeDPrintingTitleTerm}>mini-rack</span> або нестандартне
+              кріплення?
             </h2>
 
             <p className={s.threeDPrintingText}>
@@ -645,7 +663,7 @@ export default function HomePageClient() {
               >
                 Перейти до 3D Друкарні
                 <span className={s.threeDPrintingExternalIcon} aria-hidden="true">
-                  ↗
+                  <IconArrowUpRight size={16} strokeWidth={1.6} />
                 </span>
                 <span className="sr-only"> (відкриється в новій вкладці)</span>
               </a>
@@ -656,50 +674,24 @@ export default function HomePageClient() {
             </div>
           </div>
 
-          <div className={s.threeDPrintingVisual} aria-hidden="true">
+          <div className={s.threeDPrintingVisual}>
             <div className={s.threeDPrintingCard}>
-              <div className={s.threeDPrintingCardHead}>
-                <span>3D ДРУКАРНЯ</span>
+              <p className={s.threeDPrintingCardHead}>
+                <span>3D Друкарня</span>
                 <span className={s.threeDPrintingBadge}>FDM</span>
-              </div>
+              </p>
 
-              <div className={s.threeDPrintingScene}>
-                <span className={`${s.threeDPrintingTag} ${s.threeDPrintingTagNas}`}>
-                  NAS
-                </span>
-                <span className={`${s.threeDPrintingTag} ${s.threeDPrintingTagLab}`}>
-                  HomeLab
-                </span>
+              <p className={s.threeDPrintingCardText}>
+                Друкуємо за вашими розмірами — від однієї деталі.
+              </p>
 
-                <div className={s.threeDPrintingLayers} />
-
-                <div className={s.threeDPrintingRack}>
-                  <span className={s.threeDPrintingRackTop} />
-
-                  <div className={s.threeDPrintingRackUnit}>
-                    <span className={s.threeDPrintingRackLed} />
-                    <span className={s.threeDPrintingRackSlots} />
-                  </div>
-
-                  <div className={s.threeDPrintingRackUnit}>
-                    <span className={s.threeDPrintingRackLed} />
-                    <span className={s.threeDPrintingRackSlots} />
-                  </div>
-
-                  <div className={s.threeDPrintingRackUnit}>
-                    <span className={s.threeDPrintingRackLed} />
-                    <span className={s.threeDPrintingRackSlots} />
-                  </div>
-
-                  <span className={s.threeDPrintingRackFoot} />
-                </div>
-              </div>
-
-              <div className={s.threeDPrintingCardFoot}>
-                <span>Корпуси</span>
-                <span>Mini-rack</span>
-                <span>Кріплення</span>
-              </div>
+              <ul className={s.threeDPrintingCardTags}>
+                {THREE_D_PRINTING_MATERIALS.map((material) => (
+                  <li className={s.threeDPrintingTag} key={material}>
+                    {material}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>

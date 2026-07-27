@@ -414,3 +414,14 @@ export function IconReceipt(props: IconProps) {
     </IconBase>
   );
 }
+
+/* Стрілка «назовні» — для посилань, що відкриваються в новій вкладці.
+   Замінює текстовий гліф ↗, який має різну метрику в різних шрифтах. */
+export function IconArrowUpRight(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M8.4 15.6 15.6 8.4" />
+      <path d="M9.6 8.4h6v6" />
+    </IconBase>
+  );
+}
