@@ -664,44 +664,46 @@ export default function HomePageClient() {
           </div>
 
           <div className={s.threeDPrintingVisual}>
-            <div className={s.threeDPrintingBackdrop} aria-hidden="true">
-              <Image
-                src={threeDPrintingArt}
-                alt=""
-                className={s.threeDPrintingBackdropImage}
-                sizes="(max-width: 900px) 72vw, (max-width: 1440px) 46vw, 600px"
-                loading="lazy"
-              />
-            </div>
+            <div className={s.threeDPrintingScene}>
+              <div className={s.threeDPrintingBackdrop} aria-hidden="true">
+                <Image
+                  src={threeDPrintingArt}
+                  alt=""
+                  className={s.threeDPrintingBackdropImage}
+                  sizes="(max-width: 900px) 76vw, (max-width: 1440px) 46vw, 600px"
+                  loading="lazy"
+                />
+              </div>
 
-            <div className={s.threeDPrintingStage} aria-hidden="true">
-              <span className={s.threeDPrintingHalo} />
+              <div className={s.threeDPrintingStage} aria-hidden="true">
+                <span className={s.threeDPrintingHalo} />
 
-              <div className={s.threeDPrintingRack}>
-                <span className={s.threeDPrintingRackTop} />
+                <div className={s.threeDPrintingRack}>
+                  <span className={s.threeDPrintingRackTop} />
 
-                <p className={s.threeDPrintingRackPlate}>mini-rack</p>
+                  <p className={s.threeDPrintingRackPlate}>mini-rack</p>
 
-                <div className={s.threeDPrintingRackUnit}>
-                  <span className={s.threeDPrintingRackLed} />
-                  <span className={s.threeDPrintingRackBays}>
-                    <span className={s.threeDPrintingRackBay} />
-                    <span className={s.threeDPrintingRackBay} />
-                    <span className={s.threeDPrintingRackBay} />
-                  </span>
+                  <div className={s.threeDPrintingRackUnit}>
+                    <span className={s.threeDPrintingRackLed} />
+                    <span className={s.threeDPrintingRackBays}>
+                      <span className={s.threeDPrintingRackBay} />
+                      <span className={s.threeDPrintingRackBay} />
+                      <span className={s.threeDPrintingRackBay} />
+                    </span>
+                  </div>
+
+                  <div className={s.threeDPrintingRackUnit}>
+                    <span className={s.threeDPrintingRackLed} />
+                    <span className={s.threeDPrintingRackPorts} />
+                  </div>
+
+                  <div className={s.threeDPrintingRackUnit}>
+                    <span className={s.threeDPrintingRackLed} />
+                    <span className={s.threeDPrintingRackVents} />
+                  </div>
+
+                  <span className={s.threeDPrintingRackFoot} />
                 </div>
-
-                <div className={s.threeDPrintingRackUnit}>
-                  <span className={s.threeDPrintingRackLed} />
-                  <span className={s.threeDPrintingRackPorts} />
-                </div>
-
-                <div className={s.threeDPrintingRackUnit}>
-                  <span className={s.threeDPrintingRackLed} />
-                  <span className={s.threeDPrintingRackVents} />
-                </div>
-
-                <span className={s.threeDPrintingRackFoot} />
               </div>
             </div>
 

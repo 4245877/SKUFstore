@@ -1219,9 +1219,8 @@
   line-height: 1.55;
 }
 
-/* Ліва колонка — фотосцена: знімок займає її повністю й тримає ліву,
-   верхню та нижню кромки панелі, а стійка з карткою притиснуті до
-   правого краю колонки, де смуга вже розчинилася в тлі. */
+/* Ліва колонка — фотосцена. У мобільному макеті вона перетворюється
+   на вертикальний блок з окремими зонами для зображення та картки. */
 .threeDPrintingVisual {
   /* Виліт рейок стійки за корпус. Живе тут, бо від нього залежать
      і сама стійка, і внутрішні відступи сцени. */
@@ -1242,6 +1241,13 @@
   margin: calc(-1 * var(--three-d-pad)) 0 calc(-1 * var(--three-d-pad))
     calc(-1 * var(--three-d-pad));
   padding: var(--three-d-pad) 0 var(--three-d-pad) var(--three-d-pad);
+}
+
+/* На десктопі обгортка не створює власного layout-контейнера: фон,
+   як і раніше, позиціонується від усієї панелі. На мобільних вона
+   перетворюється на окрему сцену, щоб картка не лежала поверх фото. */
+.threeDPrintingScene {
+  display: contents;
 }
 
 /* На десктопі цей шар охоплює всю панель. Сам портрет займає лише її
@@ -1338,6 +1344,7 @@
    виходили б за сцену й з'їдали проміжок до картки. */
 .threeDPrintingStage {
   position: relative;
+  z-index: 1;
   width: min(54%, 268px);
   display: grid;
   place-items: center;
@@ -1519,10 +1526,9 @@
   opacity: 0.75;
 }
 
-/* Скло лежить поверх артворку, тому темне: світлий текст на ньому
-   тримає контраст незалежно від того, яка ділянка фото під ним.
-   Градієнт замість плоскої заливки — інакше на згаслому краї смуги,
-   де розмивати вже нічого, картка читалася б як сірий прямокутник. */
+/* Темна заливка й світлий текст дають картці стабільний контраст.
+   На мобільних вона стоїть окремо від фотосцени, тому зображення
+   не просвічує крізь важливий текст. */
 .threeDPrintingCard {
   position: relative;
   width: min(100%, 320px);
@@ -1631,12 +1637,12 @@
 }
 
 @media (max-width: 900px) {
-  /* Дві колонки тут уже тісні: розкладаємо в одну, фото стає нижньою
-     смугою панелі. Знімок ніде не заходить під текст — угорі смуга
-     розчиняється, а стійка й далі стоїть на фотографії. */
+  /* Дві колонки тут уже тісні: розкладаємо в одну. Фото зі стійкою
+     живуть в окремій обрізаній сцені, а інформаційна картка — нижче,
+     тому їхні розміри більше не впливають одне на одного. */
   .threeDPrintingInner {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: clamp(28px, 5vw, 40px);
   }
 
   .threeDPrintingContent,
@@ -1656,18 +1662,30 @@
     gap: 14px 18px;
   }
 
-  /* Смуга широка й низька, тож розтягнути на неї портрет через cover
-     означало б зріз по підборіддя. Знімок лишається портретом ліворуч,
-     а праву частину тримає теплий підмальовок — стійка з карткою
-     стоять на ньому, а не на порожньому кремі. */
+  /* Сцена виходить лише у внутрішні поля панелі, але ніколи — за її
+     рамку. Картка має власні поля й не перекриває зображення. */
   .threeDPrintingVisual {
     position: relative;
+    align-items: stretch;
+    gap: clamp(16px, 3vw, 24px);
     margin: 0 calc(-1 * var(--three-d-pad)) calc(-1 * var(--three-d-pad));
-    padding: clamp(36px, 7vw, 60px) var(--three-d-pad) var(--three-d-pad);
-    padding-right: clamp(var(--three-d-pad), calc(100% - 640px), 220px);
+    padding: 0 0 var(--three-d-pad);
   }
 
-  /* Тут смуга починається одразу під текстом, тому розчин — верхній:
+  .threeDPrintingScene {
+    position: relative;
+    isolation: isolate;
+    z-index: 0;
+    width: 100%;
+    min-height: clamp(300px, 74vw, 460px);
+    display: grid;
+    place-items: start end;
+    overflow: hidden;
+    padding: clamp(38px, 7vw, 60px) var(--three-d-pad)
+      clamp(24px, 5vw, 40px);
+  }
+
+  /* Сцена починається одразу під текстом, тому розчин лишається верхнім:
      маска гасить і знімок, і підмальовок, тож фото не обрізається
      різкою горизонталлю. */
   .threeDPrintingBackdrop {
@@ -1685,7 +1703,7 @@
   /* Горизонтальний розчин переїхав на сам знімок — маска батька вже
      зайнята вертикаллю, а mask-composite тут не потрібен. */
   .threeDPrintingBackdropImage {
-    width: min(72%, 520px);
+    width: min(76%, 540px);
     object-position: 50% 8%;
     -webkit-mask-image: linear-gradient(
       90deg,
@@ -1724,7 +1742,10 @@
   }
 
   .threeDPrintingCard {
-    width: min(100%, 420px);
+    z-index: 2;
+    align-self: flex-end;
+    width: min(calc(100% - var(--three-d-pad) - var(--three-d-pad)), 480px);
+    margin-inline: var(--three-d-pad);
   }
 }
 
@@ -1816,10 +1837,6 @@
   .threeDPrintingStage {
     width: clamp(172px, 40vw, 268px);
   }
-
-  .threeDPrintingCard {
-    width: min(100%, 480px);
-  }
 }
 
 @media (max-width: 480px) {
@@ -1889,12 +1906,13 @@
     --rack-ear: 10px;
   }
 
-  .threeDPrintingStage {
-    width: clamp(156px, 40vw, 240px);
+  .threeDPrintingScene {
+    min-height: clamp(280px, 80vw, 350px);
+    padding-top: clamp(32px, 8vw, 44px);
   }
 
-  .threeDPrintingCard {
-    width: 100%;
+  .threeDPrintingStage {
+    width: clamp(156px, 40vw, 240px);
   }
 
   .cardBtn {
@@ -1903,9 +1921,9 @@
   }
 }
 
-/* На десктопі права колонка лишається чистим портретом: макет стійки
-   й скляна картка «3D Друкарня» ховаються. Нижче 900px — той самий
-   мобільний вигляд, що й був: обидва блоки стоять на знімку. */
+/* На десктопі фотоколонка лишається чистим портретом: макет стійки
+   й картка «3D Друкарня» ховаються. Нижче 900px стійка з'являється
+   у фотосцені, а картка — окремим блоком під нею. */
 @media (min-width: 901px) {
   .threeDPrintingStage,
   .threeDPrintingCard {
