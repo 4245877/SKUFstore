@@ -27,7 +27,7 @@ import {
   IconWand,
   IconWrench,
 } from '../components/icons'
-import threeDPrintingArt from './_media/three-d-drukarnya.webp'
+import threeDPrintingArt from './_media/three-d-drukarnya.png'
 import s from './Home.module.css'
 
 const THREE_D_PRINTING_URL =
