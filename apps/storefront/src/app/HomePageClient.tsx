@@ -670,7 +670,7 @@ export default function HomePageClient() {
                   src={threeDPrintingArt}
                   alt=""
                   className={s.threeDPrintingBackdropImage}
-                  sizes="(max-width: 900px) 76vw, (max-width: 1440px) 46vw, 600px"
+                  sizes="(max-width: 500px) 92vw, (max-width: 900px) 460px, (max-width: 1440px) 46vw, 600px"
                   loading="lazy"
                 />
               </div>
