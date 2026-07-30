@@ -1690,63 +1690,30 @@
 
   /* Знімок займає верхній рядок сітки, а не всю сцену, тому шар
      повертається в потік і сам задає висоту кадру.
-     Сцена починається одразу під текстом, тому розчин лишається верхнім:
-     маска гасить і знімок, і підмальовок, тож фото не обрізається
-     різкою горизонталлю. */
+     У мобільному макеті кадр показуємо як є: без підмальовка й масок —
+     вони помітно гасили яскравість і контраст фотографії. */
   .threeDPrintingBackdrop {
     position: relative;
     inset: auto;
     height: clamp(300px, 74vw, 460px);
-    background: linear-gradient(
-      90deg,
-      rgba(242, 201, 201, 0.3) 0%,
-      rgba(242, 201, 201, 0.2) 46%,
-      rgba(242, 201, 201, 0.08) 74%,
-      rgba(242, 201, 201, 0) 100%
-    );
-    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 22%);
-    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 22%);
+    background: none;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
-  /* Горизонтальний розчин переїхав на сам знімок — маска батька вже
-     зайнята вертикаллю, а mask-composite тут не потрібен. */
+  /* Кремова вуаль потрібна лише десктопному стику з текстовою колонкою.
+     Тут вона лягала просто поверх знімка й вибілювала його. */
+  .threeDPrintingBackdrop::after {
+    content: none;
+  }
+
+  /* Знімок займає всю ширину сцени й лишається непрозорим по всьому
+     кадру — без бічного розчину, який з'їдав правий край. */
   .threeDPrintingBackdropImage {
-    width: min(92%, 560px);
+    width: 100%;
     object-position: 50% 8%;
-    -webkit-mask-image: linear-gradient(
-      90deg,
-      #000 0%,
-      #000 64%,
-      rgba(0, 0, 0, 0.62) 86%,
-      rgba(0, 0, 0, 0) 100%
-    );
-    mask-image: linear-gradient(
-      90deg,
-      #000 0%,
-      #000 64%,
-      rgba(0, 0, 0, 0.62) 86%,
-      rgba(0, 0, 0, 0) 100%
-    );
-  }
-
-  @supports not (mask-image: linear-gradient(90deg, #000, transparent)) {
-    .threeDPrintingBackdrop::after {
-      background:
-        linear-gradient(
-          180deg,
-          var(--cream) 0%,
-          rgba(253, 248, 243, 0.94) 9%,
-          rgba(253, 248, 243, 0.34) 28%,
-          rgba(253, 248, 243, 0) 48%
-        ),
-        linear-gradient(
-          90deg,
-          rgba(253, 248, 243, 0) 0%,
-          rgba(253, 248, 243, 0) 40%,
-          rgba(254, 244, 244, 0.96) 70%,
-          rgba(254, 244, 244, 0.96) 100%
-        );
-    }
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   /* Стійка стоїть під знімком, по центру сцени. У власному рядку її
