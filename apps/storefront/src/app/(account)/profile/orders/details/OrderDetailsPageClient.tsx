@@ -13,16 +13,18 @@ import { getAccountOrder, type OrderRecord } from '../../../../../lib/api';
 
 const statusClassMap: Record<string, string> = {
   pending: 'statusPending',
-  awaiting_payment: 'statusPending',
+  confirmed: 'statusConfirmed',
+  awaiting_payment: 'statusAwaitingPayment',
   paid: 'statusPaid',
   processing: 'statusProcessing',
   shipped: 'statusShipped',
   delivered: 'statusDelivered',
   cancelled: 'statusCancelled',
+  returned: 'statusReturned',
 };
 
 function normalizeStatus(status: string) {
-  return status.toLowerCase();
+  return String(status ?? '').toLowerCase();
 }
 
 export default function OrderDetailsPage() {
@@ -76,7 +78,8 @@ export default function OrderDetailsPage() {
   }, [order]);
 
   const normalizedStatus = order ? normalizeStatus(order.status) : 'pending';
-  const statusClassName = statusClassMap[normalizedStatus] ?? statusClassMap.pending;
+  // Неизвестный статус не должен ломать страницу и не должен показывать undefined.
+  const statusClassName = statusClassMap[normalizedStatus] ?? 'statusUnknown';
 
   if (!isReady) {
     return (
@@ -221,6 +224,17 @@ export default function OrderDetailsPage() {
                   <span className={styles.detailLabel}>Адрес</span>
                   <strong className={styles.detailValue}>{order.customer.address}</strong>
                 </div>
+
+                {order.trackingNumber ? (
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>
+                      {order.carrier ? `ТТН · ${order.carrier}` : 'Номер ТТН'}
+                    </span>
+                    <strong className={styles.detailValue}>
+                      {order.trackingNumber}
+                    </strong>
+                  </div>
+                ) : null}
 
                 <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Способ оплаты</span>

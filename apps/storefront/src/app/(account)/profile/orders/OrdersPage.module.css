@@ -350,6 +350,25 @@
   border: 1px solid rgba(201, 107, 107, 0.25);
 }
 
+.statusConfirmed {
+  background: rgba(107, 130, 201, 0.10);
+  color: #3f5c9e;
+  border: 1px solid rgba(107, 130, 201, 0.26);
+}
+
+.statusReturned {
+  background: rgba(155, 107, 122, 0.14);
+  color: #7a4f61;
+  border: 1px solid rgba(155, 107, 122, 0.32);
+}
+
+/* Статус, которого статическая сборка ещё не знает, остаётся читаемым. */
+.statusUnknown {
+  background: rgba(120, 120, 120, 0.10);
+  color: #6b5a60;
+  border: 1px solid rgba(120, 120, 120, 0.24);
+}
+
 /* ── Meta Grid ───────────────────────────── */
 .metaGrid {
   display: grid;

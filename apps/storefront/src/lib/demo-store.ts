@@ -33,11 +33,14 @@ export type CheckoutFormValues = {
 
 export type OrderStatus =
   | 'pending'
+  | 'confirmed'
+  | 'awaiting_payment'
   | 'paid'
   | 'processing'
   | 'shipped'
   | 'delivered'
-  | 'cancelled';
+  | 'cancelled'
+  | 'returned';
 
 export type StoreOrder = {
   id: string;
@@ -210,23 +213,32 @@ export function formatDate(value: string) {
   return dateFormatter.format(new Date(value));
 }
 
-export function getStatusLabel(status: OrderStatus) {
-  switch (status) {
-    case 'pending':
-      return 'Очікує підтвердження';
-    case 'paid':
-      return 'Оплачено';
-    case 'processing':
-      return 'В роботі';
-    case 'shipped':
-      return 'Відправлено';
-    case 'delivered':
-      return 'Доставлено';
-    case 'cancelled':
-      return 'Скасовано';
-    default:
-      return 'Невідомо';
-  }
+const STATUS_LABELS: Record<OrderStatus, string> = {
+  pending: 'Очікує підтвердження',
+  confirmed: 'Підтверджено',
+  awaiting_payment: 'Очікує оплати',
+  paid: 'Оплачено',
+  processing: 'В роботі',
+  shipped: 'Відправлено',
+  delivered: 'Доставлено',
+  cancelled: 'Скасовано',
+  returned: 'Повернення',
+};
+
+/**
+ * Backend может добавить статус раньше, чем обновится статика на GitHub Pages,
+ * поэтому неизвестное значение должно давать понятную подпись, а не `undefined`.
+ */
+export function normalizeOrderStatus(status: string): OrderStatus | null {
+  const normalized = String(status ?? '').toLowerCase();
+
+  return normalized in STATUS_LABELS ? (normalized as OrderStatus) : null;
+}
+
+export function getStatusLabel(status: string) {
+  const normalized = normalizeOrderStatus(status);
+
+  return normalized ? STATUS_LABELS[normalized] : 'Невідомо';
 }
 
 export function readCart(): CartItem[] {

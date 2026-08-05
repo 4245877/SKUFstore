@@ -12,12 +12,14 @@ import { getAccountOrders, type OrderRecord } from '../../../../lib/api';
 
 const statusClassMap: Record<string, string> = {
   pending: 'statusPending',
+  confirmed: 'statusConfirmed',
   awaiting_payment: 'statusAwaitingPayment',
   paid: 'statusPaid',
   processing: 'statusProcessing',
   shipped: 'statusShipped',
   delivered: 'statusDelivered',
   cancelled: 'statusCancelled',
+  returned: 'statusReturned',
 };
 
 export default function ProfileOrdersPage() {
@@ -113,8 +115,9 @@ export default function ProfileOrdersPage() {
         ) : (
           <section className={styles.list} aria-label="Список заказов">
             {orders.map((order) => {
+              // Незнакомый статус получает нейтральный стиль вместо падения вёрстки.
               const statusKey = String(order.status).toLowerCase();
-              const statusClassName = statusClassMap[statusKey] || 'statusPending';
+              const statusClassName = statusClassMap[statusKey] ?? 'statusUnknown';
               const itemsCount = order.items.reduce(
                 (sum, item) => sum + item.quantity,
                 0,
@@ -154,6 +157,15 @@ export default function ProfileOrdersPage() {
                         {formatPrice(order.total)}
                       </strong>
                     </div>
+
+                    {order.trackingNumber ? (
+                      <div className={styles.metaItem}>
+                        <span className={styles.metaLabel}>ТТН</span>
+                        <strong className={styles.metaValue}>
+                          {order.trackingNumber}
+                        </strong>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className={styles.previewList}>

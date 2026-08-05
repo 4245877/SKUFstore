@@ -28,33 +28,42 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+const statusLabels: Record<string, string> = {
+  pending: 'Ожидает подтверждения',
+  confirmed: 'Подтверждён',
+  awaiting_payment: 'Ожидает оплаты',
+  paid: 'Оплачен',
+  processing: 'В работе',
+  shipped: 'Отправлен',
+  delivered: 'Доставлен',
+  cancelled: 'Отменён',
+  returned: 'Возврат',
+};
+
 function getStatusLabel(status: string) {
-  switch (status) {
-    case 'pending':
-      return 'Ожидает подтверждения';
-    case 'paid':
-      return 'Оплачен';
-    case 'processing':
-      return 'В работе';
-    case 'shipped':
-      return 'Отправлен';
-    case 'delivered':
-      return 'Доставлен';
-    case 'cancelled':
-      return 'Отменён';
-    default:
-      return 'Неизвестно';
-  }
+  return statusLabels[String(status ?? '').toLowerCase()] ?? 'Неизвестно';
 }
 
-const statusClassMap: Record<OrderRecord['status'], string> = {
+const statusClassMap: Record<string, string> = {
   pending: 'statusPending',
+  confirmed: 'statusConfirmed',
+  awaiting_payment: 'statusAwaitingPayment',
   paid: 'statusPaid',
   processing: 'statusProcessing',
   shipped: 'statusShipped',
   delivered: 'statusDelivered',
   cancelled: 'statusCancelled',
+  returned: 'statusReturned',
 };
+
+/**
+ * Неизвестный статус получает нейтральный класс: подставлять undefined
+ * в className нельзя, а статика на Pages может отставать от backend.
+ */
+function getStatusClassName(status: string) {
+  const key = statusClassMap[String(status ?? '').toLowerCase()] ?? 'statusUnknown';
+  return styles[key] ?? styles.statusUnknown;
+}
 
 /* ── Quick-link config ─────────────────────── */
 const quickLinks = [
@@ -251,7 +260,7 @@ export default function ProfilePage() {
                       <p className={styles.orderDate}>{formatDate(lastOrder.createdAt)}</p>
                     </div>
 
-                    <span className={`${styles.status} ${styles[statusClassMap[lastOrder.status]]}`}>
+                    <span className={`${styles.status} ${getStatusClassName(lastOrder.status)}`}>
                       {getStatusLabel(lastOrder.status)}
                     </span>
                   </div>
