@@ -337,8 +337,8 @@
 /* ── Product Grid ────────────────────────── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
 }
 /* ── Product Card ────────────────────────── */
 .card {
@@ -348,7 +348,7 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.2s;
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s, border-color 0.2s;
   animation: fadeUp 0.6s var(--ease-out-expo) both;
   display: flex;
   flex-direction: column;
@@ -365,19 +365,18 @@
   text-decoration: none;
 }
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
   border-color: var(--border);
 }
 .card:hover .cardImage {
-  transform: scale(1.12);
+  transform: scale(1.06);
 }
 .card:hover .cardImagePlaceholder {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
-.card:hover .cardActions {
-  opacity: 1;
-  transform: translateY(0);
+.card:hover .cardName {
+  color: var(--mauve);
 }
 /* Stagger delays */
 .card:nth-child(1) { animation-delay: 0.04s; }
@@ -394,7 +393,7 @@
 .card:nth-child(12) { animation-delay: 0.48s; }
 /* Image wrap */
 .cardImageWrap {
-  aspect-ratio: 3/4;
+  aspect-ratio: 4/5;
   overflow: hidden;
   background: var(--parchment);
   position: relative;
@@ -419,8 +418,8 @@
   height: 100%;
   object-fit: contain;
   background: transparent;
-  transform: scale(1.08);
-  transition: transform 0.5s var(--ease-out-expo);
+  transform: scale(1.04);
+  transition: transform 0.45s var(--ease-out-expo);
 }
 .cardImagePlaceholder {
   width: 100%;
@@ -460,8 +459,8 @@
 /* Badges */
 .cardBadges {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 8px;
+  left: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -482,120 +481,91 @@
   background: var(--danger, #b91c1c);
   color: var(--cream);
 }
-/* Wishlist corner button */
+/* Wishlist button — sits in the price row, always visible.
+   Kept as an absolutely positioned sibling of .cardLink so we never nest a
+   <button> inside an <a>; .cardFooter reserves the slot with padding-right. */
 .cardWishBtn {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
-  background: rgba(253,248,243,0.88);
-  border: 1px solid var(--border);
+  right: 8px;
+  bottom: 7px;
+  width: 30px;
+  height: 30px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  backdrop-filter: blur(6px);
+  color: var(--silver);
   cursor: pointer;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s, transform 0.2s var(--ease-spring), background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s,
+    transform 0.18s var(--ease-spring);
   z-index: 3;
-}
-.card:hover .cardWishBtn {
-  opacity: 1;
-  transform: scale(1);
 }
 .cardWishBtn:hover {
   background: var(--lace);
   border-color: var(--rose);
   color: var(--deep-rose);
+  transform: scale(1.08);
 }
 .cardWishBtnActive {
-  opacity: 1;
-  transform: scale(1);
+  background: var(--lace);
   color: var(--deep-rose);
   border-color: var(--rose);
 }
-/* Hover quick-add */
-.cardActions {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 8px;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.22s, transform 0.22s var(--ease-spring);
-  z-index: 3;
-}
-.cardAddBtn {
-  width: 100%;
-  background: var(--ink);
-  color: var(--cream);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  text-align: center;
-  transition: background 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-}
-.cardAddBtn:hover {
-  background: var(--charcoal);
-}
-/* Card body */
+/* Card body: eyebrow / title / price row — three tight lines, no divider */
 .cardBody {
-  padding: 14px 15px 16px;
+  padding: 10px 12px 11px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
   flex: 1;
 }
 .cardEyebrow {
   font-family: var(--font-body);
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  min-height: 13px;
   color: var(--text-muted);
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cardName {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--ink);
-  line-height: 1.35;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* Reserve both lines so every card body is the same height: the price rows
+     line up across the grid without stretching a gap into short-title cards. */
+  min-height: calc(13.5px * 1.3 * 2);
+  transition: color 0.15s;
 }
-.cardSecondaryMeta {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-.cardMeta {
+.cardFooter {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-soft);
+  padding-top: 5px;
+  padding-right: 34px;
+  min-height: 22px;
 }
 .cardPrice {
+  font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   color: var(--deep-rose);
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
+  white-space: nowrap;
 }
 /* ── Empty State ─────────────────────────── */
 .empty {
@@ -806,20 +776,24 @@
 .filterToggle:focus-visible,
 .drawerClose:focus-visible,
 .cardWishBtn:focus-visible,
-.cardAddBtn:focus-visible,
 .sidebarBlockHeader:focus-visible {
   outline: 2px solid var(--rose);
   outline-offset: 2px;
 }
 /* ── Touch devices ───────────────────────── */
 @media (hover: none) {
-  .cardWishBtn {
-    opacity: 1;
-    transform: scale(1);
+  .card:hover {
+    transform: none;
+    box-shadow: none;
   }
-  .cardActions {
-    opacity: 1;
-    transform: translateY(0);
+  .card:hover .cardImage {
+    transform: scale(1.04);
+  }
+  .card:hover .cardName {
+    color: var(--ink);
+  }
+  .cardWishBtn:hover {
+    transform: none;
   }
 }
 /* ── Responsive ──────────────────────────── */
@@ -848,10 +822,43 @@
     margin-bottom: 16px;
   }
 }
+@media (max-width: 560px) {
+  .cardBody {
+    padding: 8px 9px 9px;
+    gap: 2px;
+  }
+  .cardEyebrow {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    min-height: 12px;
+  }
+  .cardName {
+    font-size: 12.5px;
+    min-height: calc(12.5px * 1.3 * 2);
+  }
+  .cardFooter {
+    padding-top: 4px;
+    padding-right: 31px;
+    min-height: 20px;
+  }
+  .cardPrice {
+    font-size: 14px;
+  }
+  .cardWishBtn {
+    width: 28px;
+    height: 28px;
+    right: 6px;
+    bottom: 6px;
+  }
+}
 @media (max-width: 480px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+  }
+  .cardBadges {
+    top: 6px;
+    left: 6px;
   }
   .toolbarRight {
     gap: 8px;

@@ -28,9 +28,18 @@ function getEyebrow(product: CatalogProductListItem) {
   );
 }
 
+/* Категорія і персонаж в одному рядку: одна службова стрічка замість двох. */
+function getMetaLine(product: CatalogProductListItem) {
+  const parts = [getEyebrow(product), product.character?.name ?? null].filter(
+    (value): value is string => Boolean(value),
+  );
+
+  return Array.from(new Set(parts)).join(' · ');
+}
+
 export function CatalogProductCard({ product }: CatalogProductCardProps) {
   const imageUrl = resolveMediaUrl(product.coverImage?.url);
-  const eyebrow = getEyebrow(product);
+  const metaLine = getMetaLine(product);
 
   const [wished, setWished] = useState(false);
 
@@ -41,13 +50,6 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
       setWished(isFavorite(product.id));
     });
   }, [product.id]);
-
-  const secondaryMeta = [
-    product.character?.name,
-    eyebrow === product.brand?.name ? null : product.brand?.name,
-  ]
-    .filter((value): value is string => Boolean(value))
-    .join(' • ');
 
   const priceLabel = formatMoney(product.priceFrom, product.currency);
 
@@ -123,26 +125,15 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
               </span>
             </div>
           ) : null}
-
-          <div className={styles.cardActions} aria-hidden="true">
-            <span className={styles.cardAddBtn}>Докладніше</span>
-          </div>
         </div>
 
         <div className={styles.cardBody}>
-          {eyebrow ? <div className={styles.cardEyebrow}>{eyebrow}</div> : null}
+          <div className={styles.cardEyebrow}>{metaLine}</div>
 
           <h3 className={styles.cardName}>{product.title}</h3>
 
-          {secondaryMeta ? (
-            <div className={styles.cardSecondaryMeta}>{secondaryMeta}</div>
-          ) : null}
-
-          <div className={styles.cardMeta}>
-            <div className={styles.cardPrice}>
-              <span>{priceLabel}</span>
-            </div>
-
+          <div className={styles.cardFooter}>
+            <span className={styles.cardPrice}>{priceLabel}</span>
           </div>
         </div>
       </Link>
@@ -156,7 +147,7 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
         aria-label={wished ? 'Прибрати з обраного' : 'Додати до обраного'}
         aria-pressed={wished}
       >
-        <IconHeart size={15} filled={wished} />
+        <IconHeart size={16} filled={wished} />
       </button>
     </article>
   );
