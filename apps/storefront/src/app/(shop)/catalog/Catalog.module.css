@@ -400,15 +400,18 @@
   flex-shrink: 0;
   isolation: isolate;
 }
+/* Тло для фото нестандартних пропорцій: те саме зображення, розмите.
+   inset/width/height тут задавати марно — next/image з `fill` жорстко
+   виставляє їх інлайново, тож запас під розмиття дає лише transform.
+   Масштаб мусить перекривати радіус розмиття (≈3σ), інакше по краях
+   підмішується прозорість і тло виглядає вибіленим. Найвужча картка
+   ≈137px (320px в'юпорт), тож scale(1.7) дає ≈48px запасу на blur(14px) → 42px. */
 .cardImageBackdrop {
   position: absolute;
-  inset: -18px;
-  width: calc(100% + 36px);
-  height: calc(100% + 36px);
   object-fit: cover;
-  filter: blur(22px) saturate(1.08);
-  opacity: 0.45;
-  transform: scale(1.08);
+  transform: scale(1.7);
+  filter: blur(14px) saturate(1.5) contrast(1.1);
+  opacity: 1;
   z-index: 0;
 }
 .cardImage {
@@ -419,6 +422,7 @@
   object-fit: contain;
   background: transparent;
   transform: scale(1.04);
+  filter: drop-shadow(0 3px 12px rgba(30, 20, 22, 0.28));
   transition: transform 0.45s var(--ease-out-expo);
 }
 .cardImagePlaceholder {
@@ -439,7 +443,8 @@
   color: var(--mauve);
   opacity: 0.7;
 }
-/* Adult blur */
+/* Розмиття 18+ — лише для чіткого фото; тло вже розмите, і власний
+   фільтр йому потрібен свій, інакше воно втрачає насиченість */
 .cardImageBlur {
   filter: blur(16px);
   transition: filter 0.4s;

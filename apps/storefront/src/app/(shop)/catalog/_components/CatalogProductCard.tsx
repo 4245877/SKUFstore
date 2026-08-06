@@ -90,9 +90,7 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
                 aria-hidden="true"
                 fill
                 sizes="(max-width: 767px) 50vw, (max-width: 1199px) 33vw, 25vw"
-                className={`${styles.cardImageBackdrop} ${
-                  product.isAdult ? styles.cardImageBlur : ''
-                }`}
+                className={styles.cardImageBackdrop}
               />
 
               <Image
