@@ -17,14 +17,15 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Newer pushes supersede an older build, so a queued/stuck build can never
+    # block later commits from reaching Pages.
+    concurrency:
+      group: "pages-build-${{ github.ref }}"
+      cancel-in-progress: true
     env:
       DEPLOY_TARGET: pages
       NEXT_PUBLIC_API_URL: https://api.skufnya.com
@@ -93,6 +94,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Deployments are serialised, but an in-flight one is never cancelled.
+    concurrency:
+      group: "pages-deploy"
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
