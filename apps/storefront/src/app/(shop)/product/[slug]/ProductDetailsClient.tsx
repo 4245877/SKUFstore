@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   addAccountFavorite,
   getAccountFavorites,
@@ -18,6 +18,15 @@ import {
   isFavorite,
   removeFavorite,
 } from '../../../../lib/demo-store';
+import {
+  FALLBACK_RESIN_COLORS,
+  OUT_OF_STOCK_LABEL,
+  colorLabelWithStock,
+  isLightSwatch,
+  pickDefaultColorSlug,
+  reconcileSelectedColorSlug,
+  resolveSelectedColor,
+} from '../../../../lib/resin-colors';
 import { buildAgeVerifyPath, isAgeVerifiedClient } from '../../../../lib/age-gate';
 import { IconBag, IconBow, IconHeart, IconShare } from '../../../../components/icons';
 import styles from './ProductDetails.module.css';
@@ -47,49 +56,6 @@ const FINISHES: {
   },
 ];
 
-const OUT_OF_STOCK_LABEL = 'Під замовлення';
-
-// Запасной набор цветов на случай недоступного склада: повторяет то, что
-// миграция завела в админке, поэтому витрина никогда не остаётся без выбора.
-const FALLBACK_RESIN_COLORS: CatalogResinColor[] = [
-  {
-    id: 'ivory',
-    name: 'Айворі',
-    slug: 'ivory',
-    hexColor: '#F4EBDD',
-    priceDelta: 0,
-    isInStock: true,
-    sortOrder: 0,
-  },
-  {
-    id: 'graphite',
-    name: 'Графіт',
-    slug: 'graphite',
-    hexColor: '#55585F',
-    priceDelta: 100,
-    isInStock: true,
-    sortOrder: 1,
-  },
-  {
-    id: 'black',
-    name: 'Чорний',
-    slug: 'black',
-    hexColor: '#171717',
-    priceDelta: 100,
-    isInStock: true,
-    sortOrder: 2,
-  },
-  {
-    id: 'pearl',
-    name: 'Перламутровий',
-    slug: 'pearl',
-    hexColor: '#E8E4EF',
-    priceDelta: 200,
-    isInStock: true,
-    sortOrder: 3,
-  },
-];
-
 const FINISH_IMAGE_KEYWORDS: Record<FinishType, string[]> = {
   MONO: ['mono', 'monochrome', 'моно', 'monochrom'],
   PAINTED: ['painted', 'painting', 'paint', 'art', 'розпис', 'худож'],
@@ -111,40 +77,6 @@ function getColorImageKeywords(color: CatalogResinColor | null) {
 
   return [slug, color.name.trim().toLowerCase(), ...(COLOR_IMAGE_KEYWORD_ALIASES[slug] ?? [])]
     .filter(Boolean);
-}
-
-function colorLabelWithStock(color: CatalogResinColor) {
-  return color.isInStock
-    ? color.name
-    : `${color.name} (${OUT_OF_STOCK_LABEL.toLowerCase()})`;
-}
-
-// Светлая смола на светлой карточке сливается с фоном — ей нужна рамка.
-function isLightSwatch(hexColor: string) {
-  const normalized = hexColor.replace('#', '');
-  const full =
-    normalized.length === 3
-      ? normalized
-          .split('')
-          .map((char) => char + char)
-          .join('')
-      : normalized;
-
-  if (full.length !== 6) return false;
-
-  const r = parseInt(full.slice(0, 2), 16);
-  const g = parseInt(full.slice(2, 4), 16);
-  const b = parseInt(full.slice(4, 6), 16);
-
-  if (![r, g, b].every(Number.isFinite)) return false;
-
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.75;
-}
-
-function pickDefaultColorSlug(colors: CatalogResinColor[]) {
-  // Первым предлагаем то, что реально есть на складе.
-  const preferred = colors.find((color) => color.isInStock) ?? colors[0] ?? null;
-  return preferred?.slug ?? '';
 }
 
 function formatMoney(value: number, currency: string) {
@@ -1230,6 +1162,15 @@ export default function ProductDetailsClient({
     pickDefaultColorSlug(buildResinColors),
   );
 
+  // Отличает выбор покупателя от значения, подставленного на сборке: только
+  // первое переживает приезд свежего склада (см. reconcileSelectedColorSlug).
+  const userPickedColorRef = useRef(false);
+
+  function handleSelectColor(slug: string) {
+    userPickedColorRef.current = true;
+    setSelectedColorSlug(slug);
+  }
+
   const router = useRouter();
 
   // Страница отдаётся статикой с GitHub Pages, поэтому склад смолы, вшитый в
@@ -1240,15 +1181,21 @@ export default function ProductDetailsClient({
 
     async function loadResinColors() {
       try {
-        const colors = await getCatalogResinColors({ signal: controller.signal });
+        const colors = await getCatalogResinColors({
+          mode: 'runtime',
+          signal: controller.signal,
+        });
 
-        if (controller.signal.aborted || colors.length === 0) return;
+        if (controller.signal.aborted) return;
 
+        // Ответ применяем целиком, даже пустой: пустой список означает, что в
+        // админке скрыли все цвета, а не что запрос не удался. Иначе витрина
+        // навсегда осталась бы на наборе со сборки.
         setResinColors(colors);
         setSelectedColorSlug((current) =>
-          colors.some((color) => color.slug === current)
-            ? current
-            : pickDefaultColorSlug(colors),
+          reconcileSelectedColorSlug(colors, current, {
+            userPicked: userPickedColorRef.current,
+          }),
         );
       } catch (error) {
         // Склад недоступен — остаёмся на наборе со сборки, витрина работает.
@@ -1264,10 +1211,7 @@ export default function ProductDetailsClient({
   }, []);
 
   const selectedColor = useMemo(
-    () =>
-      resinColors.find((color) => color.slug === selectedColorSlug) ??
-      resinColors[0] ??
-      null,
+    () => resolveSelectedColor(resinColors, selectedColorSlug),
     [resinColors, selectedColorSlug],
   );
 
@@ -1328,7 +1272,7 @@ export default function ProductDetailsClient({
             }}
             resinColors={resinColors}
             selectedColor={selectedColor}
-            onSelectColor={setSelectedColorSlug}
+            onSelectColor={handleSelectColor}
             isAgeVerified={isAgeVerified}
             verifyHref={verifyHref}
           />

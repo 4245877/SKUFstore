@@ -122,7 +122,7 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
 // из-за него всей сборкой каталога незачем.
 async function loadBuildResinColors(): Promise<CatalogResinColor[] | null> {
   try {
-    return await getCatalogResinColors();
+    return await getCatalogResinColors({ mode: 'build' });
   } catch (error) {
     console.warn('Failed to load resin colors during build:', error);
     return null;
