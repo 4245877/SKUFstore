@@ -53,37 +53,54 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Two cheap requests so a failed build can be told apart at a glance:
+      # API down/slow, versus the build itself. Anything heavier here eats the
+      # same 60 req/min budget the build is about to spend.
       - name: Diagnose public API
         continue-on-error: true
         run: |
           echo "DNS via system resolver:"
           getent ahostsv4 api.skufnya.com || true
 
-          echo "DNS via 1.1.1.1:"
-          dig @1.1.1.1 +short A api.skufnya.com || true
-
-          echo "DNS via 8.8.8.8:"
-          dig @8.8.8.8 +short A api.skufnya.com || true
-
-          echo "API health:"
+          echo "API health (with timing and rate-limit budget):"
           curl --ipv4 --fail --show-error --location \
             --connect-timeout 10 \
             --max-time 20 \
             --retry 2 \
             --retry-delay 3 \
-            "https://api.skufnya.com/health"
+            --dump-header - \
+            --write-out 'connect=%{time_connect}s ttfb=%{time_starttransfer}s total=%{time_total}s\n' \
+            "https://api.skufnya.com/health" \
+          | grep -Ei '^(x-ratelimit|retry-after|HTTP/|connect=)' || true
 
-          echo "Problem product:"
+          echo "Catalog snapshot size and timing:"
           curl --ipv4 --fail --show-error --location \
             --connect-timeout 10 \
-            --max-time 30 \
-            --retry 2 \
-            --retry-delay 3 \
-            "https://api.skufnya.com/api/catalog/products/bunny-girl-miku-anime-1-7-figure-resin-model-garage-kit-unpainted-unassembled" \
-            > /dev/null
+            --max-time 60 \
+            --output /dev/null \
+            --write-out 'status=%{http_code} total=%{time_total}s size=%{size_download}B\n' \
+            "https://api.skufnya.com/api/catalog/products/export" || true
 
       - name: Build Storefront
         run: pnpm --filter storefront build
+
+      # The build must publish a page for every product the API called public.
+      # next build already fails on a missing product, but this guard also
+      # catches a page lost after rendering — a truncated catalog must never
+      # reach Pages, because a silently missing product is a 404 for buyers.
+      - name: Verify every published product was exported
+        run: |
+          SNAPSHOT=apps/storefront/.next/cache/skufnya-build/catalog-snapshot.json
+          EXPECTED=$(node -e "console.log(require('./$SNAPSHOT').items.length)")
+          ACTUAL=$(find apps/storefront/out/product -mindepth 1 -maxdepth 1 -type d | wc -l)
+
+          echo "published products in snapshot: $EXPECTED"
+          echo "exported product pages:         $ACTUAL"
+
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "::error::Exported $ACTUAL product pages but the catalog snapshot has $EXPECTED published products."
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

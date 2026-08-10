@@ -3,9 +3,13 @@ import { notFound } from 'next/navigation';
 import {
   getCatalogProductBySlug,
   getCatalogResinColors,
-  type CatalogProductsResponse,
   type CatalogResinColor,
 } from '../../../../lib/api';
+import {
+  getSnapshotProduct,
+  getSnapshotResinColors,
+  loadCatalogSnapshot,
+} from '../../../../lib/build-snapshot';
 
 import ProductDetailsClient from './ProductDetailsClient';
 
@@ -13,114 +17,46 @@ const isPagesBuild = process.env.DEPLOY_TARGET === 'pages';
 
 export const dynamicParams = false;
 
-const BUILD_API_BASE =
-  (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
-
-const BUILD_PRODUCTS_PAGE_SIZE = 100;
-
-function buildBuildApiUrl(path: string) {
-  if (!BUILD_API_BASE) {
-    throw new Error('Set API_INTERNAL_URL or NEXT_PUBLIC_API_URL for pages static export builds');
-  }
-
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-  return `${BUILD_API_BASE}${normalizedPath}`;
-}
-
-async function fetchBuildJson<T>(path: string): Promise<T> {
-  const url = buildBuildApiUrl(path);
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= 8; attempt += 1) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8_000);
-
-    try {
-      const response = await fetch(url, {
-        cache: 'force-cache',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const error = new Error(`Build fetch failed for ${path}: ${response.status}`) as Error & {
-          status?: number;
-        };
-
-        error.status = response.status;
-
-        throw error;
-      }
-
-      return (await response.json()) as T;
-    } catch (error) {
-      lastError = error;
-
-      if (attempt < 8) {
-        const status = (error as Error & { status?: number }).status;
-        const delayMs =
-          status === 429
-            ? Math.min(5_000 * attempt, 30_000)
-            : Math.min(1_500 * attempt, 10_000);
-
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-      }
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  throw lastError;
-}
-
+/**
+ * Здесь собирается структура статического экспорта — и здесь же происходит
+ * единственный поход в API за каталогом.
+ *
+ * Фаза `generateStaticParams` не ограничена `staticPageGenerationTimeout`, а
+ * рендер каждой страницы товара обязан уложиться в 60 секунд. Пока страницы
+ * ходили за товаром сами, полторы сотни запросов упирались в лимит API прямо
+ * внутри этих окон, и экспорт падал на случайном товаре. Теперь каталог
+ * приезжает одним снимком, а страницам остаётся чтение из него.
+ *
+ * Заявленные здесь slug — это обязательство: страница будет собрана для
+ * каждого из них или сборка упадёт. Тихо потерять товар нельзя.
+ */
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   if (!isPagesBuild) {
     return [];
   }
 
-  const slugs = new Set<string>();
-  let page = 1;
-  let pageCount = 1;
+  const snapshot = await loadCatalogSnapshot();
 
-  try {
-    do {
-      const response = await fetchBuildJson<CatalogProductsResponse>(
-        `/api/catalog/products?page=${page}&limit=${BUILD_PRODUCTS_PAGE_SIZE}`,
-      );
-
-      for (const item of response.items) {
-        const slug = item.slug?.trim();
-
-        if (slug) {
-          slugs.add(slug);
-        }
-      }
-
-      pageCount = Math.max(1, response.meta.pageCount ?? 1);
-      page += 1;
-
-      if (page <= pageCount) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    } while (page <= pageCount);
-  } catch (error) {
-    console.warn(
-      'Failed to generate product static params during pages build:',
-      error,
-    );
-
-    throw error;
-  }
-
-  return Array.from(slugs)
-    .sort()
-    .map((slug) => ({ slug }));
+  return snapshot.slugs.map((slug) => ({ slug }));
 }
 
-// Склад смолы кладём в статический HTML, чтобы первый кадр уже был верным.
-// Ошибку глотаем: наличие всё равно перезапрашивается на клиенте, и падать
-// из-за него всей сборкой каталога незачем.
-async function loadBuildResinColors(): Promise<CatalogResinColor[] | null> {
+function loadProduct(slug: string) {
+  // Вне Pages-сборки (`output: standalone`) страница рендерится сервером на
+  // запрос, и снимка каталога не существует — там работает обычный API-клиент.
+  return isPagesBuild ? getSnapshotProduct(slug) : getCatalogProductBySlug(slug);
+}
+
+/**
+ * Склад смолы кладём в статический HTML, чтобы первый кадр уже был верным.
+ * Его отсутствие — не ошибка сборки: наличие всё равно перезапрашивается
+ * браузером на уже задеплоенной странице, и витрина переживёт это на своём
+ * запасном наборе цветов.
+ */
+async function loadResinColors(): Promise<CatalogResinColor[] | null> {
+  if (isPagesBuild) {
+    return getSnapshotResinColors();
+  }
+
   try {
     return await getCatalogResinColors({ mode: 'build' });
   } catch (error) {
@@ -137,7 +73,7 @@ export default async function ProductPage({
   const { slug } = await params;
 
   try {
-    const product = await getCatalogProductBySlug(slug);
+    const product = await loadProduct(slug);
 
     if (!product) {
       notFound();
@@ -146,7 +82,7 @@ export default async function ProductPage({
     return (
       <ProductDetailsClient
         product={product}
-        initialResinColors={await loadBuildResinColors()}
+        initialResinColors={await loadResinColors()}
       />
     );
   } catch (error) {
