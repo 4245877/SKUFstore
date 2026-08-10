@@ -7,8 +7,10 @@ import {
   addAccountFavorite,
   getAccountFavorites,
   getCatalogProductBySlug,
+  getCatalogResinColors,
   removeAccountFavorite,
   resolveMediaUrl,
+  type CatalogResinColor,
 } from '../../../../lib/api';
 import {
   addCartItem,
@@ -25,7 +27,6 @@ type Variant = Product['variants'][number];
 type ProductImage = Product['images'][number];
 type Tab = 'description' | 'specs' | 'delivery';
 type FinishType = 'MONO' | 'PAINTED';
-type ColorType = 'IVORY' | 'GRAPHITE' | 'BLACK' | 'PEARL';
 
 const FINISHES: {
   code: FinishType;
@@ -46,16 +47,47 @@ const FINISHES: {
   },
 ];
 
-const COLORS: {
-  code: ColorType;
-  label: string;
-  priceDelta: number;
-  swatchHex: string;
-}[] = [
-  { code: 'IVORY', label: 'Айворі', priceDelta: 0, swatchHex: '#F4EBDD' },
-  { code: 'GRAPHITE', label: 'Графіт', priceDelta: 100, swatchHex: '#55585F' },
-  { code: 'BLACK', label: 'Чорний', priceDelta: 100, swatchHex: '#171717' },
-  { code: 'PEARL', label: 'Перламутровий', priceDelta: 200, swatchHex: '#E8E4EF' },
+const OUT_OF_STOCK_LABEL = 'Під замовлення';
+
+// Запасной набор цветов на случай недоступного склада: повторяет то, что
+// миграция завела в админке, поэтому витрина никогда не остаётся без выбора.
+const FALLBACK_RESIN_COLORS: CatalogResinColor[] = [
+  {
+    id: 'ivory',
+    name: 'Айворі',
+    slug: 'ivory',
+    hexColor: '#F4EBDD',
+    priceDelta: 0,
+    isInStock: true,
+    sortOrder: 0,
+  },
+  {
+    id: 'graphite',
+    name: 'Графіт',
+    slug: 'graphite',
+    hexColor: '#55585F',
+    priceDelta: 100,
+    isInStock: true,
+    sortOrder: 1,
+  },
+  {
+    id: 'black',
+    name: 'Чорний',
+    slug: 'black',
+    hexColor: '#171717',
+    priceDelta: 100,
+    isInStock: true,
+    sortOrder: 2,
+  },
+  {
+    id: 'pearl',
+    name: 'Перламутровий',
+    slug: 'pearl',
+    hexColor: '#E8E4EF',
+    priceDelta: 200,
+    isInStock: true,
+    sortOrder: 3,
+  },
 ];
 
 const FINISH_IMAGE_KEYWORDS: Record<FinishType, string[]> = {
@@ -63,12 +95,57 @@ const FINISH_IMAGE_KEYWORDS: Record<FinishType, string[]> = {
   PAINTED: ['painted', 'painting', 'paint', 'art', 'розпис', 'худож'],
 };
 
-const COLOR_IMAGE_KEYWORDS: Record<ColorType, string[]> = {
-  IVORY: ['ivory', 'айворі', 'ivori', 'cream', 'creme', 'молоч'],
-  GRAPHITE: ['graphite', 'графіт', 'grafit', 'charcoal'],
-  BLACK: ['black', 'чорний', 'chorniy', 'chornyi'],
-  PEARL: ['pearl', 'перламутр', 'перламутров', 'perl'],
+// Slug и название цвета сами по себе — уже неплохие ключи для фото, но файлы
+// вроде «cream_front.webp» ловятся только дополнительными написаниями.
+const COLOR_IMAGE_KEYWORD_ALIASES: Record<string, string[]> = {
+  ivory: ['ivori', 'cream', 'creme', 'молоч'],
+  graphite: ['grafit', 'charcoal'],
+  black: ['chorniy', 'chornyi'],
+  pearl: ['перламутр', 'перламутров', 'perl'],
 };
+
+function getColorImageKeywords(color: CatalogResinColor | null) {
+  if (!color) return [];
+
+  const slug = color.slug.toLowerCase();
+
+  return [slug, color.name.trim().toLowerCase(), ...(COLOR_IMAGE_KEYWORD_ALIASES[slug] ?? [])]
+    .filter(Boolean);
+}
+
+function colorLabelWithStock(color: CatalogResinColor) {
+  return color.isInStock
+    ? color.name
+    : `${color.name} (${OUT_OF_STOCK_LABEL.toLowerCase()})`;
+}
+
+// Светлая смола на светлой карточке сливается с фоном — ей нужна рамка.
+function isLightSwatch(hexColor: string) {
+  const normalized = hexColor.replace('#', '');
+  const full =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : normalized;
+
+  if (full.length !== 6) return false;
+
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+
+  if (![r, g, b].every(Number.isFinite)) return false;
+
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.75;
+}
+
+function pickDefaultColorSlug(colors: CatalogResinColor[]) {
+  // Первым предлагаем то, что реально есть на складе.
+  const preferred = colors.find((color) => color.isInStock) ?? colors[0] ?? null;
+  return preferred?.slug ?? '';
+}
 
 function formatMoney(value: number, currency: string) {
   return new Intl.NumberFormat('uk-UA', {
@@ -216,7 +293,7 @@ function buildGalleryImages(
   productImages: ProductImage[],
   variant: Variant | null,
   finish: FinishType,
-  color: ColorType,
+  color: CatalogResinColor | null,
 ): ProductImage[] {
   const merged = [...(variant?.images ?? []), ...productImages];
   const seen = new Set<string>();
@@ -234,7 +311,7 @@ function buildGalleryImages(
     const searchText = getImageMatchText(image);
     const finishMatched = includesAny(searchText, FINISH_IMAGE_KEYWORDS[finish]);
     const colorMatched =
-      finish === 'MONO' && includesAny(searchText, COLOR_IMAGE_KEYWORDS[color]);
+      finish === 'MONO' && includesAny(searchText, getColorImageKeywords(color));
 
     return {
       image,
@@ -495,44 +572,54 @@ function FinishSelector({
 }
 
 function ColorSelector({
+  colors,
   value,
   onChange,
   currency,
 }: {
-  value: ColorType;
-  onChange: (value: ColorType) => void;
+  colors: CatalogResinColor[];
+  value: CatalogResinColor | null;
+  onChange: (slug: string) => void;
   currency: string;
 }) {
+  if (!colors.length) return null;
+
   return (
     <div className={styles.variantsSection}>
       <h2 className={styles.variantsTitle}>Колір</h2>
 
       <div className={styles.variantsList}>
-        {COLORS.map((item) => {
-          const isSelected = value === item.code;
+        {colors.map((item) => {
+          const isSelected = value?.slug === item.slug;
 
           return (
             <button
-              key={item.code}
+              key={item.slug}
               type="button"
               className={`${styles.variantCard} ${isSelected ? styles.variantCardSelected : ''}`}
-              onClick={() => onChange(item.code)}
+              onClick={() => onChange(item.slug)}
               aria-pressed={isSelected}
             >
               <div
                 className={`${styles.colorSwatch} ${isSelected ? styles.colorSwatchSelected : ''}`}
                 style={{
-                  background: item.swatchHex,
-                  borderColor:
-                    item.swatchHex.toLowerCase() === '#f4ebdd'
-                      ? 'rgba(0, 0, 0, 0.12)'
-                      : undefined,
+                  background: item.hexColor,
+                  borderColor: isLightSwatch(item.hexColor)
+                    ? 'rgba(0, 0, 0, 0.12)'
+                    : undefined,
                 }}
                 aria-hidden="true"
               />
 
               <div className={styles.variantLeft}>
-                <span className={styles.variantName}>{item.label}</span>
+                <span className={styles.variantName}>{item.name}</span>
+
+                {/* Смолу этого цвета не держим на складе — фигурку зальют
+                    после подтверждения заказа, поэтому выбор остаётся
+                    доступным, но помечен. */}
+                {!item.isInStock ? (
+                  <span className={styles.preorderBadge}>{OUT_OF_STOCK_LABEL}</span>
+                ) : null}
               </div>
 
               <div className={styles.variantRight}>
@@ -600,7 +687,7 @@ function TabPanel({
   product: Product;
   selectedVariant: Variant | null;
   selectedFinish: FinishType;
-  selectedColor: ColorType;
+  selectedColor: CatalogResinColor | null;
   estimatedShippingLabel: string;
 }) {
   const [active, setActive] = useState<Tab>('description');
@@ -657,7 +744,6 @@ function TabPanel({
     .join(' · ');
 
   const finishOption = FINISHES.find((item) => item.code === selectedFinish) ?? FINISHES[0];
-  const colorOption = COLORS.find((item) => item.code === selectedColor) ?? COLORS[0];
 
   const excludedAttributeKeys = new Set([
     'material',
@@ -689,7 +775,9 @@ function TabPanel({
     product.character?.name ? { key: 'Персонаж', value: product.character.name } : null,
     variantMeta ? { key: 'Варіант', value: variantMeta } : null,
     { key: 'Виконання', value: finishOption.label },
-    selectedFinish === 'MONO' ? { key: 'Колір', value: colorOption.label } : null,
+    selectedFinish === 'MONO' && selectedColor
+      ? { key: 'Колір', value: colorLabelWithStock(selectedColor) }
+      : null,
     product.material ? { key: 'Матеріал', value: product.material } : null,
     product.heightMm != null ? { key: 'Висота', value: `${product.heightMm} мм` } : null,
     product.countryOfOrigin
@@ -780,10 +868,12 @@ function TabPanel({
                 <span className={styles.specsValue}>{finishOption.label}</span>
               </div>
 
-              {selectedFinish === 'MONO' && (
+              {selectedFinish === 'MONO' && selectedColor && (
                 <div className={styles.specsRow}>
                   <span className={styles.specsKey}>Колір</span>
-                  <span className={styles.specsValue}>{colorOption.label}</span>
+                  <span className={styles.specsValue}>
+                    {colorLabelWithStock(selectedColor)}
+                  </span>
                 </div>
               )}
 
@@ -822,6 +912,7 @@ function ProductInfo({
   onSelectVariant,
   selectedFinish,
   onSelectFinish,
+  resinColors,
   selectedColor,
   onSelectColor,
   isAgeVerified,
@@ -832,8 +923,9 @@ function ProductInfo({
   onSelectVariant: (variant: Variant) => void;
   selectedFinish: FinishType;
   onSelectFinish: (value: FinishType) => void;
-  selectedColor: ColorType;
-  onSelectColor: (value: ColorType) => void;
+  resinColors: CatalogResinColor[];
+  selectedColor: CatalogResinColor | null;
+  onSelectColor: (slug: string) => void;
   isAgeVerified: boolean;
   verifyHref: string;
 }) {
@@ -849,12 +941,11 @@ function ProductInfo({
   const displayCurrency = selectedVariant?.currency ?? product.currency;
 
   const finishOption = FINISHES.find((item) => item.code === selectedFinish) ?? FINISHES[0];
-  const colorOption = COLORS.find((item) => item.code === selectedColor) ?? COLORS[0];
 
   const finalPrice =
     basePrice +
     finishOption.priceDelta +
-    (selectedFinish === 'MONO' ? colorOption.priceDelta : 0);
+    (selectedFinish === 'MONO' ? selectedColor?.priceDelta ?? 0 : 0);
 
   const estimatedShippingLabel = formatLeadTime(finishOption.leadTimeDays);
   const maxQty = 99;
@@ -933,7 +1024,7 @@ function ProductInfo({
     const cartLineId = [
       selectedVariant?.id ?? product.id,
       selectedFinish,
-      selectedFinish === 'MONO' ? selectedColor : 'AUTO',
+      selectedFinish === 'MONO' ? selectedColor?.slug ?? 'AUTO' : 'AUTO',
     ].join(':');
 
     addCartItem({
@@ -947,7 +1038,9 @@ function ProductInfo({
       subtitle: [
         selectedMeta || subtitle,
         finishOption.label,
-        selectedFinish === 'MONO' ? colorOption.label : null,
+        selectedFinish === 'MONO' && selectedColor
+          ? colorLabelWithStock(selectedColor)
+          : null,
       ]
         .filter(Boolean)
         .join(' · '),
@@ -1057,6 +1150,7 @@ function ProductInfo({
 
       {selectedFinish === 'MONO' && (
         <ColorSelector
+          colors={resinColors}
           value={selectedColor}
           onChange={onSelectColor}
           currency={displayCurrency}
@@ -1115,15 +1209,67 @@ function ProductInfo({
   );
 }
 
-export default function ProductDetailsClient({ product }: { product: Product }) {
+export default function ProductDetailsClient({
+  product,
+  initialResinColors,
+}: {
+  product: Product;
+  initialResinColors?: CatalogResinColor[] | null;
+}) {
   const defaultVariant =
     product.variants.find((v) => v.isDefault) ?? product.variants[0] ?? null;
 
+  const buildResinColors = initialResinColors?.length
+    ? initialResinColors
+    : FALLBACK_RESIN_COLORS;
+
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(defaultVariant);
   const [selectedFinish, setSelectedFinish] = useState<FinishType>('MONO');
-  const [selectedColor, setSelectedColor] = useState<ColorType>('IVORY');
+  const [resinColors, setResinColors] = useState<CatalogResinColor[]>(buildResinColors);
+  const [selectedColorSlug, setSelectedColorSlug] = useState(() =>
+    pickDefaultColorSlug(buildResinColors),
+  );
 
   const router = useRouter();
+
+  // Страница отдаётся статикой с GitHub Pages, поэтому склад смолы, вшитый в
+  // HTML на сборке, устаревает при первом же переключении в админке. Забираем
+  // актуальное наличие уже в браузере.
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadResinColors() {
+      try {
+        const colors = await getCatalogResinColors({ signal: controller.signal });
+
+        if (controller.signal.aborted || colors.length === 0) return;
+
+        setResinColors(colors);
+        setSelectedColorSlug((current) =>
+          colors.some((color) => color.slug === current)
+            ? current
+            : pickDefaultColorSlug(colors),
+        );
+      } catch (error) {
+        // Склад недоступен — остаёмся на наборе со сборки, витрина работает.
+        if (!controller.signal.aborted) {
+          console.error(error);
+        }
+      }
+    }
+
+    void loadResinColors();
+
+    return () => controller.abort();
+  }, []);
+
+  const selectedColor = useMemo(
+    () =>
+      resinColors.find((color) => color.slug === selectedColorSlug) ??
+      resinColors[0] ??
+      null,
+    [resinColors, selectedColorSlug],
+  );
 
   const verifyHref = useMemo(
     () => buildAgeVerifyPath(`/product/${product.slug}`),
@@ -1180,8 +1326,9 @@ export default function ProductDetailsClient({ product }: { product: Product }) 
             onSelectFinish={(value) => {
               if (!isFinishDisabled(value)) setSelectedFinish(value);
             }}
+            resinColors={resinColors}
             selectedColor={selectedColor}
-            onSelectColor={setSelectedColor}
+            onSelectColor={setSelectedColorSlug}
             isAgeVerified={isAgeVerified}
             verifyHref={verifyHref}
           />

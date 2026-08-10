@@ -2,7 +2,9 @@ import { notFound } from 'next/navigation';
 
 import {
   getCatalogProductBySlug,
+  getCatalogResinColors,
   type CatalogProductsResponse,
+  type CatalogResinColor,
 } from '../../../../lib/api';
 
 import ProductDetailsClient from './ProductDetailsClient';
@@ -115,6 +117,18 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
     .map((slug) => ({ slug }));
 }
 
+// Склад смолы кладём в статический HTML, чтобы первый кадр уже был верным.
+// Ошибку глотаем: наличие всё равно перезапрашивается на клиенте, и падать
+// из-за него всей сборкой каталога незачем.
+async function loadBuildResinColors(): Promise<CatalogResinColor[] | null> {
+  try {
+    return await getCatalogResinColors();
+  } catch (error) {
+    console.warn('Failed to load resin colors during build:', error);
+    return null;
+  }
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -129,7 +143,12 @@ export default async function ProductPage({
       notFound();
     }
 
-    return <ProductDetailsClient product={product} />;
+    return (
+      <ProductDetailsClient
+        product={product}
+        initialResinColors={await loadBuildResinColors()}
+      />
+    );
   } catch (error) {
     const status = (error as Error & { status?: number }).status;
 

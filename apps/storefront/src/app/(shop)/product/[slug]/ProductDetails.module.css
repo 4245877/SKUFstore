@@ -576,6 +576,23 @@
     border-color 0.2s;
 }
 
+/* Смола цього кольору зараз не на складі — фігурку заллють під замовлення. */
+.preorderBadge {
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a6410;
+  background: #fdf4dd;
+  border: 1px solid #ecd9a4;
+  border-radius: 999px;
+  padding: 2px 8px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
 .colorSwatchSelected {
   border-color: var(--deep-rose);
   box-shadow:
