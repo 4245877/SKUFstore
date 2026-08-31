@@ -76,6 +76,8 @@ export type ProductDetailsDto = ProductCardDto & {
   shortDescription: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
+  /** Обложка в формате, который понимают краулеры Open Graph (JPEG). */
+  ogImage: ImageDto | null;
   releaseDate: string | null;
   ageRating: AgeRating;
   heightMm: number | null;
