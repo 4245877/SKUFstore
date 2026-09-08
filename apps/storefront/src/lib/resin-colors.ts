@@ -63,8 +63,8 @@ export function pickDefaultColorSlug(colors: CatalogResinColor[]) {
 /**
  * Что делать с выбранным цветом, когда из API приехал свежий склад.
  *
- * Выбор покупателя переживает обновление и слетает, только если цвет скрыли
- * или удалили в админке. А вот значение со сборки — не выбор, а догадка о том,
+ * Выбор покупателя переживает обновление. Если цвет скрыли или удалили,
+ * сохраняем slug, но запрещаем покупку до нового явного выбора. А вот значение со сборки — не выбор, а догадка о том,
  * что было на складе на момент пересборки витрины: его пересчитываем заново,
  * иначе цвет, который тем временем отметили как отсутствующий, так и остался
  * бы выбранным вместо того, что есть в наличии.
@@ -76,24 +76,19 @@ export function reconcileSelectedColorSlug(
 ) {
   if (!userPicked) return pickDefaultColorSlug(colors);
 
-  return colors.some((color) => color.slug === currentSlug)
-    ? currentSlug
-    : pickDefaultColorSlug(colors);
+  return currentSlug;
 }
 
 /**
- * Цена и подпись всегда должны соответствовать одному и тому же цвету,
- * поэтому запасной вариант тот же, что и у выбора по умолчанию.
+ * Неизвестный выбранный slug нельзя подменять цветом по умолчанию.
+ * null заставляет карточку запросить новый выбор перед добавлением в корзину.
  */
 export function resolveSelectedColor(
   colors: CatalogResinColor[],
   slug: string,
 ): CatalogResinColor | null {
-  return (
-    colors.find((color) => color.slug === slug) ??
-    colors.find((color) => color.slug === pickDefaultColorSlug(colors)) ??
-    null
-  );
+  if (slug) return colors.find((color) => color.slug === slug) ?? null;
+  return colors.find((color) => color.slug === pickDefaultColorSlug(colors)) ?? null;
 }
 
 export function colorLabelWithStock(color: CatalogResinColor) {

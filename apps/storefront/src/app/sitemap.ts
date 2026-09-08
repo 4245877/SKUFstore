@@ -1,59 +1,12 @@
-// apps/storefront/src/app/sitemap.ts
-import type { MetadataRoute } from "next";
+import type { MetadataRoute } from 'next';
+import { getSnapshotProductSlugs } from '../lib/build-snapshot';
+import { sitemapUrls } from '../lib/sitemap-urls';
 
-export const dynamic = "force-static";
-
-const siteUrl = "https://www.skufnya.com";
+export const dynamic = 'force-static';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: siteUrl,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1,
-    },
-    {
-      url: `${siteUrl}/catalog`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${siteUrl}/contacts`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/delivery`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/payment`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${siteUrl}/returns`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${siteUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${siteUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-  ];
+  // In Pages builds generateStaticParams collects the snapshot before export workers run.
+  // Never start a second catalog fetch here or read a different list from the live API.
+  const slugs = process.env.DEPLOY_TARGET === 'pages' ? getSnapshotProductSlugs() : [];
+  return sitemapUrls(slugs).map((url) => ({ url }));
 }

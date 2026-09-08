@@ -1,17 +1,5 @@
-export type CartItem = {
-  id: string;
-  productId?: string;
-  slug: string;
-  name: string;
-  price: number;
-  quantity: number;
-  currency?: string;
-  subtitle?: string;
-  series?: string | null;
-  imageUrl?: string | null;
-  imageAlt?: string | null;
-  isAdult?: boolean;
-};
+import { normalizeCart, type CartItem } from './cart-lines.ts';
+export type { CartItem } from './cart-lines.ts';
 
 export type DeliveryMethod =
   | 'nova-poshta-branch'
@@ -75,7 +63,6 @@ const LAST_ORDER_KEY = 'skufnya:last-order';
 const FAVORITES_KEY = 'skufnya:favorites';
 const FAVORITES_CHANGED_EVENT = 'skufnya:favorites:changed';
 const CART_CHANGED_EVENT = 'skufnya:cart:changed';
-export const FREE_DELIVERY_THRESHOLD = 5000;
 
 const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
   day: '2-digit',
@@ -97,24 +84,6 @@ function safeParse<T>(value: string | null, fallback: T): T {
   }
 }
 
-function generateId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-
-  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function buildOrderNumber() {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const random = Math.floor(1000 + Math.random() * 9000);
-
-  return `SKF-${yyyy}${mm}${dd}-${random}`;
-}
-
 const DEFAULT_CUSTOMER: CheckoutFormValues = {
   fullName: 'Михайло П.',
   email: 'demo@skufnya.local',
@@ -134,6 +103,7 @@ const DEMO_ORDERS: StoreOrder[] = [
     status: 'processing',
     items: [
       {
+        variantId: null,
         id: 'demo-item-1',
         slug: 'miku-sakura-ver',
         name: 'Hatsune Miku Sakura Ver.',
@@ -142,6 +112,7 @@ const DEMO_ORDERS: StoreOrder[] = [
         quantity: 1,
       },
       {
+        variantId: null,
         id: 'demo-item-2',
         slug: 'gojo-mini-stand',
         name: 'Gojo Acrylic Stand',
@@ -167,6 +138,7 @@ const DEMO_ORDERS: StoreOrder[] = [
     status: 'delivered',
     items: [
       {
+        variantId: null,
         id: 'demo-item-3',
         slug: 'marin-kitagawa-bunny',
         name: 'Marin Kitagawa Bunny Style',
@@ -194,15 +166,10 @@ function readStoredUserOrders(): StoreOrder[] {
   return safeParse<StoreOrder[]>(window.localStorage.getItem(ORDERS_KEY), []);
 }
 
-function writeStoredUserOrders(orders: StoreOrder[]) {
-  if (!hasWindow()) return;
-
-  window.localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-}
-
 export function formatPrice(value: number, currency = 'UAH') {
   return new Intl.NumberFormat('uk-UA', {
     style: 'currency',
+    currencyDisplay: 'narrowSymbol',
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
@@ -244,7 +211,19 @@ export function getStatusLabel(status: string) {
 export function readCart(): CartItem[] {
   if (!hasWindow()) return [];
 
-  return safeParse<CartItem[]>(window.localStorage.getItem(CART_KEY), []);
+  const raw = window.localStorage.getItem(CART_KEY);
+  const items = normalizeCart(safeParse<unknown>(raw, []));
+  const normalized = JSON.stringify(items);
+  if (raw && raw !== normalized) {
+    try {
+      // Keep the original once, including malformed entries, for recovery.
+      if (!window.localStorage.getItem(`${CART_KEY}:legacy-backup`)) {
+        window.localStorage.setItem(`${CART_KEY}:legacy-backup`, raw);
+      }
+      window.localStorage.setItem(CART_KEY, normalized);
+    } catch { /* Reading a cart still works when storage is full/read-only. */ }
+  }
+  return items;
 }
 
 export function writeCart(items: CartItem[]) {
@@ -262,6 +241,7 @@ export function clearCart() {
 }
 
 export function addCartItem(item: CartItem) {
+  item = normalizeCart([item])[0];
   const nextItems = [...readCart()];
   const normalizedQuantity = Math.max(1, Math.min(99, item.quantity));
 
@@ -287,16 +267,6 @@ export function addCartItem(item: CartItem) {
 
 export function getCartSubtotal(items: CartItem[]) {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-}
-
-export function getDeliveryPrice(deliveryMethod: DeliveryMethod, items: CartItem[]) {
-  if (items.length === 0) return 0;
-  if (deliveryMethod === 'pickup') return 0;
-
-  const subtotal = getCartSubtotal(items);
-  if (subtotal >= FREE_DELIVERY_THRESHOLD) return 0;
-
-  return 120;
 }
 
 export function updateCartItemQuantity(id: string, quantity: number) {
@@ -354,36 +324,6 @@ export function writeLastOrder(order: StoreOrder | null) {
   }
 
   window.localStorage.removeItem(LAST_ORDER_KEY);
-}
-
-export function createOrderFromCart(
-  items: CartItem[],
-  customer: CheckoutFormValues,
-): StoreOrder {
-  const subtotal = getCartSubtotal(items);
-  const deliveryPrice = getDeliveryPrice(customer.deliveryMethod, items);
-
-  const order: StoreOrder = {
-    id: generateId(),
-    number: buildOrderNumber(),
-    createdAt: new Date().toISOString(),
-    status: 'pending',
-    items,
-    customer,
-    subtotal,
-    deliveryPrice,
-    total: subtotal + deliveryPrice,
-  };
-
-  const currentOrders = readStoredUserOrders();
-  writeStoredUserOrders([order, ...currentOrders]);
-
-  if (hasWindow()) {
-    window.localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
-    clearCart();
-  }
-
-  return order;
 }
 
 function emitFavoritesChanged() {

@@ -7,15 +7,14 @@ import {
   getHomeProducts,
   resolveMediaUrl,
   type HomeProductItem,
+  type OrderQuote,
 } from "../../../lib/api";
 import { buildAgeVerifyPath, isAgeVerifiedClient } from "../../../lib/age-gate";
 import {
-  FREE_DELIVERY_THRESHOLD,
   clearCart,
   formatPrice,
   getCartItemsCount,
   getCartSubtotal,
-  getDeliveryPrice,
   readCart,
   removeCartItem,
   subscribeToCartChange,
@@ -23,6 +22,7 @@ import {
   updateCartItemQuantity,
 } from "../../../lib/demo-store";
 
+import { useCartQuote } from "../../../lib/use-cart-quote";
 import { IconCart } from "../../../components/icons";
 import styles from "./CartPage.module.css";
 
@@ -43,6 +43,9 @@ type CartItemRowProps = {
 };
 
 type OrderSummaryProps = {
+  quote: OrderQuote | null;
+  message: string | null;
+  retry: () => void;
   items: CartItem[];
   subtotal: number;
   currency: string;
@@ -195,6 +198,7 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
           </Link>
 
           <div className={styles.cartItemMeta}>
+            {item.configurationIssue ? <p role="alert">{item.configurationIssue}</p> : null}
             {item.subtitle && item.subtitle !== item.series ? (
               <span className={styles.cartItemTag}>{item.subtitle}</span>
             ) : null}
@@ -256,14 +260,16 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
 }
 
 function OrderSummary({
+  quote, message, retry,
   items,
   subtotal,
   currency,
   checkoutHref,
   checkoutLabel,
 }: OrderSummaryProps) {
-  const shipping = getDeliveryPrice("nova-poshta-branch", items);
-  const total = subtotal + shipping;
+  const shipping = quote?.deliveryPrice;
+  const total = quote?.total;
+  const FREE_DELIVERY_THRESHOLD = quote?.shippingPolicy.freeDeliveryThreshold;
   const progressPct = Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100);
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
   const itemsCount = getCartItemsCount(items);
@@ -313,7 +319,7 @@ function OrderSummary({
                 </span>
               ) : (
                 <span className={styles.summaryLineVal}>
-                  {formatPrice(shipping, currency)}
+                  {shipping == null ? "Уточнюється" : formatPrice(shipping, currency)}
                 </span>
               )}
             </div>
@@ -324,11 +330,14 @@ function OrderSummary({
               {SUMMARY_COPY.labels.total}
             </span>
             <span className={styles.summaryTotalVal}>
-              {formatPrice(total, currency)}
+              {total == null ? "Уточнюється" : formatPrice(total, currency)}
             </span>
           </div>
 
-          <Link href={checkoutHref} className={styles.checkoutBtn}>
+          {message ? <p role="status">{message}</p> : null}
+          {!quote ? <button type="button" onClick={retry}>Повторити перевірку</button> : null}
+          <Link href={checkoutHref} className={styles.checkoutBtn} aria-disabled={!quote}
+            onClick={(event) => { if (!quote) event.preventDefault(); }}>
             {checkoutLabel}
           </Link>
 
@@ -346,7 +355,7 @@ function OrderSummary({
           </div>
         </div>
 
-        <div className={styles.shippingProgress}>
+        {quote ? <div className={styles.shippingProgress}>
           <p className={styles.shippingProgressText}>
             {shipping === 0 ? (
               <strong>{SUMMARY_COPY.shipping.freeReached}</strong>
@@ -370,7 +379,7 @@ function OrderSummary({
             <span>{formatPrice(0, currency)}</span>
             <span>{formatPrice(FREE_DELIVERY_THRESHOLD, currency)}</span>
           </div>
-        </div>
+        </div> : null}
 
         <div className={styles.trustBlock}>
           {SUMMARY_NOTES.map((note) => (
@@ -388,7 +397,7 @@ function OrderSummary({
 }
 
 export default function CartPage() {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [cartItems, setItems] = useState<CartItem[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [catalogItems, setCatalogItems] = useState<HomeProductItem[]>([]);
   const [isAgeVerified, setIsAgeVerified] = useState<boolean | null>(null);
@@ -434,7 +443,9 @@ export default function CartPage() {
     };
   }, []);
 
-  const subtotal = useMemo(() => getCartSubtotal(items), [items]);
+  const pricing = useCartQuote(cartItems, "nova-poshta-branch");
+  const { items, quote } = pricing;
+  const subtotal = quote?.subtotal ?? getCartSubtotal(items);
   const itemCount = useMemo(() => getCartItemsCount(items), [items]);
 
   const hasAdultItems = useMemo(
@@ -654,6 +665,9 @@ export default function CartPage() {
 
           {!isEmpty ? (
             <OrderSummary
+              quote={quote}
+              message={pricing.message}
+              retry={pricing.refresh}
               items={items}
               subtotal={subtotal}
               currency={currency}

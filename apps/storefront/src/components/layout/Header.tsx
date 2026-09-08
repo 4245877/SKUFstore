@@ -11,8 +11,9 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from 'react';
-import { getAccountProfile } from '../../lib/api';
+import { getAccountProfile, getShippingPolicy, type ShippingPolicy } from '../../lib/api';
 import {
+  formatPrice,
   getCartItemsCount,
   readCart,
   readFavorites,
@@ -107,7 +108,6 @@ const MOBILE_QUICK_LINKS = [
 ];
 
 const ANNOUNCEMENTS = [
-  'Безкоштовна доставка від 1 500 ₴',
   'Актуальні товари з каталогу на головній',
   '-15% на перше замовлення за промокодом SKUFNYA',
   'Новинки та хіти регулярно оновлюються',
@@ -115,6 +115,15 @@ const ANNOUNCEMENTS = [
 
 export default function Header() {
   const router = useRouter();
+  const [shippingPolicy, setShippingPolicy] = useState<ShippingPolicy | null>(null);
+  useEffect(() => {
+    let active = true;
+    getShippingPolicy().then((policy) => { if (active) setShippingPolicy(policy); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const announcements = shippingPolicy
+    ? [`Безкоштовна доставка від ${formatPrice(shippingPolicy.freeDeliveryThreshold, shippingPolicy.currency)}`, ...ANNOUNCEMENTS]
+    : ANNOUNCEMENTS;
 
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -248,7 +257,7 @@ export default function Header() {
           <div className={styles.ribbonTrack}>
             {[0, 1].map((copy) => (
               <div className={styles.ribbonInner} key={copy} aria-hidden={copy === 1}>
-                {ANNOUNCEMENTS.map((text, i) => (
+                {announcements.map((text, i) => (
                   <Fragment key={`${copy}-${i}`}>
                     {i > 0 && <span className={styles.ribbonSep}>✦</span>}
                     <span>{text}</span>

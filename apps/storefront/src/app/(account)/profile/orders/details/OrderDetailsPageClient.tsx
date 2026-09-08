@@ -9,6 +9,7 @@ import {
   formatPrice,
   getStatusLabel,
 } from '../../../../../lib/demo-store';
+import { configurationLabel } from '../../../../../lib/cart-lines';
 import { getAccountOrder, type OrderRecord } from '../../../../../lib/api';
 
 const statusClassMap: Record<string, string> = {
@@ -148,6 +149,7 @@ export default function OrderDetailsPage() {
                       {item.name}
                     </Link>
 
+                    {item.configurationSnapshot ? <p className={styles.itemSubtitle}>{configurationLabel(item.configurationSnapshot)}</p> : null}
                     {item.subtitle ? (
                       <p className={styles.itemSubtitle}>{item.subtitle}</p>
                     ) : null}

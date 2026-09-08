@@ -54,6 +54,7 @@ export function validateCatalogSnapshot(payload: unknown): SnapshotIssue[] {
 
     seen.add(slug);
 
+    if (item.status !== 'ACTIVE') issues.push(`${slug}: product is not ACTIVE`);
     if (!item.id) issues.push(`${slug}: missing id`);
     if (!item.title) issues.push(`${slug}: missing title`);
     if (!Array.isArray(item.images)) issues.push(`${slug}: images is not an array`);

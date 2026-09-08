@@ -70,7 +70,7 @@ describe('обновление склада в браузере', () => {
     );
   });
 
-  it('переводит выбор на доступный цвет, если прежний скрыли в админке', () => {
+  it('сохраняет выбор скрытого цвета, не подставляя другой цвет', () => {
     // isActive = false в админке — цвет просто исчезает из публичной выдачи.
     const colors = [
       color({ slug: 'ivory', isInStock: false }),
@@ -79,7 +79,7 @@ describe('обновление склада в браузере', () => {
 
     assert.equal(
       reconcileSelectedColorSlug(colors, 'pearl', { userPicked: true }),
-      'graphite',
+      'pearl',
     );
   });
 
@@ -97,15 +97,15 @@ describe('обновление склада в браузере', () => {
     );
   });
 
-  it('на опустевшем каталоге сбрасывает выбор', () => {
-    for (const userPicked of [true, false]) {
-      assert.equal(reconcileSelectedColorSlug([], 'ivory', { userPicked }), '');
-    }
+  it('пустой каталог не заменяет явный выбор покупателя', () => {
+    assert.equal(reconcileSelectedColorSlug([], 'ivory', { userPicked: true }), 'ivory');
+    assert.equal(reconcileSelectedColorSlug([], 'ivory', { userPicked: false }), '');
+    assert.equal(resolveSelectedColor([], 'ivory'), null);
   });
 });
 
 describe('цена и подпись выбранного цвета', () => {
-  it('на неизвестном slug отдаёт тот же цвет, что и выбор по умолчанию', () => {
+  it('не подменяет неизвестный выбранный цвет запасным', () => {
     // Иначе покупатель увидел бы цену одного цвета, а пометку — другого.
     const colors = [
       color({ slug: 'ivory', isInStock: false, priceDelta: 0 }),
@@ -114,8 +114,7 @@ describe('цена и подпись выбранного цвета', () => {
 
     const selected = resolveSelectedColor(colors, 'unknown-slug');
 
-    assert.equal(selected?.slug, pickDefaultColorSlug(colors));
-    assert.equal(selected?.priceDelta, 100);
+    assert.equal(selected, null);
   });
 
   it('помечает отсутствующий цвет как «Під замовлення»', () => {

@@ -510,3 +510,10 @@ export function getSnapshotProduct(slug: string): CatalogProductDetail {
 export function getSnapshotResinColors(): CatalogResinColor[] | null {
   return readSnapshot().file.resinColors;
 }
+
+export function getSnapshotProductSlugs(): string[] {
+  const { file, bySlug } = readSnapshot();
+  const issues = validateCatalogSnapshot(file);
+  if (issues.length) throw new Error(`Invalid sitemap snapshot: ${issues.join('; ')}`);
+  return [...bySlug.keys()];
+}

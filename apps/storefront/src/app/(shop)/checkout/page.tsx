@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { IconCart } from "../../../components/icons";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import {
   createOrder,
@@ -15,9 +15,8 @@ import {
   clearCart,
   formatPrice,
   getCartItemsCount,
-  getCartSubtotal,
-  getDeliveryPrice,
   readCart,
+  subscribeToCartChange,
   writeLastOrder,
   type CartItem,
   type CheckoutFormValues,
@@ -26,6 +25,8 @@ import {
   type StoreOrder,
 } from "../../../lib/demo-store";
 
+import { useCartQuote } from "../../../lib/use-cart-quote";
+import { cartOrderItems, orderCartItems } from "../../../lib/cart-lines";
 import { NovaPoshtaPicker } from "./NovaPoshtaPicker";
 import styles from "./CheckoutPage.module.css";
 
@@ -86,7 +87,6 @@ const PAYMENT_OPTIONS: Array<{
 
 function toStoredOrder(
   order: OrderRecord,
-  cartItems: CartItem[],
   customer: CheckoutFormValues,
 ): StoreOrder {
   return {
@@ -94,7 +94,7 @@ function toStoredOrder(
     number: order.number,
     createdAt: order.createdAt,
     status: order.status,
-    items: cartItems,
+    items: orderCartItems(order),
     customer,
     subtotal: order.subtotal,
     deliveryPrice: order.deliveryPrice,
@@ -154,7 +154,7 @@ function validateForm(values: CheckoutFormValues, items: CartItem[]) {
     return "Вкажіть адресу або відділення.";
   }
 
-  const missingVariant = items.some((item) => !item.id?.trim());
+  const missingVariant = items.some((item) => !item.variantId?.trim() || item.configurationIssue);
 
   if (missingVariant) {
     return "У кошику є товар без варіанта. Видаліть його та додайте знову.";
@@ -166,27 +166,24 @@ function validateForm(values: CheckoutFormValues, items: CartItem[]) {
 export default function CheckoutPage() {
   const router = useRouter();
 
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [cartItems, setItems] = useState<CartItem[]>([]);
   const [form, setForm] = useState<CheckoutFormValues>(INITIAL_FORM);
   const [isReady, setIsReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setItems(readCart());
-    setIsReady(true);
+    const sync = () => { setItems(readCart()); setIsReady(true); };
+    sync();
+    return subscribeToCartChange(sync);
   }, []);
 
-  const currency = items[0]?.currency || "UAH";
-
-  const subtotal = useMemo(() => getCartSubtotal(items), [items]);
-
-  const deliveryPrice = useMemo(
-    () => getDeliveryPrice(form.deliveryMethod, items),
-    [form.deliveryMethod, items],
-  );
-
-  const total = subtotal + deliveryPrice;
+  const pricing = useCartQuote(cartItems, form.deliveryMethod);
+  const { items, quote } = pricing;
+  const currency = quote?.currency || items[0]?.currency || "UAH";
+  const subtotal = quote?.subtotal;
+  const deliveryPrice = quote?.deliveryPrice;
+  const total = quote?.total;
   const itemsCount = getCartItemsCount(items);
 
   const selectedDelivery = DELIVERY_OPTIONS.find(
@@ -208,6 +205,7 @@ export default function CheckoutPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (!quote || isSubmitting) return;
     const validationError = validateForm(form, items);
 
     if (validationError) {
@@ -241,16 +239,12 @@ export default function CheckoutPage() {
         currency,
         comment: normalizedCustomer.comment || undefined,
 
-        items: items.map((item) => ({
-          variantId: item.id,
-          productId: item.productId,
-          qty: item.quantity,
-        })),
+        items: cartOrderItems(items),
+        quoteToken: quote.quoteToken,
       });
 
       const storedOrder = toStoredOrder(
         response.order,
-        items,
         normalizedCustomer,
       );
 
@@ -265,6 +259,7 @@ export default function CheckoutPage() {
       router.push(`/checkout/success/?${search.toString()}`);
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
+      if ((error as { status?: number }).status === 409) pricing.refresh();
       setIsSubmitting(false);
     }
   }
@@ -588,7 +583,7 @@ export default function CheckoutPage() {
               <div className={styles.totals}>
                 <div>
                   <span>Товари</span>
-                  <strong>{formatPrice(subtotal, currency)}</strong>
+                  <strong>{subtotal == null ? "Уточнюється" : formatPrice(subtotal, currency)}</strong>
                 </div>
 
                 <div>
@@ -597,16 +592,18 @@ export default function CheckoutPage() {
                   <strong>
                     {deliveryPrice === 0
                       ? "Безкоштовно"
-                      : formatPrice(deliveryPrice, currency)}
+                      : deliveryPrice == null ? "Уточнюється" : formatPrice(deliveryPrice, currency)}
                   </strong>
                 </div>
 
                 <div className={styles.grandTotal}>
                   <span>Разом</span>
-                  <strong>{formatPrice(total, currency)}</strong>
+                  <strong>{total == null ? "Уточнюється" : formatPrice(total, currency)}</strong>
                 </div>
               </div>
 
+              {pricing.message ? <p role="status">{pricing.message}</p> : null}
+              {pricing.error ? <button type="button" onClick={pricing.refresh}>Повторити перевірку</button> : null}
               {errorMessage ? (
                 <div className={styles.errorBox} role="alert">
                   {errorMessage}
@@ -616,7 +613,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 className={styles.submitButton}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !quote}
               >
                 {isSubmitting
                   ? "Створюємо замовлення…"

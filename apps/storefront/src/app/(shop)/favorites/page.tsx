@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import s from './FavoritesPage.module.css';
 import {
   addAccountFavorite,
@@ -13,7 +14,6 @@ import {
   type CatalogProductListItem,
 } from '../../../lib/api';
 import {
-  addCartItem,
   addFavorite,
   clearFavorites,
   readFavorites,
@@ -211,7 +211,7 @@ function GridCard({
 
         <div className={s.cardActions}>
           <button type="button" className={s.cardBtn} onClick={() => onAddToCart(item)}>
-            У кошик
+            Обрати варіант
           </button>
         </div>
       </div>
@@ -287,7 +287,7 @@ function ListCard({
           <span className={s.listCardActionIcon}>
             <IconCart size={16} />
           </span>
-          У кошик
+          Обрати варіант
         </button>
 
         <button
@@ -308,6 +308,7 @@ function ListCard({
 }
 
 export default function FavoritesPage() {
+  const router = useRouter();
   const [items, setItems] = useState<FavoriteItem[]>([]);
   const [view, setView] = useState<ViewMode>('grid');
   const [sort, setSort] = useState<SortKey>('added');
@@ -389,16 +390,7 @@ export default function FavoritesPage() {
   }, [suggestions, favoriteIds]);
 
   function handleAddToCart(item: FavoriteItem) {
-    addCartItem({
-      id: item.productId,
-      slug: item.slug,
-      name: item.name,
-      price: item.price,
-      quantity: 1,
-      subtitle: item.series,
-    });
-
-    showToast(`«${item.name}» додано до кошика`);
+    router.push(`/product/${encodeURIComponent(item.slug)}/`);
   }
 
   async function handleRemove(productId: string) {
@@ -735,16 +727,7 @@ export default function FavoritesPage() {
               <Link href="/catalog" className={s.summaryBtnSecondary}>
                 Продовжити вибір
               </Link>
-              <button
-                type="button"
-                className={s.summaryBtnPrimary}
-                onClick={() => {
-                  items.forEach(handleAddToCart);
-                }}
-              >
-                <IconCart size={15} />
-                Додати все до кошика
-              </button>
+              <p>Оберіть варіант і колір на сторінці кожного товару.</p>
             </div>
           </div>
         </div>

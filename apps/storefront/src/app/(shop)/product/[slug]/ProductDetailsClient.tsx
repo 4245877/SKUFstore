@@ -27,6 +27,7 @@ import {
   reconcileSelectedColorSlug,
   resolveSelectedColor,
 } from '../../../../lib/resin-colors';
+import { cartLineKey } from '../../../../lib/cart-lines';
 import { buildAgeVerifyPath, isAgeVerifiedClient } from '../../../../lib/age-gate';
 import { IconBag, IconBow, IconHeart, IconShare } from '../../../../components/icons';
 import styles from './ProductDetails.module.css';
@@ -82,6 +83,7 @@ function getColorImageKeywords(color: CatalogResinColor | null) {
 function formatMoney(value: number, currency: string) {
   return new Intl.NumberFormat('uk-UA', {
     style: 'currency',
+    currencyDisplay: 'narrowSymbol',
     currency,
     maximumFractionDigits: 0,
   }).format(value);
@@ -942,6 +944,8 @@ function ProductInfo({
       return;
     }
 
+    if (!selectedVariant || selectedFinish !== 'MONO' || !selectedColor) return;
+
     const safeQuantity = Math.max(1, Math.min(quantity, maxQty));
     const cartTitle = selectedVariant
       ? `${product.title} — ${selectedVariant.name}`
@@ -953,14 +957,13 @@ function ProductInfo({
       product.images[0] ??
       null;
 
-    const cartLineId = [
-      selectedVariant?.id ?? product.id,
-      selectedFinish,
-      selectedFinish === 'MONO' ? selectedColor?.slug ?? 'AUTO' : 'AUTO',
-    ].join(':');
+    const selection = { variantId: selectedVariant.id, finish: selectedFinish,
+      colorSlug: selectedColor.slug };
+    const cartLineId = cartLineKey(selection);
 
     addCartItem({
       id: cartLineId,
+      ...selection,
       productId: product.id,
       slug: product.slug,
       name: cartTitle,
@@ -1089,6 +1092,7 @@ function ProductInfo({
         />
       )}
 
+      {!selectedColor ? <p role="alert">Оберіть доступний колір перед додаванням до кошика.</p> : null}
       <QuantitySelector value={quantity} onChange={setQuantity} max={maxQty} />
 
       {/* Вкладки винесено на рівень сторінки (на всю ширину під гридом) */}
@@ -1096,6 +1100,7 @@ function ProductInfo({
         <button
           type="button"
           className={styles.btnPrimary}
+          disabled={!selectedVariant || selectedFinish !== 'MONO' || !selectedColor}
           onClick={handleAddToCart}
         >
           {product.isAdult && !isAgeVerified ? (
