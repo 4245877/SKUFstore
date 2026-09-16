@@ -40,6 +40,8 @@ type FavoriteItem = {
   name: string;
   series: string;
   price: number;
+  /** Цена товара — это цена «від»: у него несколько активных вариаций с разной ценой. */
+  hasPriceRange: boolean;
   currency: string;
   metaLabel: string | null;
   imageUrl: string | null;
@@ -98,6 +100,7 @@ function mapAccountFavorite(item: AccountFavoriteItem): FavoriteItem {
       item.category?.name as string | undefined,
     ),
     price: item.priceFrom,
+    hasPriceRange: Boolean(item.pricing?.hasPriceRange),
     currency: item.currency,
     metaLabel: getMetaLabel(
       item.defaultVariant?.sizeLabel,
@@ -117,6 +120,7 @@ function mapGuestFavorite(item: FavoriteSnapshot): FavoriteItem {
     name: item.title,
     series: getSeriesLabel(item.series),
     price: item.priceFrom,
+    hasPriceRange: Boolean(item.hasPriceRange),
     currency: item.currency,
     metaLabel: null,
     imageUrl: item.coverImage?.url ?? null,
@@ -137,6 +141,7 @@ function buildGuestFavoriteSnapshot(product: CatalogProductListItem): Omit<Favor
       product.category?.name as string | undefined,
     ),
     priceFrom: product.priceFrom,
+    hasPriceRange: Boolean(product.pricing?.hasPriceRange),
     currency: product.currency,
     isAdult: product.isAdult,
     coverImage: product.coverImage
@@ -160,6 +165,7 @@ function mapCatalogProductToFavorite(product: CatalogProductListItem): FavoriteI
       product.category?.name as string | undefined,
     ),
     price: product.priceFrom,
+    hasPriceRange: Boolean(product.pricing?.hasPriceRange),
     currency: product.currency,
     metaLabel: getMetaLabel(product.productType, product.category?.name as string | undefined),
     imageUrl: product.coverImage?.url ?? null,
@@ -223,7 +229,10 @@ function GridCard({
         </h3>
 
         <div className={s.cardMeta}>
-          <span className={s.cardPrice}>{formatPrice(item.price, item.currency)}</span>
+          <span className={s.cardPrice}>
+            {item.hasPriceRange ? 'від ' : ''}
+            {formatPrice(item.price, item.currency)}
+          </span>
           <span className={s.cardScale}>{item.metaLabel || 'Фігурка'}</span>
         </div>
 
@@ -271,7 +280,10 @@ function ListCard({
         </div>
 
         <div className={s.listCardBottom}>
-          <span className={s.listCardPrice}>{formatPrice(item.price, item.currency)}</span>
+          <span className={s.listCardPrice}>
+            {item.hasPriceRange ? 'від ' : ''}
+            {formatPrice(item.price, item.currency)}
+          </span>
           <div className={s.listCardMeta}>
             {item.metaLabel ? <span className={s.listCardScale}>{item.metaLabel}</span> : null}
           </div>
@@ -674,6 +686,7 @@ export default function FavoritesPage() {
 
                     <div className={s.suggestCardBottom}>
                       <span className={s.suggestCardPrice}>
+                        {item.pricing?.hasPriceRange ? 'від ' : ''}
                         {formatPrice(item.priceFrom, item.currency)}
                       </span>
 

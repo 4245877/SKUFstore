@@ -15,7 +15,7 @@ import {
   removeFavorite,
   subscribeToFavoritesChange,
 } from '../../../../lib/demo-store';
-import { formatMoney } from '../catalog.utils';
+import { formatProductPriceLabel } from '../catalog.utils';
 import styles from '../Catalog.module.css';
 
 type CatalogProductCardProps = {
@@ -51,7 +51,13 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
     });
   }, [product.id]);
 
-  const priceLabel = formatMoney(product.priceFrom, product.currency);
+  // Цена в карточке — та же, по которой каталог сортирует price_asc/price_desc.
+  // Если активных вариаций несколько и стоят они по-разному, цена подписывается «від».
+  const priceLabel = formatProductPriceLabel(
+    product.pricing,
+    product.priceFrom,
+    product.currency,
+  );
 
   function handleWishToggle(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();

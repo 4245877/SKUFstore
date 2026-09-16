@@ -431,6 +431,7 @@ export default function HomePageClient() {
 
                       <div className={s.cardMeta}>
                         <span className={s.cardPrice}>
+                          {p.pricing?.hasPriceRange ? 'від ' : ''}
                           {p.priceFrom.toLocaleString('uk-UA')} ₴
                         </span>
 

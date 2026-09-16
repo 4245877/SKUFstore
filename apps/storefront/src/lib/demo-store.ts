@@ -48,6 +48,8 @@ export type FavoriteSnapshot = {
   title: string;
   series?: string | null;
   priceFrom: number;
+  /** У товара несколько активных вариаций с разной ценой: цену подписываем «від». */
+  hasPriceRange?: boolean;
   currency: string;
   isAdult?: boolean;
   coverImage?: {
