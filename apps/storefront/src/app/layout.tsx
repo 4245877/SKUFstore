@@ -1,9 +1,13 @@
+import { getTranslator } from '../i18n/translate';
+import { DEFAULT_LOCALE, LOCALE_PRESENTATION } from '../i18n/locales';
 import type { Metadata } from "next";
 import { Manrope, Playfair_Display, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import StoreAnalytics from "../components/StoreAnalytics";
+
+const t = getTranslator(DEFAULT_LOCALE);
 
 // Body-гротеск із повною українською кирилицею та символом ₴ (U+20B4)
 const fontSans = Manrope({
@@ -39,45 +43,45 @@ export const metadata: Metadata = {
 
   },
   title: {
-    default: "SKUFnya — магазин колекційних фігурок під замовлення.",
+    default: t('seo.title'),
     template: "%s | SKUFnya",
   },
   description:
-    "Оригінальні аніме-фігурки з ніжною аніме-естетикою: scale, Nendoroid, Figma та колекційні релізи, дбайливо відібрані для тих, хто цінує прекрасне.",
+    t('seo.description'),
   keywords: [
-    "аніме-фігурки",
-    "оригінальні аніме-фігурки",
-    "колекційні фігурки",
+    t('seo.keywordFigures'),
+    t('seo.keywordOriginal'),
+    t('seo.keywordCollectibles'),
     "scale figures",
     "Nendoroid",
     "Figma",
     "anime store",
-    "аніме-магазин",
+    t('seo.keywordStore'),
     "anime figures",
     "SKUFnya",
   ],
   openGraph: {
-    title: "SKUFnya — колекціонуй прекрасне",
+    title: t('seo.socialTitle'),
     description:
-      "Світ аніме-естетики, ніжності та оригінальних фігурок. Охайно зібрана колекція для тих, хто цінує витончене.",
+      t('seo.socialDescription'),
     url: siteUrl,
     siteName: "SKUFnya",
-    locale: "uk_UA",
+    locale: LOCALE_PRESENTATION[DEFAULT_LOCALE].openGraphLocale,
     type: "website",
     images: [
       {
         url: ogImageUrl,
         width: 1200,
         height: 630,
-        alt: "SKUFnya — брендове зображення з аніме-персонажем у maid-естетиці",
+        alt: t('seo.imageAlt'),
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SKUFnya — колекціонуй прекрасне",
+    title: t('seo.socialTitle'),
     description:
-      "Ніжна anime-естетика, оригінальні фігурки та дбайливо відібрана колекція для тих, хто цінує прекрасне.",
+      t('seo.twitterDescription'),
     images: [ogImageUrl],
   },
 };
@@ -87,14 +91,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="uk"
+      lang={DEFAULT_LOCALE}
       className={`${fontSans.variable} ${fontSerif.variable} ${fontJp.variable}`}
     >
       <body>
         <StoreAnalytics />
-        <Header />
+        <Header locale={DEFAULT_LOCALE} />
         {children}
-        <Footer />
+        <Footer locale={DEFAULT_LOCALE} />
       </body>
     </html>
   );

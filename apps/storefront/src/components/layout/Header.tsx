@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { getTranslator } from '../../i18n/translate';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/locales';
+import { buildLocalizedPath } from '../../i18n/paths';
 import { useRouter } from 'next/navigation';
 import {
   Fragment,
@@ -41,79 +44,83 @@ type NavItem = {
   }>;
 };
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    label: 'Каталог',
-    labelJp: 'カタログ',
-    href: '/catalog',
-    mega: [
-      {
-        heading: 'Каталог',
-        links: [
-          { label: 'Усі товари', href: '/catalog' },
-          { label: 'Обране', href: '/favorites' },
-          { label: 'Кошик', href: '/cart' },
-          { label: 'Оформлення замовлення', href: '/checkout' },
-        ],
-      },
-      {
-        heading: 'Покупка',
-        links: [
-          { label: 'Доставка', href: '/delivery' },
-          { label: 'Оплата', href: '/payment' },
-          { label: 'Повернення', href: '/returns' },
-          { label: 'Умови сервісу', href: '/terms', accent: true },
-        ],
-      },
-      {
-        heading: 'Акаунт',
-        links: [
-          { label: 'Профіль', href: '/profile' },
-          { label: 'Мої замовлення', href: '/profile/orders' },
-          { label: 'Налаштування', href: '/profile/settings' },
-          { label: 'Контакти', href: '/contacts', accent: true },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'Обране',
-    labelJp: 'お気に入り',
-    href: '/favorites',
-  },
-  {
-    label: 'Кошик',
-    labelJp: 'カート',
-    href: '/cart',
-  },
-  {
-    label: 'Доставка',
-    labelJp: '配送',
-    href: '/delivery',
-  },
-  {
-    label: 'Контакти',
-    labelJp: '連絡先',
-    href: '/contacts',
-  },
-];
+export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+  const t = getTranslator(locale);
+  const href = (path: string) => buildLocalizedPath({ locale, path });
 
-const SEARCH_PARAM_KEY = 'q';
-const CATALOG_PATH = '/catalog';
+  const NAV_ITEMS: NavItem[] = [
+    {
+      label: t('nav.catalog'),
+      labelJp: 'カタログ',
+      href: '/catalog',
+      mega: [
+        {
+          heading: t('nav.catalog'),
+          links: [
+            { label: t('nav.allProducts'), href: '/catalog' },
+            { label: t('nav.favorites'), href: '/favorites' },
+            { label: t('nav.cart'), href: '/cart' },
+            { label: t('nav.checkout'), href: '/checkout' },
+          ],
+        },
+        {
+          heading: t('nav.purchase'),
+          links: [
+            { label: t('nav.delivery'), href: '/delivery' },
+            { label: t('nav.payment'), href: '/payment' },
+            { label: t('nav.returns'), href: '/returns' },
+            { label: t('nav.serviceTerms'), href: '/terms', accent: true },
+          ],
+        },
+        {
+          heading: t('nav.account'),
+          links: [
+            { label: t('nav.profile'), href: '/profile' },
+            { label: t('nav.orders'), href: '/profile/orders' },
+            { label: t('nav.settings'), href: '/profile/settings' },
+            { label: t('nav.contacts'), href: '/contacts', accent: true },
+          ],
+        },
+      ],
+    },
+    {
+      label: t('nav.favorites'),
+      labelJp: 'お気に入り',
+      href: '/favorites',
+    },
+    {
+      label: t('nav.cart'),
+      labelJp: 'カート',
+      href: '/cart',
+    },
+    {
+      label: t('nav.delivery'),
+      labelJp: '配送',
+      href: '/delivery',
+    },
+    {
+      label: t('nav.contacts'),
+      labelJp: '連絡先',
+      href: '/contacts',
+    },
+  ];
 
-// Швидкі підбірки каталогу для мобільного меню
-const MOBILE_QUICK_LINKS = [
-  { label: 'Усі товари', href: '/catalog' },
-  { label: 'Новинки', href: '/catalog?sort=newest' },
-];
+  const SEARCH_PARAM_KEY = 'q';
+  const CATALOG_PATH = href('/catalog');
 
-const ANNOUNCEMENTS = [
-  'Актуальні товари з каталогу на головній',
-  '-15% на перше замовлення за промокодом SKUFNYA',
-  'Новинки та хіти регулярно оновлюються',
-];
+  // Швидкі підбірки каталогу для мобільного меню
+  const MOBILE_QUICK_LINKS = [
+    { label: t('nav.allProducts'), href: '/catalog' },
+    { label: t('nav.newest'), href: '/catalog?sort=newest' },
+  ];
 
-export default function Header() {
+  const ANNOUNCEMENTS = [
+    t('header.catalogAnnouncement'),
+    t('header.promoAnnouncement'),
+    t('header.newestAnnouncement'),
+  ];
+
+
   const router = useRouter();
   const [shippingPolicy, setShippingPolicy] = useState<ShippingPolicy | null>(null);
   useEffect(() => {
@@ -122,7 +129,7 @@ export default function Header() {
     return () => { active = false; };
   }, []);
   const announcements = shippingPolicy
-    ? [`Безкоштовна доставка від ${formatPrice(shippingPolicy.freeDeliveryThreshold, shippingPolicy.currency)}`, ...ANNOUNCEMENTS]
+    ? [t('header.freeDelivery', { amount: formatPrice(shippingPolicy.freeDeliveryThreshold, shippingPolicy.currency) }), ...ANNOUNCEMENTS]
     : ANNOUNCEMENTS;
 
   const [scrolled, setScrolled] = useState(false);
@@ -253,7 +260,7 @@ export default function Header() {
         }`}
         role="banner"
       >
-        <div className={styles.ribbon} aria-label="Оголошення магазину">
+        <div className={styles.ribbon} aria-label={t('header.announcements')}>
           <div className={styles.ribbonTrack}>
             {[0, 1].map((copy) => (
               <div className={styles.ribbonInner} key={copy} aria-hidden={copy === 1}>
@@ -269,7 +276,7 @@ export default function Header() {
         </div>
 
         <div className={styles.inner}>
-          <Link href="/" className={styles.logo} aria-label="Skufnya — на головну">
+          <Link href={href('/')} className={styles.logo} aria-label={t('header.home')}>
             <span className={styles.logoIcon} aria-hidden="true">
               <IconBow size={24} />
             </span>
@@ -279,7 +286,7 @@ export default function Header() {
             </span>
           </Link>
 
-          <nav className={styles.nav} aria-label="Основна навігація">
+          <nav className={styles.nav} aria-label={t('header.navigation')}>
             <ul className={styles.navList} role="list">
               {NAV_ITEMS.map((item) => (
                 <li
@@ -291,7 +298,7 @@ export default function Header() {
                   onMouseLeave={item.mega ? handleNavLeave : undefined}
                 >
                   <Link
-                    href={item.href}
+                    href={href(item.href)}
                     className={styles.navLink}
                     aria-expanded={item.mega ? activeMenu === item.label : undefined}
                     aria-haspopup={item.mega ? 'true' : undefined}
@@ -339,7 +346,7 @@ export default function Header() {
                       onMouseEnter={handleMegaEnter}
                       onMouseLeave={handleNavLeave}
                       role="region"
-                      aria-label={`Підменю ${item.label}`}
+                      aria-label={t('header.submenu', { label: item.label })}
                     >
                       <div className={styles.megaInner}>
                         {item.mega.map((col) => (
@@ -349,7 +356,7 @@ export default function Header() {
                               {col.links.map((link) => (
                                 <li key={link.label}>
                                   <Link
-                                    href={link.href}
+                                    href={href(link.href)}
                                     className={`${styles.megaLink} ${
                                       link.accent ? styles.megaLinkAccent : ''
                                     }`}
@@ -363,19 +370,19 @@ export default function Header() {
                         ))}
 
                         <div className={styles.megaFeatured}>
-                          <p className={styles.megaFeaturedLabel}>✦ Швидкий перехід</p>
+                          <p className={styles.megaFeaturedLabel}>{t('header.quickAccess')}</p>
                           <div className={styles.megaFeaturedCard}>
                             <div className={styles.megaFeaturedImage} aria-hidden="true">
                               <IconBag size={44} strokeWidth={1.2} />
                             </div>
                             <div className={styles.megaFeaturedBody}>
-                              <p className={styles.megaFeaturedSeries}>Особистий кабінет</p>
+                              <p className={styles.megaFeaturedSeries}>{t('nav.personalAccount')}</p>
                               <p className={styles.megaFeaturedName}>
-                                Профіль, замовлення та збережені товари
+                                {t('header.accountDescription')}
                               </p>
-                              <p className={styles.megaFeaturedPrice}>Усе в одному місці</p>
-                              <Link href="/profile" className={styles.megaFeaturedCta}>
-                                Відкрити
+                              <p className={styles.megaFeaturedPrice}>{t('header.accountSummary')}</p>
+                              <Link href={href('/profile')} className={styles.megaFeaturedCta}>
+                                {t('header.open')}
                                 <svg
                                   width="12"
                                   height="12"
@@ -413,7 +420,7 @@ export default function Header() {
                 setMobileOpen(false);
                 setSearchOpen((v) => !v);
               }}
-              aria-label="Пошук"
+              aria-label={t('header.search')}
               aria-expanded={searchOpen}
               aria-controls="search-bar"
             >
@@ -440,9 +447,9 @@ export default function Header() {
             </button>
 
             <Link
-              href="/favorites"
+              href={href('/favorites')}
               className={styles.iconBtn}
-              aria-label={`Список бажань (${wishCount})`}
+              aria-label={t('header.wishlistCount', { count: wishCount })}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                 <path
@@ -460,9 +467,9 @@ export default function Header() {
             </Link>
 
             <Link
-              href="/cart"
+              href={href('/cart')}
               className={`${styles.iconBtn} ${styles.cartBtn}`}
-              aria-label={`Кошик (${cartCount})`}
+              aria-label={t('header.cartCount', { count: cartCount })}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                 <path
@@ -482,7 +489,7 @@ export default function Header() {
               )}
             </Link>
 
-            <Link href={accountHref} className={styles.iconBtn} aria-label="Особистий кабінет">
+            <Link href={href(accountHref)} className={styles.iconBtn} aria-label={t('nav.personalAccount')}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                 <circle cx="9" cy="6.5" r="3" stroke="currentColor" strokeWidth="1.6" />
                 <path
@@ -502,7 +509,7 @@ export default function Header() {
                 setSearchOpen(false);
                 setMobileOpen((v) => !v);
               }}
-              aria-label={mobileOpen ? 'Закрити меню' : 'Відкрити меню'}
+              aria-label={mobileOpen ? t('header.closeMenu') : t('header.openMenu')}
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
             >
@@ -542,9 +549,9 @@ export default function Header() {
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Знайти фігурку, серію або бренд..."
+              placeholder={t('header.searchPlaceholder')}
               className={styles.searchInput}
-              aria-label="Пошук по сайту"
+              aria-label={t('header.searchSite')}
               tabIndex={searchOpen ? 0 : -1}
             />
 
@@ -553,10 +560,10 @@ export default function Header() {
               className={styles.searchSubmit}
               tabIndex={searchOpen ? 0 : -1}
             >
-              Шукати
+              {t('header.searchSubmit')}
             </button>
 
-            <span className={styles.searchHint}>↵ Enter</span>
+            <span className={styles.searchHint}>{t('header.searchHint')}</span>
           </form>
         </div>
       </header>
@@ -567,7 +574,7 @@ export default function Header() {
         aria-hidden={!mobileOpen}
         role="dialog"
         aria-modal="true"
-        aria-label="Мобільна навігація"
+        aria-label={t('header.mobileNavigation')}
       >
         <div className={styles.mobileNavInner}>
           <form className={styles.mobileSearch} onSubmit={handleSearchSubmit} role="search">
@@ -586,9 +593,9 @@ export default function Header() {
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Пошук..."
+              placeholder={t('header.mobileSearchPlaceholder')}
               className={styles.mobileSearchInput}
-              aria-label="Пошук"
+              aria-label={t('header.search')}
               tabIndex={mobileOpen ? 0 : -1}
             />
 
@@ -597,7 +604,7 @@ export default function Header() {
               className={styles.mobileSearchSubmit}
               tabIndex={mobileOpen ? 0 : -1}
             >
-              Шукати
+              {t('header.searchSubmit')}
             </button>
           </form>
 
@@ -609,7 +616,7 @@ export default function Header() {
                 style={{ '--i': i } as CSSProperties}
               >
                 <Link
-                  href={item.href}
+                  href={href(item.href)}
                   className={styles.mobileNavLink}
                   onClick={closeMobileMenu}
                   tabIndex={mobileOpen ? 0 : -1}
@@ -646,12 +653,12 @@ export default function Header() {
           </ul>
 
           <div className={styles.mobileQuick}>
-            <p className={styles.mobileQuickTitle}>Каталог за добірками</p>
+            <p className={styles.mobileQuickTitle}>{t('header.collections')}</p>
             <div className={styles.mobileQuickGrid}>
               {MOBILE_QUICK_LINKS.map((link) => (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={href(link.href)}
                   className={styles.mobileQuickLink}
                   onClick={closeMobileMenu}
                   tabIndex={mobileOpen ? 0 : -1}
@@ -664,14 +671,14 @@ export default function Header() {
 
           <div className={styles.mobileNavFooter}>
             <div className={styles.mobileNavLinks}>
-              <Link href={accountHref} tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
-                Особистий кабінет
+              <Link href={href(accountHref)} tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
+                {t('nav.personalAccount')}
               </Link>
-              <Link href="/favorites" tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
-                Список бажань
+              <Link href={href('/favorites')} tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
+                {t('nav.wishlist')}
               </Link>
-              <Link href="/cart" tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
-                Кошик
+              <Link href={href('/cart')} tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
+                {t('nav.cart')}
               </Link>
             </div>
             <p className={styles.mobileNavBrand}>

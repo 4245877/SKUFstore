@@ -1,0 +1,152 @@
+{
+  "date": "2026-09-16",
+  "productionDeployed": false,
+  "pushed": false,
+  "baseline": {
+    "SKUFstore": {
+      "head": "dea63ae22942b7a0af9d6e7213917b47cd4adc06",
+      "status": " M apps/storefront/src/app/(shop)/catalog/_components/CatalogProductCard.tsx\n M apps/storefront/src/app/(shop)/catalog/catalog.utils.ts\n M apps/storefront/src/app/(shop)/favorites/page.tsx\n M apps/storefront/src/app/HomePageClient.tsx\n M apps/storefront/src/lib/api.ts\n M apps/storefront/src/lib/demo-store.ts\n?? apps/storefront/src/lib/product-price.ts\n"
+    },
+    "SKUFnya": {
+      "head": "7ce9719b255ab2539e2cb0f12899f2e5241551c6",
+      "status": ""
+    }
+  },
+  "tests": {
+    "baseline": {
+      "passed": 56,
+      "failed": 0
+    },
+    "stage1": {
+      "passed": 68,
+      "failed": 0,
+      "suites": 16,
+      "newTests": 12
+    },
+    "cleanHeadPlusStage1WithoutExistingEdits": {
+      "passed": 68,
+      "failed": 0,
+      "typecheck": "passed"
+    },
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "staticExport": {
+      "passed": true,
+      "products": 165,
+      "sitemapUrls": 173,
+      "htmlPages": 191,
+      "baselineCompared": true
+    },
+    "htmlContentComparison": {
+      "pages": 191,
+      "differences": []
+    }
+  },
+  "browser": {
+    "passed": true,
+    "localePreferences": [
+      "de-DE",
+      "en-US"
+    ],
+    "checks": [
+      "Header search, desktop/mobile navigation, live policy, Footer and uk language",
+      "Non-default variant, two resin colors, favorites/storage, cart quote, pickup, checkout 409/review/retry and saved snapshot",
+      "Authenticated profile, orders and order configuration details with fixture account",
+      "Known baseline profile order-link prefetch 404 recorded; no new HTTP/console/page/hydration errors"
+    ],
+    "baselineParity": {
+      "captured": true,
+      "stored": true,
+      "quoteCalls": true,
+      "createCalls": true,
+      "order": true,
+      "errors": true
+    },
+    "quoteRequestsCompared": 4,
+    "checkoutRequestsCompared": 2,
+    "pageErrors": [],
+    "knownBaselineIssues": [
+      "/profile/orders/browser-order/index.txt prefetch returns 404; profile link points to old dynamic route instead of exported /profile/orders/details/?id=browser-order"
+    ],
+    "expectedFixtureStatuses": [
+      401,
+      409
+    ],
+    "productionApiRequests": 0,
+    "productionOrdersCreated": 0
+  },
+  "sourceIntegrity": {
+    "backendAndAdminUnchanged": true,
+    "protectedStorefrontFiles": {
+      "apps/storefront/src/lib/api.ts": "f3f7eb1cd5053a217048de0ae209034767d082424f62af195fec75ec14aadbf0",
+      "apps/storefront/src/lib/cart-lines.ts": "653f3ba685e5fe0d6c11ab9e655d0e5258a011e9f33630b1cbca917aa2d79b3d",
+      "apps/storefront/src/lib/demo-store.ts": "869ae735ef48c8dcdb00493050302a9d83b31c989cde0d05a8f21726f55dbf6c",
+      "apps/storefront/src/lib/use-cart-quote.ts": "68c912810a9030a8177914fb2ff3fb07782c124d5f098648c052288672f784c9",
+      "apps/storefront/src/lib/resin-colors.ts": "65689f4f74e885ea02c9e7639045a0fffc7fe4cdfb33750bf55a54137a92b084",
+      "apps/storefront/src/lib/build-snapshot.ts": "22acc3133cb241aec290d4b906ab1de9035f5f3f37f34150b7e24b8de2af3bd7",
+      "apps/storefront/src/app/(shop)/checkout/page.tsx": "71bd71ae1ba1515083fe300c3bc5668569c79395a2d3366706d5f67957bf2eb9",
+      "apps/storefront/src/app/(shop)/cart/page.tsx": "b0a32b71d3fa2aa4acef88302204f776bdd187bd8436819342904c1ebdefc696",
+      "apps/storefront/src/app/(shop)/product/[slug]/ProductDetailsClient.tsx": "ec865d2c6de304e5bdc5997df0263441d8ca4df988323c59666b8a2154d333af"
+    },
+    "existingDirtyFilesPreserved": true
+  },
+  "productionReadOnly": {
+    "appliedNames": [
+      "20260328114759_init",
+      "20260328122810_catalog_foundation",
+      "20260328214131_auth_foundation",
+      "20260330131144_add_variant_option_fields",
+      "20260402122323_add_home_quality_fields",
+      "20260403170000_add_favorites",
+      "20260408190000_add_order_checkout_fields",
+      "20260409175614_sync_product_schema",
+      "20260411180000_add_email_verification_code_patch",
+      "20260722000000_add_store_analytics",
+      "20260805090000_add_order_status_values",
+      "20260805090100_add_order_management_fields",
+      "20260810120000_add_resin_colors",
+      "20260907120000_order_item_configuration"
+    ],
+    "repositoryMigrations": 13,
+    "pending": [],
+    "missingHistoricalFiles": [
+      "20260402122323_add_home_quality_fields"
+    ],
+    "checksumMismatches": [],
+    "unresolvedFailed": [],
+    "api": {
+      "imageId": "sha256:6ee5008417591383ded85ac34037d3533c94f7a24d4e568d2bd89a45fe9c19d5",
+      "created": "2026-09-13T13:07:16.670615791Z",
+      "healthy": "healthy",
+      "composeFiles": "/home/hpelitdesk/apps/SKUFnya/ops/docker-compose.yml"
+    },
+    "admin": {
+      "imageId": "sha256:98fa3f3c5e16386fbd87024cab6906fadfb6f08aaedbbe5ec4d41398b00d0984",
+      "created": "2026-09-13T13:07:20.075021628Z",
+      "healthy": "healthy"
+    }
+  },
+  "changedStorefrontFiles": [
+    ".github/workflows/deploy-storefront.yml",
+    "apps/storefront/src/app/(shop)/product/[slug]/page.tsx",
+    "apps/storefront/src/app/layout.tsx",
+    "apps/storefront/src/app/not-found.tsx",
+    "apps/storefront/src/app/page.tsx",
+    "apps/storefront/src/components/layout/Footer.tsx",
+    "apps/storefront/src/components/layout/Header.tsx",
+    "apps/storefront/src/i18n/dictionaries/de.ts",
+    "apps/storefront/src/i18n/dictionaries/en.ts",
+    "apps/storefront/src/i18n/dictionaries/uk.ts",
+    "apps/storefront/src/i18n/locales.ts",
+    "apps/storefront/src/i18n/paths.ts",
+    "apps/storefront/src/i18n/translate.ts",
+    "apps/storefront/src/lib/product-meta.ts",
+    "apps/storefront/src/lib/sitemap-urls.ts",
+    "apps/storefront/test/browser-stage1.mjs",
+    "apps/storefront/test/i18n.test.ts",
+    "apps/storefront/test/verify-stage1-export.mjs",
+    "docs/STAGE1_I18N.md",
+    "docs/STAGE1_STRING_INVENTORY.md",
+    "docs/stage1-20260916/verification.json"
+  ]
+}

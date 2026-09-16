@@ -1,3 +1,7 @@
+import { buildLocalizedPath } from '../i18n/paths.ts';
+import { getTranslator } from '../i18n/translate.ts';
+import { DEFAULT_LOCALE, type Locale } from '../i18n/locales.ts';
+
 /**
  * Метаданные страницы товара для поисковиков и превью ссылок.
  *
@@ -30,7 +34,6 @@ const SITE_URL = 'https://www.skufnya.com';
  * мимо гейта нельзя.
  */
 const FALLBACK_IMAGE_URL = `${SITE_URL}/opengraph-image.png`;
-const FALLBACK_IMAGE_ALT = 'SKUFnya — магазин колекційних фігурок';
 
 /**
  * Telegram показывает в карточке две-три строки, Google обрезает сниппет
@@ -98,10 +101,10 @@ function firstNonEmpty(...values: Array<string | null | undefined>): string {
   return '';
 }
 
-export function buildProductUrl(slug: string): string {
+export function buildProductUrl(slug: string, locale: Locale = DEFAULT_LOCALE): string {
   // `trailingSlash: true` в next.config — канонический адрес обязан совпадать с
   // тем, по которому страница реально лежит, иначе поисковик увидит редирект.
-  return `${SITE_URL}/product/${encodeURIComponent(slug)}/`;
+  return `${SITE_URL}${buildLocalizedPath({ locale, path: `/product/${encodeURIComponent(slug)}/` })}`;
 }
 
 type PreviewImage = {
@@ -159,7 +162,9 @@ export type ProductPageMeta = {
 export function buildProductPageMeta(
   product: CatalogProductDetail,
   resolveImageUrl: MediaUrlResolver,
+  locale: Locale = DEFAULT_LOCALE,
 ): ProductPageMeta {
+  const t = getTranslator(locale);
   const title = toPlainText(product.title);
   const metaTitle = toPlainText(product.metaTitle);
   const series = firstNonEmpty(
@@ -171,7 +176,7 @@ export function buildProductPageMeta(
   // Заголовок превью — это имя фигурки: «AOI TODO - JUJUTSU KAISEN». Именно его
   // человек ждёт увидеть в чате, а не SEO-формулировку из админки. Она остаётся
   // заголовком вкладки и сниппета, где и должна работать.
-  const socialTitle = title || metaTitle || 'Колекційна фігурка';
+  const socialTitle = title || metaTitle || t('productMeta.title');
   const documentTitle = metaTitle || socialTitle;
 
   const description = firstNonEmpty(
@@ -181,8 +186,8 @@ export function buildProductPageMeta(
   );
 
   const fallbackDescription = series
-    ? `${socialTitle} — колекційна фігурка із ${series} у каталозі SKUFnya.`
-    : `${socialTitle} — колекційна фігурка у каталозі SKUFnya.`;
+    ? t('productMeta.descriptionWithSeries', { title: socialTitle, series })
+    : t('productMeta.description', { title: socialTitle });
 
   // Фотографии взрослых товаров витрина закрывает возрастным гейтом. Превью
   // ссылки гейта не знает и разворачивается у всех, кто есть в чате, поэтому
@@ -192,11 +197,11 @@ export function buildProductPageMeta(
     : pickPreviewImage(product, resolveImageUrl);
 
   return {
-    canonicalUrl: buildProductUrl(product.slug),
+    canonicalUrl: buildProductUrl(product.slug, locale),
     documentTitle,
     socialTitle,
     description: truncateText(description || fallbackDescription, DESCRIPTION_LIMIT),
-    image: previewImage ?? { url: FALLBACK_IMAGE_URL, alt: FALLBACK_IMAGE_ALT },
+    image: previewImage ?? { url: FALLBACK_IMAGE_URL, alt: t('productMeta.imageAlt') },
     usesProductPhoto: previewImage !== null,
   };
 }
@@ -223,8 +228,9 @@ function getSchemaAvailability(product: CatalogProductDetail): string {
 export function buildProductJsonLd(
   product: CatalogProductDetail,
   resolveImageUrl: MediaUrlResolver,
+  locale: Locale = DEFAULT_LOCALE,
 ): Record<string, unknown> {
-  const meta = buildProductPageMeta(product, resolveImageUrl);
+  const meta = buildProductPageMeta(product, resolveImageUrl, locale);
 
   const images = product.isAdult
     ? [meta.image.url]

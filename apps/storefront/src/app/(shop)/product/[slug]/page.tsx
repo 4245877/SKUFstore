@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, LOCALE_PRESENTATION } from '../../../../i18n/locales';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -129,7 +130,7 @@ export async function generateMetadata({
       type: 'website',
       url: meta.canonicalUrl,
       siteName: 'SKUFnya',
-      locale: 'uk_UA',
+      locale: LOCALE_PRESENTATION[DEFAULT_LOCALE].openGraphLocale,
       title: meta.socialTitle,
       description: meta.description,
       images: [{ url: meta.image.url, alt: meta.image.alt }],
