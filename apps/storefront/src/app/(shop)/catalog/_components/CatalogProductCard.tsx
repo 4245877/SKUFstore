@@ -78,6 +78,7 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
         product.brand?.name ??
         null,
       priceFrom: product.priceFrom,
+      hasPriceRange: product.pricing?.hasPriceRange === true,
       currency: product.currency,
       isAdult: product.isAdult,
       coverImage: product.coverImage,

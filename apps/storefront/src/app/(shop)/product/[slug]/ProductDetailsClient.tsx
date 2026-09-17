@@ -133,6 +133,7 @@ function buildGuestFavoritePayload(product: Product) {
     title: product.title,
     series: product.series ?? product.franchise?.name ?? product.brand?.name ?? null,
     priceFrom: product.priceFrom,
+    hasPriceRange: product.pricing?.hasPriceRange === true,
     currency: product.currency,
     isAdult: product.isAdult,
     coverImage: coverImage

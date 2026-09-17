@@ -28,7 +28,7 @@ export function formatProductPriceLabel(
   priceFrom: number,
   currency: string,
 ) {
-  const amount = pricing ? pricing.priceFrom : priceFrom;
+  const amount = priceFrom;
   const formatted = formatMoney(amount, currency);
 
   return pricing?.hasPriceRange ? `від ${formatted}` : formatted;

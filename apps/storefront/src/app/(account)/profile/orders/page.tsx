@@ -179,7 +179,7 @@ export default function ProfileOrdersPage() {
 
                   <div className={styles.actions}>
                     <Link
-                      href={`/profile/orders/${encodeURIComponent(order.id)}`}
+                      href={`/profile/orders/details/?id=${encodeURIComponent(order.id)}`}
                       className={styles.detailsLink}
                     >
                       Открыть детали

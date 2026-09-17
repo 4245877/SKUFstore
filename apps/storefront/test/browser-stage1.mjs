@@ -6,6 +6,7 @@ const snapshot = JSON.parse(fs.readFileSync(process.env.SMOKE_SNAPSHOT || '.next
 const product = snapshot.items.find((p) => !p.isAdult && p.variants.length > 1);
 assert.ok(product, 'fixture needs a product with a non-default variant');
 const selected = product.variants.find((v) => !v.isDefault);
+const namePattern = (name) => new RegExp(name.trim().split(/\s+/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'));
 const colors = [
   { id: 'test-pearl', slug: 'pearl', name: 'Перламутровий', hexColor: '#EEEEEE', priceDelta: 200, isInStock: true, sortOrder: 0 },
   { id: 'test-black', slug: 'black', name: 'Чорний', hexColor: '#111111', priceDelta: 100, isInStock: true, sortOrder: 1 },
@@ -15,6 +16,7 @@ let createCalls = [];
 let quoteCalls = [];
 let failNextCreate = true;
 const base = process.env.SMOKE_BASE || 'http://127.0.0.1:54330';
+assert.equal(new URL(base).hostname, '127.0.0.1', 'fixture checkout smoke must run only on a local static server');
 let authenticated = false;
 let savedOrder;
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE });
@@ -67,7 +69,7 @@ await context.route('**/*', async (route) => {
   const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
   if (path === '/api/shipping/policy') return json({ currency: 'UAH', freeDeliveryThreshold: 1500, deliveryPrice: 120 });
   if (path === '/api/catalog/resin-colors') return json({ items: colors });
-  if (path === '/api/catalog/products/home') return json({ featured: [product], newArrivals: [product], bestsellers: [product] });
+  if (path === '/api/catalog/products/home') return json({ items: [product] });
   if (path === '/api/catalog/products') return json({ items: [product], meta: { page: 1, pageCount: 1, total: 1, limit: 24 } });
   if (path === '/api/catalog/products/' + product.slug) return json(product);
   if (path === '/api/catalog/categories') return json({ items: [] });
@@ -111,6 +113,7 @@ try {
   await page.goto(`${base}/product/${product.slug}/`);
   await capture('product');
   await page.getByRole('button', { name: 'Додати до обраного', exact: true }).click();
+  await page.waitForFunction(() => localStorage.getItem('skufnya:favorites') !== null);
   const favoritesBefore = await page.evaluate(() => localStorage.getItem('skufnya:favorites'));
   assert.ok(favoritesBefore);
   await page.goto(base + '/favorites/');
@@ -118,7 +121,7 @@ try {
   assert.equal(await page.evaluate(() => localStorage.getItem('skufnya:favorites')), favoritesBefore);
   await capture('favorites');
   await page.goto(`${base}/product/${product.slug}/`);
-  await page.getByRole('button', { name: new RegExp(selected.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }).first().click();
+  await page.getByRole('button', { name: namePattern(selected.name) }).first().click();
   await page.getByRole('button', { name: /Перламутровий/ }).click();
   await page.getByRole('button', { name: /Додати до кошика/ }).click();
   await page.getByRole('button', { name: /Чорний/ }).click();
@@ -165,15 +168,24 @@ try {
     await page.getByRole('heading', { name: heading, exact: true }).first().waitFor();
     await capture(path);
   }
-  checks.push('Authenticated profile, orders and order configuration details with fixture account');
+  await page.goto(base + '/profile/orders/');
+  const detailsLink = page.locator('main a[href^="/profile/orders/details/"]');
+  await detailsLink.waitFor();
+  assert.equal(await detailsLink.getAttribute('href'), '/profile/orders/details/?id=browser-order');
+  await detailsLink.hover();
+  await page.waitForLoadState('networkidle');
+  await detailsLink.click();
+  await page.waitForURL('**/profile/orders/details/?id=browser-order');
+  await page.getByRole('heading', { name: savedOrder.number, exact: true }).waitFor();
+  await page.waitForLoadState('networkidle');
+  checks.push('Profile order href, real Link navigation, details rendering and prefetch without 404');
   assert.deepEqual(errors, []);
-  const knownProfilePrefetch = httpErrors.filter(e => e.status === 404 && new URL(e.url).pathname === '/profile/orders/browser-order/index.txt');
+  assert.equal(httpErrors.filter(e => e.status === 404).length, 0, 'No profile or other prefetch 404 is allowed');
   assert.ok(httpErrors.every(e =>
     (e.status === 401 && ['/api/auth/me', '/api/account/favorites', '/api/account/favorites/' + product.id].includes(new URL(e.url).pathname)) ||
-    (e.status === 409 && new URL(e.url).pathname === '/api/orders') ||
-    knownProfilePrefetch.includes(e)), JSON.stringify(httpErrors));
-  assert.ok(consoleErrors.every(e => /Failed to load resource: the server responded with a status of (401|409)/.test(e) || (knownProfilePrefetch.length > 0 && /Failed to load resource: the server responded with a status of 404/.test(e))), JSON.stringify(consoleErrors));
-  checks.push('Known baseline profile order-link prefetch 404 recorded; no new HTTP/console/page/hydration errors');
+    (e.status === 409 && new URL(e.url).pathname === '/api/orders')), JSON.stringify(httpErrors));
+  assert.ok(consoleErrors.every(e => /Failed to load resource: the server responded with a status of (401|409)/.test(e)), JSON.stringify(consoleErrors));
+  checks.push('No unexpected HTTP/console/page/hydration errors, including profile prefetch');
   for (const payload of [...quoteCalls, ...createCalls]) {
     assert.equal('locale' in payload, false);
     assert.equal('shippingCountry' in payload, false);
