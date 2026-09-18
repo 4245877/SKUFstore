@@ -44,6 +44,21 @@ async function scenario(name, path, action) {
   });
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
+  const activeRequests = new Set();
+  let lastNetworkEvent = Date.now();
+  page.on('request', request => { activeRequests.add(request); lastNetworkEvent = Date.now(); });
+  for (const event of ['requestfinished', 'requestfailed']) {
+    page.on(event, request => { activeRequests.delete(request); lastNetworkEvent = Date.now(); });
+  }
+  async function settleNetwork() {
+    // waitForLoadState('networkidle') may already be satisfied after SPA/history
+    // navigation. Drain newly queued Link prefetches before unloading the document.
+    const deadline = Date.now() + 30000;
+    while (activeRequests.size || Date.now() - lastNetworkEvent < 1000) {
+      assert.ok(Date.now() < deadline, 'Catalog network did not settle');
+      await page.waitForTimeout(100);
+    }
+  }
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error' || /hydration|#418/i.test(m.text())) errors.push(m.text()); });
   const pending = [];
@@ -77,6 +92,7 @@ async function scenario(name, path, action) {
       if (q.get('sort') === 'price_desc') assert.ok(data.items[i - 1].priceFrom >= data.items[i].priceFrom);
     }
     assert.equal(await page.locator('html').getAttribute('lang'), 'uk');
+    await settleNetwork();
     return data;
   }
   try {
@@ -94,7 +110,7 @@ async function scenario(name, path, action) {
     if (action) await action({ page, verify, responses });
     assert.deepEqual(errors, []);
     results.push({ name, passed: true, requests, errors });
-  } catch (e) { results.push({ name, passed: false, error: e.stack, errors, requests, url: page.url(), body: await page.locator('main').innerText() }); }
+  } catch (e) { results.push({ name, passed: false, error: e.stack, errors, requests, url: page.url(), body: await page.locator('body').innerText({ timeout: 1000 }).catch(() => '<unavailable>') }); }
   finally { console.log(JSON.stringify({ scenario: name, passed: results.at(-1)?.passed, error: results.at(-1)?.error })); await context.close(); }
 }
 try {
