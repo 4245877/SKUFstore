@@ -11,6 +11,9 @@ on:
       - "pnpm-workspace.yaml"
       - ".github/workflows/deploy-storefront.yml"
   workflow_dispatch:
+  schedule:
+    # Reconcile new/renamed/removed public URLs without a backend token.
+    - cron: "17 * * * *"
 
 permissions:
   contents: read
@@ -18,7 +21,24 @@ permissions:
   id-token: write
 
 jobs:
+  freshness:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      needs_build: ${{ steps.check.outputs.needs_build }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Check live catalog against published pages
+        id: check
+        run: node apps/storefront/scripts/catalog-freshness.mjs --reconcile
+
   build:
+    needs: freshness
+    if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.freshness.outputs.needs_build == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Newer pushes supersede an older build, so a queued/stuck build can never
@@ -109,6 +129,22 @@ jobs:
         working-directory: apps/storefront
         run: node --experimental-strip-types test/verify-stage1-export.mjs
 
+      - name: Install Chromium for catalog regression
+        working-directory: apps/storefront
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Catalog query hydration and navigation regression
+        working-directory: apps/storefront
+        run: |
+          python3 -m http.server 54332 --bind 127.0.0.1 --directory out > /tmp/storefront-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:54332/catalog/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node test/browser-catalog-hydration.mjs
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
@@ -116,6 +152,7 @@ jobs:
 
   deploy:
     needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     # Deployments are serialised, but an in-flight one is never cancelled.
@@ -127,9 +164,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
         with:
           timeout: 900000
           error_count: 20
+
+      # This reads the CURRENT API and actual published HTML, not the build snapshot.
+      # Failure here means Pages was published but acceptance/freshness failed.
+      - name: Verify production catalog freshness
+        env:
+          FRESHNESS_ATTEMPTS: "4"
+        run: node apps/storefront/scripts/catalog-freshness.mjs

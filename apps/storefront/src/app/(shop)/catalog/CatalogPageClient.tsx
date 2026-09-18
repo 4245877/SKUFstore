@@ -187,7 +187,15 @@ function buildSearchParamsMap(searchParams: URLSearchParams): SearchParamsMap {
 export default function CatalogPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const searchParamsKey = searchParams.toString();
+  const [mounted, setMounted] = useState(false);
+  // Pages serves one force-static document for every query. Hydrate its empty
+  // query state first, then apply the real URL without changing the URL itself.
+  // This also keeps the loading sidebar's hidden inputs identical on hydration.
+  const searchParamsKey = mounted ? searchParams.toString() : '';
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const currentSearchParams = useMemo(
     () => buildSearchParamsMap(new URLSearchParams(searchParamsKey)),
@@ -245,6 +253,10 @@ export default function CatalogPageClient() {
   }, [mobileFiltersOpen]);
 
   useEffect(() => {
+    // Do not request (or canonicalize) the empty prerender query before the
+    // actual deep link is available.
+    if (!mounted) return;
+
     let cancelled = false;
 
     async function load() {
@@ -353,6 +365,7 @@ export default function CatalogPageClient() {
       cancelled = true;
     };
   }, [
+    mounted,
     currentBrandSlug,
     currentCharacterSlug,
     currentFranchiseSlug,
