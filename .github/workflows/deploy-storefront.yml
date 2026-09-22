@@ -125,7 +125,7 @@ jobs:
             exit 1
           fi
 
-      - name: Verify Ukrainian routes and SEO export
+      - name: Verify exported routes and SEO
         working-directory: apps/storefront
         run: node --experimental-strip-types test/verify-stage1-export.mjs
 
