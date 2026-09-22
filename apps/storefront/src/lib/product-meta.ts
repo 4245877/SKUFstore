@@ -177,7 +177,7 @@ export function buildProductPageMeta(
   // человек ждёт увидеть в чате, а не SEO-формулировку из админки. Она остаётся
   // заголовком вкладки и сниппета, где и должна работать.
   const socialTitle = title || metaTitle || t('productMeta.title');
-  const documentTitle = metaTitle || socialTitle;
+  const documentTitle = locale === 'en' ? socialTitle : metaTitle || socialTitle;
 
   const description = firstNonEmpty(
     product.metaDescription,
@@ -200,7 +200,7 @@ export function buildProductPageMeta(
     canonicalUrl: buildProductUrl(product.slug, locale),
     documentTitle,
     socialTitle,
-    description: truncateText(description || fallbackDescription, DESCRIPTION_LIMIT),
+    description: truncateText((locale === 'en' ? '' : description) || fallbackDescription, DESCRIPTION_LIMIT),
     image: previewImage ?? { url: FALLBACK_IMAGE_URL, alt: t('productMeta.imageAlt') },
     usesProductPhoto: previewImage !== null,
   };
@@ -242,7 +242,7 @@ export function buildProductJsonLd(
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: meta.socialTitle,
-    description: meta.description,
+    description: truncateText(firstNonEmpty(product.description, product.shortDescription) || meta.description, DESCRIPTION_LIMIT),
     url: meta.canonicalUrl,
     image: images.length > 0 ? images : [meta.image.url],
   };
@@ -266,6 +266,16 @@ export function buildProductJsonLd(
       priceCurrency: product.currency,
       availability: getSchemaAvailability(product),
       url: meta.canonicalUrl,
+      // Фигурки печатаются под конкретный заказ, поэтому товар надлежащего
+      // качества обмену и возврату не подлежит — п. 3 ч. 5 ст. 13 ЗУ «Про
+      // захист прав споживачів». Merchant Center сверяет политику возврата в
+      // фиде с той, что видна на странице, так что разметка обязана повторять
+      // страницу /returns, а не молчать.
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'UA',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+      },
     };
   }
 

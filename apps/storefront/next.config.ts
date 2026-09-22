@@ -1,4 +1,10 @@
 import type { NextConfig } from 'next'
+import { randomUUID } from 'node:crypto'
+
+// Inherited by build workers and inlined into server bundles. A new build never
+// reuses a previous catalog, while UK/EN workers share one collection run.
+const catalogBuildId = process.env.SKUF_CATALOG_BUILD_ID ?? randomUUID()
+process.env.SKUF_CATALOG_BUILD_ID = catalogBuildId
 
 const deployTarget = process.env.DEPLOY_TARGET ?? 'server'
 const isPages = deployTarget === 'pages'
@@ -8,6 +14,7 @@ const useBasePath = process.env.USE_BASE_PATH === 'true'
 const basePath = isPages && useBasePath ? rawBasePath : ''
 
 const nextConfig: NextConfig = {
+  env: { SKUF_CATALOG_BUILD_ID: catalogBuildId },
   trailingSlash: true,
 
   experimental: {

@@ -4,7 +4,7 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE = 'uk' satisfies Locale;
 
 /** A supported language is not necessarily translated or published. */
-export const PUBLISHED_LOCALES = [DEFAULT_LOCALE] as const satisfies readonly Locale[];
+export const PUBLISHED_LOCALES = [DEFAULT_LOCALE, 'en'] as const satisfies readonly Locale[];
 export type PublishedLocale = (typeof PUBLISHED_LOCALES)[number];
 
 export function isLocale(value: unknown): value is Locale {

@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-09-19T10:38:43.311Z",
+  "count": 166,
+  "fields": {
+    "title": {
+      "present": 166,
+      "cyrillic": 1
+    },
+    "description": {
+      "present": 166,
+      "cyrillic": 166
+    },
+    "shortDescription": {
+      "present": 166,
+      "cyrillic": 166
+    },
+    "metaTitle": {
+      "present": 166,
+      "cyrillic": 163
+    },
+    "metaDescription": {
+      "present": 166,
+      "cyrillic": 166
+    },
+    "series": {
+      "present": 134,
+      "cyrillic": 0
+    },
+    "category": {
+      "names": [
+        "Оригінальні персонажі",
+        "Персонажі з аніме",
+        "Персонажі з відеоігор"
+      ]
+    },
+    "franchise": {
+      "names": [
+        "",
+        "VOCALOID"
+      ]
+    },
+    "character": {
+      "names": [
+        "",
+        "Hatsune Miku"
+      ]
+    },
+    "brand": {
+      "names": [
+        "",
+        "Good Smile Company"
+      ]
+    }
+  }
+}

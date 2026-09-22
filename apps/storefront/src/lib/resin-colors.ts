@@ -91,10 +91,10 @@ export function resolveSelectedColor(
   return colors.find((color) => color.slug === pickDefaultColorSlug(colors)) ?? null;
 }
 
-export function colorLabelWithStock(color: CatalogResinColor) {
+export function colorLabelWithStock(color: CatalogResinColor, outOfStockLabel = OUT_OF_STOCK_LABEL.toLowerCase()) {
   return color.isInStock
     ? color.name
-    : `${color.name} (${OUT_OF_STOCK_LABEL.toLowerCase()})`;
+    : `${color.name} (${outOfStockLabel})`;
 }
 
 // Светлая смола на светлой карточке сливается с фоном — ей нужна рамка.

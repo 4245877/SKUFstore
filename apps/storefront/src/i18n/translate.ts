@@ -1,3 +1,4 @@
+import { en } from './dictionaries/en.ts';
 import { uk } from './dictionaries/uk.ts';
 import { assertPublishedLocale, type Locale, type PublishedLocale } from './locales.ts';
 
@@ -32,7 +33,7 @@ export function validateDictionary(value: unknown): asserts value is Dictionary 
   }
 }
 
-const dictionaries: Record<PublishedLocale, Dictionary> = { uk };
+const dictionaries: Record<PublishedLocale, Dictionary> = { uk, en };
 for (const dictionary of Object.values(dictionaries)) {
   validateDictionary(dictionary);
   Object.freeze(dictionary);

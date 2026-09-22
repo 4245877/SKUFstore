@@ -1,3 +1,5 @@
+import { getTranslator } from '../i18n/translate.ts';
+import { DEFAULT_LOCALE, type Locale } from '../i18n/locales.ts';
 import type { ProductPricing } from './api';
 
 /**
@@ -27,9 +29,10 @@ export function formatProductPriceLabel(
   pricing: ProductPricing | null | undefined,
   priceFrom: number,
   currency: string,
+  locale: Locale = DEFAULT_LOCALE,
 ) {
   const amount = priceFrom;
   const formatted = formatMoney(amount, currency);
 
-  return pricing?.hasPriceRange ? `від ${formatted}` : formatted;
+  return pricing?.hasPriceRange ? getTranslator(locale)('shop.fromValue', { value1: formatted }) : formatted;
 }

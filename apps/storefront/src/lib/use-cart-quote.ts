@@ -1,8 +1,11 @@
+import { useI18n } from '../i18n/client';
+import { presentApiError } from '../i18n/api-errors';
 import { useEffect, useState } from 'react';
 import { quoteOrder, type OrderDeliveryMethod, type OrderQuote } from './api';
 import { applyCartQuote, cartOrderItems, type CartItem } from './cart-lines';
 
 export function useCartQuote(items: CartItem[], deliveryMethod: OrderDeliveryMethod) {
+  const { t } = useI18n();
   const [revision, setRevision] = useState(0);
   const key = JSON.stringify([items, deliveryMethod, revision]);
   const [result, setResult] = useState<{ key: string; quote?: OrderQuote; items?: CartItem[]; error?: string }>({ key: '' });
@@ -15,7 +18,7 @@ export function useCartQuote(items: CartItem[], deliveryMethod: OrderDeliveryMet
         const pricedItems = applyCartQuote(items, quote);
         if (!controller.signal.aborted) setResult({ key, quote, items: pricedItems });
       } catch (error) {
-        if (!controller.signal.aborted) setResult({ key, error: error instanceof Error ? error.message : 'Не вдалося перевірити ціни.' });
+        if (!controller.signal.aborted) setResult({ key, error: presentApiError(t, error) });
       }
     }
     void update();
@@ -27,9 +30,9 @@ export function useCartQuote(items: CartItem[], deliveryMethod: OrderDeliveryMet
   const quote = current?.quote ?? null;
   return {
     quote, items: current?.items ?? items,
-    message: current?.error ?? (!quote && items.length ? 'Перевіряємо ціни та доставку…' :
+    message: current?.error ?? (!quote && items.length ? t('shop.checkingPricesAndDelivery') :
       quote && items.some((item, index) => item.price !== quote.items[index].unitPrice || item.currency !== quote.items[index].currency)
-        ? 'Ціни оновлено. Перевірте суму перед підтвердженням.' : null),
+        ? t('shop.pricesHaveChangedReviewTheTotalBefore') : null),
     error: current?.error,
     refresh: () => setRevision((value) => value + 1),
   };

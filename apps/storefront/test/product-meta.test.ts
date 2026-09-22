@@ -239,6 +239,23 @@ describe('Product-разметка', () => {
       priceCurrency: 'UAH',
       availability: 'https://schema.org/InStock',
       url: 'https://www.skufnya.com/product/aoi-todo-jujutsu-kaisen/',
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'UA',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+      },
+    });
+  });
+
+  it('политика возврата размечена запретом, как на странице условий', () => {
+    const jsonLd = buildProductJsonLd(product(), resolveImageUrl) as any;
+
+    // Merchant Center сверяет фид с витриной: если разметка пообещает возврат,
+    // которого страница /returns не даёт, объявления снимут за расхождение.
+    assert.deepEqual(jsonLd.offers.hasMerchantReturnPolicy, {
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: 'UA',
+      returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
     });
   });
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import LocaleSwitcher from './LocaleSwitcher';
 import { getTranslator } from '../../i18n/translate';
 import { DEFAULT_LOCALE, type Locale } from '../../i18n/locales';
 import { buildLocalizedPath } from '../../i18n/paths';
@@ -411,6 +412,7 @@ export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale })
           </nav>
 
           <div className={styles.actions}>
+              <LocaleSwitcher />
             <button
               type="button"
               className={`${styles.iconBtn} ${styles.searchToggle} ${

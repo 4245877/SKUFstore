@@ -11,6 +11,7 @@ import {
   type CatalogResinColor,
 } from './api';
 import { validateCatalogSnapshot } from './snapshot-integrity';
+import { collectSnapshotOnce } from './snapshot-collection';
 
 /**
  * Снимок каталога для статической сборки витрины.
@@ -455,7 +456,11 @@ async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: numbe
 let collecting: Promise<{ slugs: string[]; count: number }> | null = null;
 
 export function loadCatalogSnapshot(): Promise<{ slugs: string[]; count: number }> {
-  collecting ??= collectCatalogSnapshot();
+  collecting ??= collectSnapshotOnce({
+    directory: path.dirname(SNAPSHOT_PATH),
+    buildId: process.env.SKUF_CATALOG_BUILD_ID ?? '',
+    collect: collectCatalogSnapshot,
+  });
 
   return collecting;
 }
