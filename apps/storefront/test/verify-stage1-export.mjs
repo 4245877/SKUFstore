@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { buildProductUrl } from '../src/lib/product-meta.ts';
 import { sitemapUrls } from '../src/lib/sitemap-urls.ts';
-import { PUBLISHED_LOCALES } from '../src/i18n/locales.ts';
+import { DEFAULT_LOCALE, PUBLISHED_LOCALES } from '../src/i18n/locales.ts';
+import { getTranslator } from '../src/i18n/translate.ts';
 import { buildLocalizedPath } from '../src/i18n/paths.ts';
 import { SITE_URL } from '../src/i18n/metadata.ts';
 
@@ -23,6 +24,28 @@ for (const url of urls) {
 }
 for (const locale of ['uk', 'de']) assert.equal(fs.existsSync(path.join(root, locale)), false);
 assert.ok(fs.existsSync(path.join(root, 'en', 'index.html')), 'Missing EN export root');
+
+/**
+ * The global 404 is the one document outside both locale trees: a static host
+ * has a single one, and Pages answers every unmatched URL with it, /en/ ones
+ * included, so it is the default locale's page. The per-file pass below already
+ * demands uk of it, but only these checks tell the storefront's own 404 apart
+ * from Next's unbranded fallback — which is silently what the export carries
+ * whenever the app has no root not-found route to own that URL.
+ */
+const notFound = ['404.html', '404/index.html'].map((relative) => {
+  const file = path.join(root, relative);
+  assert.ok(fs.existsSync(file), `Missing global 404: ${relative}`);
+  return fs.readFileSync(file, 'utf8');
+});
+assert.equal(notFound[0], notFound[1], 'The /404.html and /404/ documents differ');
+assert.doesNotMatch(notFound[0], /This page could not be found/, 'The global 404 is the Next.js fallback, not the storefront page');
+assert.match(notFound[0], /<html[^>]+lang="uk"/, 'The global 404 is not the default-locale document');
+assert.ok(notFound[0].includes(getTranslator(DEFAULT_LOCALE)('errors.notFound')), 'The global 404 carries no Ukrainian message');
+assert.match(notFound[0], /<header[\s>]/, 'The global 404 is not rendered inside the storefront shell');
+// It answers under every unmatched URL, so it may never be indexed or claim one.
+assert.match(notFound[0], /<meta name="robots" content="noindex"/, 'The global 404 must stay out of the index');
+assert.doesNotMatch(notFound[0], /rel="canonical"|rel="alternate"/, 'The global 404 must claim neither a canonical nor alternates');
 
 function htmlFiles(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
