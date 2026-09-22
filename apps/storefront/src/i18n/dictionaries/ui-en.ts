@@ -551,7 +551,7 @@ export const uiEn = {
   "content.messageUsOn": ", message us on",
   "content.orViber": "or Viber.",
   "content.includeYourOrderNumberYourNameAnd": "Include your order number, your name and a short description of what exactly is wrong with the product.",
-  "content.attachPhotosOfTheProductAndPackaging": "Attach photos of the product, the packaging and the defect itself — we cannot review a request without photos.",
+  "content.attachPhotosOfTheProductAndPackaging": "For a faster review, please attach photos of the product, the packaging, and the defect, if possible.",
   "content.waitForConfirmationFromOurTeamBefore_602": "Wait for confirmation from our team before sending the product back.",
   "content.returnDelivery": "Return delivery",
   "content.refunds": "Refunds",
