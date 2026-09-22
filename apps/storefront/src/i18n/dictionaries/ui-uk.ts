@@ -551,7 +551,7 @@ export const uiUk = {
   "content.messageUsOn": ", у",
   "content.orViber": "або Viber.",
   "content.includeYourOrderNumberYourNameAnd": "Вкажи номер замовлення, ім’я та коротко опиши, у чому саме проблема з товаром.",
-  "content.attachPhotosOfTheProductAndPackaging": "Додай фото товару, пакування та самого дефекту — без фото розглянути звернення неможливо.",
+  "content.attachPhotosOfTheProductAndPackaging": "Для швидкого розгляду звернення, будь ласка, додай фото товару, пакування та виявленого дефекту, якщо це можливо.",
   "content.waitForConfirmationFromOurTeamBefore_602": "Дочекайся підтвердження від менеджера перед відправкою товару назад.",
   "content.returnDelivery": "Доставка при поверненні",
   "content.refunds": "Повернення коштів",
