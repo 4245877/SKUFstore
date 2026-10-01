@@ -186,9 +186,11 @@
   transition: color 0.18s, border-color 0.18s;
 }
 
-.list li a:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .list li a:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 /* ── Inline link ─────────────────────────── */
@@ -199,9 +201,11 @@
   transition: color 0.18s, border-color 0.18s;
 }
 
-.link:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .link:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 /* ── Note / disclaimer ───────────────────── */

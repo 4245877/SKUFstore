@@ -17,7 +17,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 15% 80%, rgba(201, 107, 107, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 15% 80%, rgba(178, 80, 80, 0.07) 0%, transparent 60%),
     radial-gradient(ellipse 50% 40% at 85% 20%, rgba(201, 169, 110, 0.06) 0%, transparent 60%);
   pointer-events: none;
 }
@@ -61,8 +61,10 @@
   transition: opacity 0.2s;
 }
 
-.logo:hover {
-  opacity: 0.8;
+@media (hover: hover) {
+  .logo:hover {
+    opacity: 0.8;
+  }
 }
 
 .logoMark {
@@ -115,8 +117,10 @@
   word-break: break-word;
 }
 
-.contactItem:hover {
-  color: var(--rose);
+@media (hover: hover) {
+  .contactItem:hover {
+    color: var(--rose);
+  }
 }
 
 .contactIcon {
@@ -153,11 +157,13 @@
   text-decoration: none;
 }
 
-.socialBtn:hover {
-  background: rgba(242, 201, 201, 0.12);
-  border-color: rgba(242, 201, 201, 0.35);
-  color: var(--blush);
-  transform: translateY(-3px);
+@media (hover: hover) {
+  .socialBtn:hover {
+    background: rgba(242, 201, 201, 0.12);
+    border-color: rgba(242, 201, 201, 0.35);
+    color: var(--blush);
+    transform: translateY(-3px);
+  }
 }
 
 /* ── Nav columns ──────────────────────────── */
@@ -211,9 +217,11 @@
   position: relative;
 }
 
-.navLink:hover {
-  color: var(--blush);
-  gap: 12px;
+@media (hover: hover) {
+  .navLink:hover {
+    color: var(--blush);
+    gap: 12px;
+  }
 }
 
 .navDot {
@@ -226,9 +234,11 @@
   transition: background 0.18s, opacity 0.18s;
 }
 
-.navLink:hover .navDot {
-  background: var(--rose);
-  opacity: 1;
+@media (hover: hover) {
+  .navLink:hover .navDot {
+    background: var(--rose);
+    opacity: 1;
+  }
 }
 
 /* ── Bottom bar ───────────────────────────── */
@@ -274,8 +284,10 @@
   transition: color 0.2s;
 }
 
-.legalLink:hover {
-  color: var(--blush);
+@media (hover: hover) {
+  .legalLink:hover {
+    color: var(--blush);
+  }
 }
 
 /* ── Payment badges ───────────────────────── */
@@ -299,9 +311,11 @@
   transition: border-color 0.2s, color 0.2s;
 }
 
-.paymentBadge:hover {
-  border-color: rgba(242, 201, 201, 0.35);
-  color: rgba(253, 248, 243, 0.85);
+@media (hover: hover) {
+  .paymentBadge:hover {
+    border-color: rgba(242, 201, 201, 0.35);
+    color: rgba(253, 248, 243, 0.85);
+  }
 }
 
 /* ── Petal decoration ─────────────────────── */
@@ -396,5 +410,13 @@
 
   .payments {
     gap: 6px;
+  }
+}
+
+/* ── Тач-екрани: зони дотику не менші за 44px ── */
+@media (pointer: coarse) {
+  .socialBtn {
+    width: var(--hit-min);
+    height: var(--hit-min);
   }
 }

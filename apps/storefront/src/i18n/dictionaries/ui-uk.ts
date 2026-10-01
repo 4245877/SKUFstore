@@ -217,6 +217,7 @@ export const uiUk = {
   "auth.continueWithGoogle": "Продовжити через Google",
   "auth.continueWithFacebook": "Продовжити через Facebook",
   "auth.registerWithEmail": "Реєстрація через електронну пошту",
+  "auth.signInWithEmail": "Вхід через електронну пошту",
   "auth.registrationForm": "Форма реєстрації",
   "auth.firstName": "Ім’я",
   "auth.sakura": "Сакура",

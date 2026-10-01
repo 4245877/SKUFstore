@@ -412,7 +412,7 @@ export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale })
           </nav>
 
           <div className={styles.actions}>
-              <LocaleSwitcher />
+            <LocaleSwitcher className={styles.localeDesktop} />
             <button
               type="button"
               className={`${styles.iconBtn} ${styles.searchToggle} ${
@@ -672,6 +672,12 @@ export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale })
           </div>
 
           <div className={styles.mobileNavFooter}>
+            {/* На вузьких екранах перемикач мови живе тут, а не в шапці */}
+            <div className={styles.mobileLocale}>
+              <p className={styles.mobileQuickTitle}>{t('header.language')}</p>
+              <LocaleSwitcher variant="full" tabIndex={mobileOpen ? 0 : -1} />
+            </div>
+
             <div className={styles.mobileNavLinks}>
               <Link href={href(accountHref)} tabIndex={mobileOpen ? 0 : -1} onClick={closeMobileMenu}>
                 {t('nav.personalAccount')}

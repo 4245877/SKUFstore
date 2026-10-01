@@ -180,9 +180,11 @@
   transition: transform 0.3s var(--ease-spring), box-shadow 0.3s;
 }
 
-.infoCard:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+@media (hover: hover) {
+  .infoCard:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 .infoCardIcon {
@@ -199,9 +201,11 @@
   transition: background 0.2s, border-color 0.2s;
 }
 
-.infoCard:hover .infoCardIcon {
-  background: var(--parchment);
-  border-color: var(--rose);
+@media (hover: hover) {
+  .infoCard:hover .infoCardIcon {
+    background: var(--parchment);
+    border-color: var(--rose);
+  }
 }
 
 .infoCardTitle {
@@ -238,10 +242,12 @@
   transition: color 0.2s, border-color 0.2s;
 }
 
-.infoCardLink:hover,
-.contactIntroLink:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .infoCardLink:hover,
+  .contactIntroLink:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 .infoCardLinkArrow,
@@ -249,9 +255,11 @@
   transition: transform 0.2s var(--ease-spring);
 }
 
-.infoCardLink:hover .infoCardLinkArrow,
-.contactIntroLink:hover .contactIntroLinkArrow {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .infoCardLink:hover .infoCardLinkArrow,
+  .contactIntroLink:hover .contactIntroLinkArrow {
+    transform: translateX(3px);
+  }
 }
 
 /* ── FAQ section ─────────────────────────── */
@@ -319,8 +327,10 @@
   transition: box-shadow 0.25s;
 }
 
-.faqItem:hover {
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) {
+  .faqItem:hover {
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 .faqQuestion {
@@ -338,8 +348,10 @@
   transition: background 0.15s;
 }
 
-.faqQuestion:hover {
-  background: var(--lace);
+@media (hover: hover) {
+  .faqQuestion:hover {
+    background: var(--lace);
+  }
 }
 
 .faqQuestionText {

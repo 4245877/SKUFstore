@@ -62,9 +62,11 @@
   transition: color 0.2s, border-color 0.2s;
 }
 
-.breadcrumbLink:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .breadcrumbLink:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 .breadcrumbDivider {
@@ -182,9 +184,9 @@
 }
 
 .statusCancelled {
-  background: rgba(201, 107, 107, 0.08);
+  background: rgba(178, 80, 80, 0.08);
   color: var(--deep-rose);
-  border-color: rgba(201, 107, 107, 0.22);
+  border-color: rgba(178, 80, 80, 0.22);
 }
 
 .statusAwaitingPayment {
@@ -287,8 +289,10 @@
   padding-top: 4px;
 }
 
-.itemRow:hover {
-  background: var(--lace);
+@media (hover: hover) {
+  .itemRow:hover {
+    background: var(--lace);
+  }
 }
 
 /* Avatar-style visual with first letter */
@@ -310,9 +314,11 @@
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 
-.itemRow:hover .itemVisual {
-  box-shadow: var(--shadow-rose);
-  border-color: var(--rose);
+@media (hover: hover) {
+  .itemRow:hover .itemVisual {
+    box-shadow: var(--shadow-rose);
+    border-color: var(--rose);
+  }
 }
 
 .itemContent {
@@ -333,8 +339,10 @@
   transition: color 0.2s;
 }
 
-.itemName:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .itemName:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .itemSubtitle {
@@ -466,21 +474,38 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--ink);
-  color: var(--cream);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  padding: 12px 24px;
-  border-radius: 2px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 24px;
+  border-radius: var(--btn-radius);
   transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
   margin-top: 8px;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.primaryLink:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+@media (hover: hover) {
+  .primaryLink:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.primaryLink:active:not(:disabled) {
+  transform: var(--btn-press);
+  box-shadow: none;
+}
+
+.primaryLink:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .breadcrumbLink:focus-visible,

@@ -69,6 +69,7 @@ export const uk = {
   "header.searchSubmit": "Шукати",
   "header.searchHint": "↵ Enter",
   "header.mobileNavigation": "Мобільна навігація",
+  "header.language": "Мова сайту",
   "header.mobileSearchPlaceholder": "Пошук...",
   "header.collections": "Каталог за добірками",
   "footer.shop": "Магазин",

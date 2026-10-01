@@ -130,7 +130,7 @@
   justify-content: center;
   color: var(--deep-rose);
   animation: floatY 5s ease-in-out infinite;
-  filter: drop-shadow(0 4px 12px rgba(201, 107, 107, 0.3));
+  filter: drop-shadow(0 4px 12px rgba(178, 80, 80, 0.3));
 }
 
 .brandName {
@@ -228,19 +228,21 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  padding: 15px 28px;
-  border-radius: 2px;
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 28px;
+  border-radius: var(--btn-radius);
   border: none;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
+  min-height: var(--btn-h-lg);
+  line-height: 1.2;
 }
 
 .primaryButton::before {
@@ -272,7 +274,7 @@
 }
 
 .primaryButton:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
   box-shadow: var(--shadow-sm);
 }
 
@@ -295,16 +297,18 @@
   justify-content: center;
   gap: 6px;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--btn-secondary-fg);
   font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  padding: 12px 20px;
-  border-radius: 2px;
-  border: 1px solid var(--border);
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 20px;
+  border-radius: var(--btn-radius);
+  border: 1px solid var(--btn-secondary-border);
   text-decoration: none;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
+  min-height: var(--btn-h-lg);
+  line-height: 1.2;
 }
 
 @media (hover: hover) {
@@ -497,4 +501,15 @@
 
 .secondaryButton {
   cursor: pointer;
+}
+
+.secondaryButton:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.secondaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }

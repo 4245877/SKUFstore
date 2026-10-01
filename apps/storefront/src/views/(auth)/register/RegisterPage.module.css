@@ -331,16 +331,20 @@
   text-decoration: none;
 }
 
-.backLink:hover {
-  color: var(--mauve);
+@media (hover: hover) {
+  .backLink:hover {
+    color: var(--mauve);
+  }
 }
 
 .backArrow {
   transition: transform 0.2s var(--ease-spring);
 }
 
-.backLink:hover .backArrow {
-  transform: translateX(-3px);
+@media (hover: hover) {
+  .backLink:hover .backArrow {
+    transform: translateX(-3px);
+  }
 }
 
 /* Form header */
@@ -397,9 +401,11 @@
   text-decoration: none;
 }
 
-.formSubtitleLink:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .formSubtitleLink:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 /* ── Divider ─────────────────────────────── */
@@ -497,7 +503,7 @@
 
 .input:focus {
   border-color: var(--rose);
-  box-shadow: 0 0 0 3px rgba(201, 107, 107, 0.09);
+  box-shadow: 0 0 0 3px rgba(178, 80, 80, 0.09);
   background: var(--lace);
 }
 
@@ -508,27 +514,35 @@
 .inputError,
 .input.inputError {
   border-color: var(--deep-rose);
-  box-shadow: 0 0 0 3px rgba(201, 107, 107, 0.12);
+  box-shadow: 0 0 0 3px rgba(178, 80, 80, 0.12);
 }
 
 /* Password toggle */
 .inputToggle {
   position: absolute;
-  right: 12px;
+  right: 3px;
   top: 50%;
   transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 15px;
-  opacity: 0.4;
-  padding: 4px;
-  transition: opacity 0.2s;
+  opacity: 0.6;
+  padding: 0;
+  transition: opacity 0.2s, background 0.2s;
   line-height: 1;
 }
 
-.inputToggle:hover {
-  opacity: 0.75;
+@media (hover: hover) {
+  .inputToggle:hover {
+    opacity: 0.75;
+  }
 }
 
 /* Strength meter */
@@ -648,24 +662,24 @@
   text-decoration: none;
 }
 
-.checkLabelLink:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .checkLabelLink:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 /* ── Submit Button ───────────────────────── */
 .submitBtn {
   position: relative;
   width: 100%;
-  height: 50px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border-radius: 2px;
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  border-radius: var(--btn-radius);
   border: none;
   cursor: pointer;
   display: flex;
@@ -679,6 +693,9 @@
   overflow: hidden;
   margin-top: 4px;
   isolation: isolate;
+  min-height: var(--btn-h-lg);
+  padding: 0 24px;
+  line-height: 1.2;
 }
 
 /* Shimmer effect */
@@ -700,18 +717,20 @@
   z-index: -1;
 }
 
-.submitBtn:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
+@media (hover: hover) {
+  .submitBtn:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
 
-.submitBtn:hover::after {
-  background-position: 200% center;
+  .submitBtn:hover::after {
+    background-position: 200% center;
+  }
 }
 
 .submitBtn:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
 }
 
 .submitBtn:disabled {
@@ -733,13 +752,98 @@
 }
 
 /* ── Global Error Alert ──────────────────── */
+/* Соцреєстрація — другорядні кнопки, головна дія лишається за формою */
+.socials {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.socialBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--btn-h-md);
+  padding: 0 24px;
+  background: var(--surface);
+  border: 1px solid var(--btn-secondary-border);
+  border-radius: var(--btn-radius);
+  font-family: var(--font-body);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  line-height: 1.2;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.2s var(--ease-spring);
+}
+
+@media (hover: hover) {
+  .socialBtn:hover {
+    border-color: var(--deep-rose);
+    background: var(--lace);
+    color: var(--deep-rose);
+    transform: translateY(-1px);
+  }
+}
+
+.socialBtn:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.socialBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Текстова дія (надіслати код ще раз) — у стилі посилань форми */
+.textButton {
+  align-self: flex-start;
+  margin-top: 10px;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--blush);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mauve);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+@media (hover: hover) {
+  .textButton:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
+}
+
+.textButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.alertSuccess {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(120, 180, 120, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(120, 180, 120, 0.1);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .alertError {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 13px 16px;
-  background: rgba(201, 107, 107, 0.08);
-  border: 1px solid rgba(201, 107, 107, 0.25);
+  background: rgba(178, 80, 80, 0.08);
+  border: 1px solid rgba(178, 80, 80, 0.25);
   border-radius: 2px;
   font-size: 13px;
   color: var(--deep-rose);
@@ -780,7 +884,7 @@
   background:
     radial-gradient(circle at center, rgba(242, 201, 201, 0.35) 0 28%, transparent 29%),
     radial-gradient(circle at center, rgba(201, 169, 110, 0.25) 0 45%, transparent 46%),
-    radial-gradient(circle at center, rgba(201, 107, 107, 0.16) 0 62%, transparent 63%);
+    radial-gradient(circle at center, rgba(178, 80, 80, 0.16) 0 62%, transparent 63%);
   filter: blur(0.2px);
 }
 

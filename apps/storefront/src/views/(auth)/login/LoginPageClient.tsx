@@ -271,6 +271,30 @@ export default function LoginPage() {
             </div>
           )}
 
+          <div className={styles.socials}>
+            <button
+              type="button"
+              className={styles.socialBtn}
+              onClick={() => handleSocialLogin('google')}
+              disabled={isLoading}
+            >
+              {t('auth.signInWithGoogle')} </button>
+
+            <button
+              type="button"
+              className={styles.socialBtn}
+              onClick={() => handleSocialLogin('facebook')}
+              disabled={isLoading}
+            >
+              {t('auth.signInWithFacebook')} </button>
+          </div>
+
+          <div className={styles.divider} role="separator">
+            <span className={styles.dividerLine} aria-hidden="true" />
+            <span className={styles.dividerText}>{t('auth.signInWithEmail')}</span>
+            <span className={styles.dividerLine} aria-hidden="true" />
+          </div>
+
           <form onSubmit={handleSubmit} noValidate>
             <div className={styles.fields}>
               <div className={styles.fieldGroup}>
@@ -383,24 +407,6 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
-
-          <div style={{ marginTop: 20, display: 'grid', gap: 12 }}>
-            <button
-              type="button"
-              className={styles.submitBtn}
-              onClick={() => handleSocialLogin('google')}
-              disabled={isLoading}
-            >
-              {t('auth.signInWithGoogle')} </button>
-
-            <button
-              type="button"
-              className={styles.submitBtn}
-              onClick={() => handleSocialLogin('facebook')}
-              disabled={isLoading}
-            >
-              {t('auth.signInWithFacebook')} </button>
-          </div>
 
           <div className={styles.divider} aria-hidden="true">
             <span className={styles.dividerLine} />

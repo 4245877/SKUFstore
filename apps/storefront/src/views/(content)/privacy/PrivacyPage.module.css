@@ -134,9 +134,11 @@
   animation: fadeSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-.section:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--neutral-400);
+@media (hover: hover) {
+  .section:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--neutral-400);
+  }
 }
 
 /* left accent bar */
@@ -153,8 +155,10 @@
   transition: opacity var(--transition-base);
 }
 
-.section:hover::before {
-  opacity: 1;
+@media (hover: hover) {
+  .section:hover::before {
+    opacity: 1;
+  }
 }
 
 /* stagger delays for each child section */
@@ -192,8 +196,10 @@
   transition: box-shadow var(--transition-fast);
 }
 
-.section:hover .sectionTitle::before {
-  box-shadow: 0 0 0 4px rgba(178, 86, 52, 0.2);
+@media (hover: hover) {
+  .section:hover .sectionTitle::before {
+    box-shadow: 0 0 0 4px rgba(178, 86, 52, 0.2);
+  }
 }
 
 .text {
@@ -237,9 +243,11 @@
   transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 
-.list li:hover::before {
-  opacity: 1;
-  transform: rotate(45deg) scale(1.2);
+@media (hover: hover) {
+  .list li:hover::before {
+    opacity: 1;
+    transform: rotate(45deg) scale(1.2);
+  }
 }
 
 /* ─── Link ───────────────────────────────────────────────────────────────── */
@@ -254,9 +262,11 @@
     text-decoration-color var(--transition-fast);
 }
 
-.link:hover {
-  color: var(--link-hover);
-  text-decoration-color: var(--link-hover);
+@media (hover: hover) {
+  .link:hover {
+    color: var(--link-hover);
+    text-decoration-color: var(--link-hover);
+  }
 }
 
 /* ─── Note / Footer callout ──────────────────────────────────────────────── */

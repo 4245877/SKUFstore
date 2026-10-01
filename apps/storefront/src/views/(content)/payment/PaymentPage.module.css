@@ -34,8 +34,10 @@
   transition: color 0.2s;
 }
 
-.breadcrumbItem:hover {
-  color: var(--mauve);
+@media (hover: hover) {
+  .breadcrumbItem:hover {
+    color: var(--mauve);
+  }
 }
 
 .breadcrumbSep {
@@ -201,8 +203,10 @@
   transition: box-shadow 0.3s;
 }
 
-.card:hover {
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) {
+  .card:hover {
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 .card:nth-child(1) { animation-delay: 0.2s; }
@@ -259,9 +263,11 @@
   transition: color 0.2s, border-color 0.2s;
 }
 
-.cardEdit:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .cardEdit:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 .cardBody {
@@ -316,13 +322,15 @@
   opacity: 0.7;
 }
 
-.input:hover {
-  border-color: var(--rose);
+@media (hover: hover) {
+  .input:hover {
+    border-color: var(--rose);
+  }
 }
 
 .input:focus {
   border-color: var(--deep-rose);
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.10);
+  box-shadow: 0 0 0 3px rgba(178,80,80,0.10);
   background: var(--lace);
 }
 
@@ -334,7 +342,7 @@
 
 .inputError {
   border-color: var(--deep-rose) !important;
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.10);
+  box-shadow: 0 0 0 3px rgba(178,80,80,0.10);
 }
 
 .fieldError {
@@ -364,13 +372,15 @@
   width: 100%;
 }
 
-.select:hover {
-  border-color: var(--rose);
+@media (hover: hover) {
+  .select:hover {
+    border-color: var(--rose);
+  }
 }
 
 .select:focus {
   border-color: var(--deep-rose);
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.10);
+  box-shadow: 0 0 0 3px rgba(178,80,80,0.10);
 }
 
 /* ── Shipping options ────────────────────── */
@@ -393,15 +403,17 @@
   position: relative;
 }
 
-.shippingOption:hover {
-  border-color: var(--rose);
-  background: var(--lace);
+@media (hover: hover) {
+  .shippingOption:hover {
+    border-color: var(--rose);
+    background: var(--lace);
+  }
 }
 
 .shippingOptionActive {
   border-color: var(--deep-rose);
   background: var(--lace);
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.08);
+  box-shadow: 0 0 0 3px rgba(178,80,80,0.08);
 }
 
 .shippingOption input[type="radio"] {
@@ -484,9 +496,11 @@
   border-right: none;
 }
 
-.payTab:hover {
-  background: var(--lace);
-  color: var(--charcoal);
+@media (hover: hover) {
+  .payTab:hover {
+    background: var(--lace);
+    color: var(--charcoal);
+  }
 }
 
 .payTabActive {
@@ -494,9 +508,11 @@
   color: var(--cream);
 }
 
-.payTabActive:hover {
-  background: var(--charcoal);
-  color: var(--cream);
+@media (hover: hover) {
+  .payTabActive:hover {
+    background: var(--charcoal);
+    color: var(--cream);
+  }
 }
 
 .payTabIcon {
@@ -548,9 +564,11 @@
   transition: border-color 0.2s, background 0.2s;
 }
 
-.savedCard:hover {
-  border-color: var(--rose);
-  background: var(--lace);
+@media (hover: hover) {
+  .savedCard:hover {
+    border-color: var(--rose);
+    background: var(--lace);
+  }
 }
 
 .savedCardActive {
@@ -608,9 +626,11 @@
   transition: color 0.2s, border-color 0.2s;
 }
 
-.newCardToggle:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .newCardToggle:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 /* ── Checkbox ────────────────────────────── */
@@ -642,9 +662,11 @@
   border-bottom: 1px solid var(--blush);
 }
 
-.checkLink:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .checkLink:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 /* ── Promo code ──────────────────────────── */
@@ -659,7 +681,7 @@
 
 .promoRow:focus-within {
   border-color: var(--deep-rose);
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.10);
+  box-shadow: 0 0 0 3px rgba(178,80,80,0.10);
 }
 
 .promoInput {
@@ -684,18 +706,31 @@
   border-left: 1px solid var(--border);
   color: var(--mauve);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
   padding: 11px 18px;
   white-space: nowrap;
   transition: background 0.2s, color 0.2s;
   cursor: pointer;
+  border-radius: var(--btn-radius);
 }
 
-.promoBtn:hover {
-  background: var(--blush);
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .promoBtn:hover {
+    background: var(--blush);
+    color: var(--deep-rose);
+  }
+}
+
+.promoBtn:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.promoBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .promoApplied {
@@ -722,8 +757,10 @@
   transition: color 0.2s;
 }
 
-.promoRemove:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .promoRemove:hover {
+    color: var(--deep-rose);
+  }
 }
 
 /* ── Order summary sidebar ───────────────── */
@@ -934,18 +971,20 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  padding: 16px 28px;
-  border-radius: 2px;
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 28px;
+  border-radius: var(--btn-radius);
   cursor: pointer;
   transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
   position: relative;
   overflow: hidden;
+  min-height: var(--btn-h-lg);
+  line-height: 1.2;
 }
 
 .submitBtn::before {
@@ -963,18 +1002,27 @@
   transition: background-position 0.6s;
 }
 
-.submitBtn:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
+@media (hover: hover) {
+  .submitBtn:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
 
-.submitBtn:hover::before {
-  background-position: 200% center;
+  .submitBtn:hover::before {
+    background-position: 200% center;
+  }
 }
 
 .submitBtn:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
+}
+
+.submitBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .submitBtnLoading {
@@ -1160,39 +1208,77 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--ink);
-  color: var(--cream);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  padding: 12px 24px;
-  border-radius: 2px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 24px;
+  border-radius: var(--btn-radius);
   transition: background 0.2s, transform 0.2s var(--ease-spring);
   cursor: pointer;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.confirmBtnPrimary:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .confirmBtnPrimary:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+  }
+}
+
+.confirmBtnPrimary:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.confirmBtnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .confirmBtnSecondary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--mauve);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  color: var(--btn-secondary-fg);
   border-bottom: 1px solid var(--blush);
   padding-bottom: 1px;
   transition: color 0.2s, border-color 0.2s;
   cursor: pointer;
   align-self: center;
+  letter-spacing: var(--btn-ls);
+  border-radius: var(--btn-radius);
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  padding: 0 24px;
+  line-height: 1.2;
+  background: transparent;
+  border: 1px solid var(--btn-secondary-border);
 }
 
-.confirmBtnSecondary:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .confirmBtnSecondary:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+    background: var(--lace);
+  }
+}
+
+.confirmBtnSecondary:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.confirmBtnSecondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ── Responsive ──────────────────────────── */

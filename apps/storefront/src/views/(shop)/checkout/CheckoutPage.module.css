@@ -27,8 +27,10 @@
   text-decoration: none;
 }
 
-.breadcrumb a:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .breadcrumb a:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .header {
@@ -192,8 +194,10 @@
   transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
 }
 
-.optionCard:hover {
-  border-color: var(--rose);
+@media (hover: hover) {
+  .optionCard:hover {
+    border-color: var(--rose);
+  }
 }
 
 .optionCardActive {
@@ -271,10 +275,12 @@
   gap: 3px;
   padding: 10px 12px;
 }
-.citySuggestionButton:hover,
-.warehouseSuggestionButton:hover {
-  border-color: var(--rose);
-  background: var(--lace);
+@media (hover: hover) {
+  .citySuggestionButton:hover,
+  .warehouseSuggestionButton:hover {
+    border-color: var(--rose);
+    background: var(--lace);
+  }
 }
 .citySuggestionButton strong,
 .warehouseSuggestionMain strong {
@@ -411,8 +417,10 @@
   white-space: nowrap;
 }
 
-.itemInfo a:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .itemInfo a:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .itemInfo small,
@@ -476,24 +484,35 @@
 
 .submitButton {
   width: calc(100% - 48px);
-  min-height: 48px;
+  min-height: var(--btn-h-lg);
   margin: 0 24px;
-  padding: 12px 18px;
+  padding: 0 18px;
   border: 0;
-  border-radius: 2px;
-  background: var(--ink);
-  color: var(--cream);
+  border-radius: var(--btn-radius);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
   cursor: pointer;
   transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+  letter-spacing: var(--btn-ls);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
 }
 
-.submitButton:hover:not(:disabled) {
-  background: var(--charcoal);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+@media (hover: hover) {
+  .submitButton:hover:not(:disabled) {
+    background: var(--charcoal);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.submitButton:active:not(:disabled) {
+  transform: var(--btn-press);
 }
 
 .submitButton:disabled {
@@ -514,8 +533,10 @@
   text-decoration: underline;
 }
 
-.legalNote a:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .legalNote a:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .backLink {
@@ -527,8 +548,10 @@
   text-decoration: none;
 }
 
-.backLink:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .backLink:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .loading {
@@ -564,11 +587,29 @@
 
 .primaryLink {
   display: inline-flex;
-  padding: 13px 22px;
-  border-radius: 2px;
-  background: var(--ink);
-  color: var(--cream);
+  padding: 0 22px;
+  border-radius: var(--btn-radius);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   text-decoration: none;
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  align-items: center;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
+  font-size: var(--btn-fs);
+}
+
+.primaryLink:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.primaryLink:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .submitButton:focus-visible,
@@ -581,7 +622,7 @@
 .citySuggestionButton:focus-visible,
 .warehouseSuggestionButton:focus-visible,
 .optionCard:focus-within {
-  outline: 2px solid var(--rose);
+  outline: 2px solid var(--deep-rose);
   outline-offset: 3px;
 }
 

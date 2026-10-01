@@ -172,9 +172,11 @@
 .section:nth-child(5) { animation-delay: 0.25s; }
 .section:nth-child(6) { animation-delay: 0.30s; }
 
-.section:hover {
-  box-shadow: var(--shadow-md), 0 0 0 1px var(--border);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .section:hover {
+    box-shadow: var(--shadow-md), 0 0 0 1px var(--border);
+    transform: translateY(-2px);
+  }
 }
 
 /* Decorative left accent stripe */
@@ -191,8 +193,10 @@
   transition: opacity 0.3s;
 }
 
-.section:hover::before {
-  opacity: 1;
+@media (hover: hover) {
+  .section:hover::before {
+    opacity: 1;
+  }
 }
 
 /* Corner lace flourish */
@@ -208,9 +212,11 @@
   pointer-events: none;
 }
 
-.section:hover::after {
-  opacity: 0.9;
-  transform: rotate(15deg) scale(1.15);
+@media (hover: hover) {
+  .section:hover::after {
+    opacity: 0.9;
+    transform: rotate(15deg) scale(1.15);
+  }
 }
 
 /* ── Section typography ── */
@@ -286,9 +292,11 @@
   transition: transform 0.3s var(--ease-spring), background 0.3s;
 }
 
-.list li:hover::before {
-  transform: rotate(135deg) scale(1.3);
-  background: linear-gradient(135deg, var(--gold), var(--deep-rose));
+@media (hover: hover) {
+  .list li:hover::before {
+    transform: rotate(135deg) scale(1.3);
+    background: linear-gradient(135deg, var(--gold), var(--deep-rose));
+  }
 }
 
 /* ── Links ── */
@@ -313,12 +321,14 @@
   border-radius: 99px;
 }
 
-.link:hover {
-  color: var(--mauve);
-}
+@media (hover: hover) {
+  .link:hover {
+    color: var(--mauve);
+  }
 
-.link:hover::after {
-  transform: scaleX(1);
+  .link:hover::after {
+    transform: scaleX(1);
+  }
 }
 
 /* ── Note / callout ── */

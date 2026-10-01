@@ -26,11 +26,13 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
 }
 
-.pageBtn:hover {
-  background: var(--surface-alt);
-  border-color: var(--rose);
-  color: var(--ink);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .pageBtn:hover {
+    background: var(--surface-alt);
+    border-color: var(--rose);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
 }
 
 .pageBtnActive {
@@ -40,10 +42,12 @@
   cursor: default;
 }
 
-.pageBtnActive:hover {
-  background: var(--charcoal);
-  border-color: var(--charcoal);
-  transform: none;
+@media (hover: hover) {
+  .pageBtnActive:hover {
+    background: var(--charcoal);
+    border-color: var(--charcoal);
+    transform: none;
+  }
 }
 
 .pageBtnDisabled {
@@ -59,4 +63,16 @@
   display: flex;
   align-items: center;
   height: 36px;
+}
+
+/* ── Тач-екрани: зони дотику не менші за 44px ── */
+@media (pointer: coarse) {
+  .pageBtn {
+    min-width: var(--hit-min);
+    height: var(--hit-min);
+  }
+
+  .pageDots {
+    height: var(--hit-min);
+  }
 }

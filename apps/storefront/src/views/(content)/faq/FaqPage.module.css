@@ -274,9 +274,11 @@
   display: none;
 }
 
-.summary:hover {
-  background: var(--surface-alt);
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .summary:hover {
+    background: var(--surface-alt);
+    color: var(--deep-rose);
+  }
 }
 
 .summaryText {
@@ -381,38 +383,72 @@
   gap: 8px;
   background: var(--gold);
   color: var(--ink);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 13px 26px;
-  border-radius: 2px;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 26px;
+  border-radius: var(--btn-radius);
   white-space: nowrap;
   text-decoration: none;
   transition: background 0.2s, transform 0.2s var(--ease-spring);
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.primaryLink:hover {
-  background: var(--gold-light);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .primaryLink:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+  }
+}
+
+.primaryLink:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.primaryLink:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .secondaryLink {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
   color: rgba(253,248,243,0.75);
   border-bottom: 1px solid rgba(253,248,243,0.25);
   padding-bottom: 2px;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--btn-ls);
   text-decoration: none;
   transition: color 0.2s, border-color 0.2s;
+  border-radius: var(--btn-radius);
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  padding: 0 24px;
+  line-height: 1.2;
 }
 
-.secondaryLink:hover {
-  color: var(--gold-light);
-  border-color: var(--gold-light);
+@media (hover: hover) {
+  .secondaryLink:hover {
+    color: var(--gold-light);
+    border-color: var(--gold-light);
+  }
+}
+
+.secondaryLink:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.secondaryLink:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .summary:focus-visible,

@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════════
+   SKUFNYA — перемикач мови
+   Сегментований контрол у ритмі шапки: активна мова — чорнильна
+   «стрічка», як фартух на формі покоївки; інша — тихе посилання.
+   ═══════════════════════════════════════════ */
+
+.switcher {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 32px;
+  padding: 2px;
+  margin-right: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--text-muted);
+  transition:
+    background 0.18s,
+    color 0.18s,
+    transform 0.18s var(--ease-spring);
+}
+
+.current {
+  background: var(--ink);
+  color: var(--cream);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .link:hover {
+    background: var(--lace);
+    color: var(--deep-rose);
+  }
+}
+
+.link:active {
+  transform: var(--btn-press);
+}
+
+.link:focus-visible {
+  outline-offset: 2px;
+}
+
+/* На тач-екранах зона дотику більша за видимий сегмент */
+@media (pointer: coarse) {
+  .link::after {
+    content: '';
+    position: absolute;
+    inset: -7px -2px;
+  }
+}
+
+/* ── Повний варіант для мобільного меню ───── */
+.full {
+  display: flex;
+  width: 100%;
+  height: 48px;
+  margin: 0;
+  padding: 3px;
+}
+
+.full .option {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.full .link::after {
+  content: none;
+}

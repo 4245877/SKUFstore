@@ -256,10 +256,10 @@ export default function RegisterPage() {
             </p>
           </header>
 
-          <div style={{ display: 'grid', gap: 12, marginBottom: 20 }}>
+          <div className={s.socials}>
             <button
               type="button"
-              className={s.submitBtn}
+              className={s.socialBtn}
               onClick={() => handleSocialRegister('google')}
               disabled={loading}
             >
@@ -267,7 +267,7 @@ export default function RegisterPage() {
 
             <button
               type="button"
-              className={s.submitBtn}
+              className={s.socialBtn}
               onClick={() => handleSocialRegister('facebook')}
               disabled={loading}
             >
@@ -287,16 +287,7 @@ export default function RegisterPage() {
           )}
 
           {successMessage && (
-            <div
-              role="status"
-              style={{
-                marginBottom: 16,
-                padding: '12px 14px',
-                borderRadius: 14,
-                border: '1px solid rgba(120,180,120,0.35)',
-                background: 'rgba(120,180,120,0.10)',
-              }}
-            >
+            <div role="status" className={s.alertSuccess}>
               {successMessage}
             </div>
           )}
@@ -373,17 +364,9 @@ export default function RegisterPage() {
 
                 <button
                   type="button"
+                  className={s.textButton}
                   onClick={handleResendCode}
                   disabled={loading}
-                  style={{
-                    marginTop: 10,
-                    background: 'transparent',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                    font: 'inherit',
-                  }}
                 >
                   {t('auth.resendCode')} </button>
               </div>

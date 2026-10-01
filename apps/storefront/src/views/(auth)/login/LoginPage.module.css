@@ -150,7 +150,7 @@
   position: absolute;
   inset: -10px -10px -10px 10px;
   border: 1px solid rgba(242, 201, 201, 0.25);
-  border-radius: 24px;
+  border-radius: var(--radius-md);
 }
 
 .figureInner {
@@ -159,7 +159,7 @@
   padding: 24px;
   background: linear-gradient(160deg, rgba(242, 201, 201, 0.12) 0%, rgba(201, 169, 110, 0.08) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -426,8 +426,10 @@
   transition: color 0.15s;
 }
 
-.labelHint:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .labelHint:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .inputWrap {
@@ -452,7 +454,7 @@
   padding: 0 44px 0 42px;
   background: var(--surface);
   border: 1.5px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--text-primary);
@@ -465,14 +467,16 @@
   opacity: 0.6;
 }
 
-.input:hover {
-  border-color: var(--rose);
+@media (hover: hover) {
+  .input:hover {
+    border-color: var(--rose);
+  }
 }
 
 .input:focus {
   border-color: var(--deep-rose);
   background: #fff;
-  box-shadow: 0 0 0 4px rgba(201, 107, 107, 0.1);
+  box-shadow: 0 0 0 4px rgba(178, 80, 80, 0.1);
 }
 
 .input:focus ~ .inputFocusBar,
@@ -492,7 +496,7 @@
   right: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--deep-rose), var(--mauve));
-  border-radius: 0 0 14px 14px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s var(--ease-out-expo);
@@ -502,24 +506,26 @@
 /* Eye toggle for password */
 .eyeBtn {
   position: absolute;
-  right: 10px;
-  width: 32px;
-  height: 32px;
+  right: 6px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  opacity: 0.45;
+  opacity: 0.6;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   transition: opacity 0.15s, background 0.15s;
   background: none;
   border: none;
 }
 
-.eyeBtn:hover {
-  opacity: 0.85;
-  background: var(--parchment);
+@media (hover: hover) {
+  .eyeBtn:hover {
+    opacity: 0.85;
+    background: var(--parchment);
+  }
 }
 
 /* Input error state */
@@ -564,7 +570,7 @@
   width: 20px;
   height: 20px;
   border: 1.5px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   display: flex;
   align-items: center;
@@ -593,16 +599,14 @@
 
 .submitBtn {
   width: 100%;
-  height: 52px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: none;
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
   border: none;
-  border-radius: 14px;
+  border-radius: var(--btn-radius);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -611,6 +615,9 @@
   position: relative;
   overflow: hidden;
   transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
+  min-height: var(--btn-h-lg);
+  padding: 0 24px;
+  line-height: 1.2;
 }
 
 /* Shimmer sweep on hover */
@@ -629,18 +636,20 @@
   transition: background-position 0.55s ease;
 }
 
-.submitBtn:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
+@media (hover: hover) {
+  .submitBtn:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
 
-.submitBtn:hover::after {
-  background-position: 200% center;
+  .submitBtn:hover::after {
+    background-position: 200% center;
+  }
 }
 
 .submitBtn:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
   box-shadow: var(--shadow-xs);
 }
 
@@ -655,8 +664,10 @@
   font-size: 16px;
 }
 
-.submitBtn:hover .submitArrow {
-  transform: translateX(4px);
+@media (hover: hover) {
+  .submitBtn:hover .submitArrow {
+    transform: translateX(4px);
+  }
 }
 
 /* Loading spinner inside button */
@@ -676,7 +687,7 @@
   align-items: center;
   gap: 14px;
   margin: 24px 0;
-  animation: fadeIn 0.5s var(--ease-out-expo) 0.5s both;
+  animation: fadeIn 0.5s var(--ease-out-expo) 0.25s both;
 }
 
 .dividerLine {
@@ -694,33 +705,51 @@
 }
 
 /* ── Social logins ───────────────────────── */
+/* Соцвходи — другорядні кнопки над формою, як і на реєстрації */
 .socials {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
-  animation: fadeUp 0.7s var(--ease-out-expo) 0.5s both;
+  animation: fadeUp 0.7s var(--ease-out-expo) 0.2s both;
 }
 
 .socialBtn {
-  height: 44px;
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
+  border: 1px solid var(--btn-secondary-border);
+  border-radius: var(--btn-radius);
   background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
   color: var(--text-secondary);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, transform 0.2s var(--ease-spring);
+  letter-spacing: var(--btn-ls);
+  min-height: var(--btn-h-md);
+  padding: 0 24px;
+  line-height: 1.2;
 }
 
-.socialBtn:hover {
-  border-color: var(--rose);
-  background: var(--lace);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .socialBtn:hover {
+    border-color: var(--deep-rose);
+    background: var(--lace);
+    transform: translateY(-1px);
+    color: var(--deep-rose);
+  }
+}
+
+.socialBtn:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.socialBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .socialIcon {
@@ -745,9 +774,11 @@
   transition: color 0.15s, border-color 0.15s;
 }
 
-.formFooterLink:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
+@media (hover: hover) {
+  .formFooterLink:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 }
 
 /* ── Alert / global error ────────────────── */
@@ -758,7 +789,7 @@
   background: #fff4f4;
   border: 1px solid #f5c0c0;
   border-left: 3px solid var(--deep-rose);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 12px 14px;
   margin-bottom: 20px;
   font-size: 13px;
@@ -808,19 +839,23 @@
 .backLink:focus-visible,
 .eyeBtn:focus-visible,
 .formFooterLink:focus-visible {
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 
-.backLink:hover {
-  color: var(--gold-light);
+@media (hover: hover) {
+  .backLink:hover {
+    color: var(--gold-light);
+  }
 }
 
 .backArrow {
   transition: transform 0.2s var(--ease-spring);
 }
 
-.backLink:hover .backArrow {
-  transform: translateX(-3px);
+@media (hover: hover) {
+  .backLink:hover .backArrow {
+    transform: translateX(-3px);
+  }
 }
 
 /* ── Trust badges ────────────────────────── */

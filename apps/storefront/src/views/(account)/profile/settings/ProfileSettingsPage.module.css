@@ -35,8 +35,10 @@
   transition: color 0.18s;
 }
 
-.breadcrumbLink:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .breadcrumbLink:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .breadcrumbSep {
@@ -130,8 +132,10 @@
   transition: box-shadow 0.3s;
 }
 
-.card:hover {
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) {
+  .card:hover {
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 /* subtle top accent line */
@@ -147,8 +151,10 @@
   transition: opacity 0.3s;
 }
 
-.card:hover::before {
-  opacity: 1;
+@media (hover: hover) {
+  .card:hover::before {
+    opacity: 1;
+  }
 }
 
 /* ── Card head ───────────────────────────── */
@@ -249,13 +255,15 @@
   color: var(--silver);
 }
 
-.input:hover {
-  border-color: var(--rose);
+@media (hover: hover) {
+  .input:hover {
+    border-color: var(--rose);
+  }
 }
 
 .input:focus {
   border-color: var(--deep-rose);
-  box-shadow: 0 0 0 3px rgba(201, 107, 107, 0.10);
+  box-shadow: 0 0 0 3px rgba(178, 80, 80, 0.10);
 }
 
 /* ── Actions ─────────────────────────────── */
@@ -272,19 +280,22 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  padding: 11px 24px;
-  border-radius: 2px;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 24px;
+  border-radius: var(--btn-radius);
   border: 1px solid transparent;
   transition: background 0.18s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
 .primaryButton::after {
@@ -302,18 +313,20 @@
   transition: background-position 0.5s;
 }
 
-.primaryButton:hover {
-  background: var(--charcoal);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
+@media (hover: hover) {
+  .primaryButton:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
 
-.primaryButton:hover::after {
-  background-position: 200% center;
+  .primaryButton:hover::after {
+    background-position: 200% center;
+  }
 }
 
 .primaryButton:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
 }
 
 /* Secondary button */
@@ -322,27 +335,32 @@
   align-items: center;
   gap: 8px;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--btn-secondary-fg);
   font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  padding: 10px 20px;
-  border-radius: 2px;
-  border: 1px solid var(--border);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 20px;
+  border-radius: var(--btn-radius);
+  border: 1px solid var(--btn-secondary-border);
   transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.2s var(--ease-spring);
   cursor: pointer;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.secondaryButton:hover {
-  background: var(--parchment);
-  border-color: var(--rose);
-  color: var(--charcoal);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .secondaryButton:hover {
+    background: var(--lace);
+    border-color: var(--deep-rose);
+    color: var(--deep-rose);
+    transform: translateY(-1px);
+  }
 }
 
 .secondaryButton:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
 }
 
 /* ── Security section ────────────────────── */
@@ -402,8 +420,10 @@
   border-bottom: none;
 }
 
-.toggleRow:hover .toggleTitle {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .toggleRow:hover .toggleTitle {
+    color: var(--deep-rose);
+  }
 }
 
 .toggleTitle {
@@ -454,7 +474,7 @@
 
 .toggle:checked::before {
   transform: translateX(18px);
-  box-shadow: 0 1px 6px rgba(201, 107, 107, 0.35);
+  box-shadow: 0 1px 6px rgba(178, 80, 80, 0.35);
 }
 
 .toggle:focus-visible {
@@ -493,24 +513,29 @@
   background: transparent;
   color: #b03030;
   font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  padding: 10px 20px;
-  border-radius: 2px;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 20px;
+  border-radius: var(--btn-radius);
   border: 1px solid #e0a0a0;
   cursor: pointer;
   transition: background 0.18s, border-color 0.18s, transform 0.2s var(--ease-spring);
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.dangerButton:hover {
-  background: #fdf0f0;
-  border-color: #c05050;
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .dangerButton:hover {
+    background: #fdf0f0;
+    border-color: #c05050;
+    transform: translateY(-1px);
+  }
 }
 
 .dangerButton:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
 }
 
 /* ── Sidebar ─────────────────────────────── */
@@ -533,8 +558,10 @@
   transition: box-shadow 0.3s;
 }
 
-.sideCard:hover {
-  box-shadow: var(--shadow-xs);
+@media (hover: hover) {
+  .sideCard:hover {
+    box-shadow: var(--shadow-xs);
+  }
 }
 
 /* soft lace corner decoration */
@@ -602,14 +629,16 @@
   transition: transform 0.2s var(--ease-spring);
 }
 
-.sideLink:hover {
-  background: var(--lace);
-  color: var(--deep-rose);
-  padding-left: 16px;
-}
+@media (hover: hover) {
+  .sideLink:hover {
+    background: var(--lace);
+    color: var(--deep-rose);
+    padding-left: 16px;
+  }
 
-.sideLink:hover::before {
-  transform: translateY(-50%) scaleY(1);
+  .sideLink:hover::before {
+    transform: translateY(-50%) scaleY(1);
+  }
 }
 
 .sideText {
@@ -781,9 +810,11 @@
   display: none;
 }
 
-.primaryButton:disabled:hover,
-.secondaryButton:disabled:hover,
-.dangerButton:disabled:hover {
-  transform: none;
-  box-shadow: none;
+@media (hover: hover) {
+  .primaryButton:disabled:hover,
+  .secondaryButton:disabled:hover,
+  .dangerButton:disabled:hover {
+    transform: none;
+    box-shadow: none;
+  }
 }

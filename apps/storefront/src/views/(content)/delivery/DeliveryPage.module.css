@@ -81,8 +81,10 @@
   transition: color 0.2s;
 }
 
-.breadcrumbLink:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .breadcrumbLink:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .breadcrumbSep {
@@ -251,8 +253,10 @@
   transition: background 0.15s;
 }
 
-.zonesTable tbody tr:hover {
-  background: var(--lace);
+@media (hover: hover) {
+  .zonesTable tbody tr:hover {
+    background: var(--lace);
+  }
 }
 
 .zoneRegion {
@@ -348,19 +352,21 @@
   transition: opacity 0.25s;
 }
 
-.methodCard:hover {
-  border-color: var(--rose);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
-}
+@media (hover: hover) {
+  .methodCard:hover {
+    border-color: var(--rose);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+  }
 
-.methodCard:hover::before {
-  opacity: 1;
+  .methodCard:hover::before {
+    opacity: 1;
+  }
 }
 
 .methodCardActive {
   border-color: var(--deep-rose);
-  box-shadow: 0 0 0 3px rgba(201, 107, 107, 0.1);
+  box-shadow: 0 0 0 3px rgba(178, 80, 80, 0.1);
 }
 
 .methodCardActive::before {
@@ -368,9 +374,7 @@
 }
 
 .methodCard:focus-visible {
-  outline: none;
   border-color: var(--deep-rose);
-  box-shadow: 0 0 0 3px rgba(201, 107, 107, 0.18);
 }
 
 .methodIcon {
@@ -453,9 +457,11 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.step:hover .stepDot {
-  border-color: var(--rose);
-  box-shadow: 0 0 0 4px rgba(232, 160, 160, 0.15);
+@media (hover: hover) {
+  .step:hover .stepDot {
+    border-color: var(--rose);
+    box-shadow: 0 0 0 4px rgba(232, 160, 160, 0.15);
+  }
 }
 
 .stepNum {
@@ -536,8 +542,10 @@
   transition: color 0.2s;
 }
 
-.faqQuestion:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .faqQuestion:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .faqChevron {
@@ -669,23 +677,41 @@
 
 .calcBtn {
   width: 100%;
-  background: var(--deep-rose);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  padding: 12px;
-  border-radius: 2px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 12px;
+  border-radius: var(--btn-radius);
   text-align: center;
   cursor: pointer;
   border: none;
   transition: background 0.2s, transform 0.2s var(--ease-spring);
   font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.calcBtn:hover {
-  background: var(--mauve);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .calcBtn:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-1px);
+  }
+}
+
+.calcBtn:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.calcBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .calcResult {
@@ -764,10 +790,12 @@
   text-decoration: none;
 }
 
-.supportItem:hover {
-  border-color: var(--blush);
-  background: var(--lace);
-  transform: translateX(3px);
+@media (hover: hover) {
+  .supportItem:hover {
+    border-color: var(--blush);
+    background: var(--lace);
+    transform: translateX(3px);
+  }
 }
 
 .supportItemIcon {
@@ -805,9 +833,11 @@
   transition: transform 0.2s var(--ease-spring);
 }
 
-.supportItem:hover .supportItemArrow {
-  transform: translateX(3px);
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .supportItem:hover .supportItemArrow {
+    transform: translateX(3px);
+    color: var(--deep-rose);
+  }
 }
 
 /* Trust card */
@@ -916,19 +946,35 @@
   gap: 8px;
   background: var(--gold);
   color: var(--ink);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 12px 24px;
-  border-radius: 2px;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 24px;
+  border-radius: var(--btn-radius);
   white-space: nowrap;
   transition: background 0.2s, transform 0.2s var(--ease-spring);
   flex-shrink: 0;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.promoBarCta:hover {
-  background: var(--gold-light);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .promoBarCta:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+  }
+}
+
+.promoBarCta:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.promoBarCta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ── Intro section ───────────────────────── */

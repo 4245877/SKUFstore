@@ -217,6 +217,7 @@ export const uiEn = {
   "auth.continueWithGoogle": "Continue with Google",
   "auth.continueWithFacebook": "Continue with Facebook",
   "auth.registerWithEmail": "Register with email",
+  "auth.signInWithEmail": "Sign in with email",
   "auth.registrationForm": "Registration form",
   "auth.firstName": "First name",
   "auth.sakura": "Sakura",

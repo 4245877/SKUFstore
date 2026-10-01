@@ -34,8 +34,10 @@
   transition: color 0.2s;
 }
 
-.breadcrumbLink:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .breadcrumbLink:hover {
+    color: var(--deep-rose);
+  }
 }
 
 .breadcrumbSep {
@@ -126,8 +128,10 @@
   display: block;
 }
 
-.mainImageWrap:hover .mainImage {
-  transform: scale(1.02);
+@media (hover: hover) {
+  .mainImageWrap:hover .mainImage {
+    transform: scale(1.02);
+  }
 }
 
 .mainImagePlaceholder {
@@ -146,7 +150,7 @@
   align-items: center;
   justify-content: center;
   color: var(--rose);
-  filter: drop-shadow(0 8px 24px rgba(201, 107, 107, 0.25));
+  filter: drop-shadow(0 8px 24px rgba(178, 80, 80, 0.25));
   animation: floatY 5s ease-in-out infinite;
 }
 
@@ -214,8 +218,10 @@
   pointer-events: auto;
 }
 
-.adultHintButton:hover {
-  background: rgba(30, 20, 22, 0.9);
+@media (hover: hover) {
+  .adultHintButton:hover {
+    background: rgba(30, 20, 22, 0.9);
+  }
 }
 
 /* Спільне скидання для інтерактивних елементів */
@@ -255,9 +261,11 @@
   transition: border-color 0.2s, transform 0.2s var(--ease-spring);
 }
 
-.thumb:hover {
-  border-color: var(--rose);
-  transform: scale(1.03);
+@media (hover: hover) {
+  .thumb:hover {
+    border-color: var(--rose);
+    transform: scale(1.03);
+  }
 }
 
 .thumbActive {
@@ -271,8 +279,10 @@
   transition: transform 0.4s var(--ease-out-expo);
 }
 
-.thumb:hover .thumbImg {
-  transform: scale(1.04);
+@media (hover: hover) {
+  .thumb:hover .thumbImg {
+    transform: scale(1.04);
+  }
 }
 
 .thumbBlurred {
@@ -459,10 +469,12 @@
   background: linear-gradient(160deg, var(--lace), var(--parchment), var(--blush));
 }
 
-.variantCard:hover {
-  border-color: var(--rose);
-  transform: translateX(3px);
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) {
+  .variantCard:hover {
+    border-color: var(--rose);
+    transform: translateX(3px);
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 .variantCard:disabled {
@@ -472,11 +484,13 @@
   box-shadow: none;
 }
 
-.variantCard:disabled:hover {
-  border-color: var(--border-soft);
-  background: var(--surface);
-  transform: none;
-  box-shadow: none;
+@media (hover: hover) {
+  .variantCard:disabled:hover {
+    border-color: var(--border-soft);
+    background: var(--surface);
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .variantCardSelected {
@@ -485,8 +499,10 @@
   box-shadow: var(--shadow-rose);
 }
 
-.variantCardSelected:hover {
-  transform: translateX(0);
+@media (hover: hover) {
+  .variantCardSelected:hover {
+    transform: translateX(0);
+  }
 }
 
 .variantLeft {
@@ -596,7 +612,7 @@
 .colorSwatchSelected {
   border-color: var(--deep-rose);
   box-shadow:
-    0 0 0 3px rgba(201, 107, 107, 0.14),
+    0 0 0 3px rgba(178, 80, 80, 0.14),
     inset 0 0 0 1px rgba(255, 255, 255, 0.45);
   transform: scale(1.02);
 }
@@ -637,9 +653,11 @@
   user-select: none;
 }
 
-.quantityBtn:hover {
-  background: var(--parchment);
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .quantityBtn:hover {
+    background: var(--parchment);
+    color: var(--deep-rose);
+  }
 }
 
 .quantityBtn:disabled {
@@ -675,20 +693,22 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  padding: 16px 28px;
-  border-radius: 2px;
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 28px;
+  border-radius: var(--btn-radius);
   transition:
     background 0.2s,
     transform 0.2s var(--ease-spring),
     box-shadow 0.2s;
   position: relative;
   overflow: hidden;
+  min-height: var(--btn-h-lg);
+  line-height: 1.2;
 }
 
 .btnPrimary::after {
@@ -701,18 +721,27 @@
   transition: background-position 0.5s;
 }
 
-.btnPrimary:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
+@media (hover: hover) {
+  .btnPrimary:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
 
-.btnPrimary:hover::after {
-  background-position: 200% center;
+  .btnPrimary:hover::after {
+    background-position: 200% center;
+  }
 }
 
 .btnPrimary:active {
-  transform: translateY(0);
+  transform: var(--btn-press);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btnSecondary {
@@ -720,21 +749,29 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  padding: 13px 28px;
-  border-radius: 2px;
-  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--btn-secondary-fg);
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 28px;
+  border-radius: var(--btn-radius);
+  border: 1px solid var(--btn-secondary-border);
   transition: border-color 0.2s, color 0.2s, background 0.2s;
+  min-height: var(--btn-h-lg);
+  line-height: 1.2;
 }
 
-.btnSecondary:hover {
-  border-color: var(--rose);
-  color: var(--deep-rose);
-  background: var(--lace);
+@media (hover: hover) {
+  .btnSecondary:hover {
+    border-color: var(--deep-rose);
+    color: var(--deep-rose);
+    background: var(--lace);
+  }
+}
+
+.btnSecondary:active:not(:disabled) {
+  transform: var(--btn-press);
 }
 
 .btnSecondary:disabled {
@@ -742,10 +779,12 @@
   cursor: not-allowed;
 }
 
-.btnSecondary:disabled:hover {
-  border-color: var(--border);
-  color: var(--text-secondary);
-  background: var(--surface);
+@media (hover: hover) {
+  .btnSecondary:disabled:hover {
+    border-color: var(--border);
+    color: var(--text-secondary);
+    background: var(--surface);
+  }
 }
 
 .btnRow {
@@ -785,8 +824,10 @@
   white-space: nowrap;
 }
 
-.tabBtn:hover {
-  color: var(--text-secondary);
+@media (hover: hover) {
+  .tabBtn:hover {
+    color: var(--text-secondary);
+  }
 }
 
 .tabBtnActive {
@@ -945,5 +986,13 @@
 
   .variantPrice {
     font-size: 16px;
+  }
+}
+
+/* ── Тач-екрани: зони дотику не менші за 44px ── */
+@media (pointer: coarse) {
+  .quantityBtn {
+    width: var(--hit-min);
+    height: var(--hit-min);
   }
 }

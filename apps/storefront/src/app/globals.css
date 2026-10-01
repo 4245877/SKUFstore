@@ -47,6 +47,24 @@
   --radius-md:   3px;
   --radius-pill: 99px;
 
+  /* Buttons — одна система для всіх сторінок: розміри, шрифт, кольори, натискання */
+  --btn-radius:   var(--radius-sm);
+  --btn-h-sm:     36px;
+  --btn-h-md:     44px;
+  --btn-h-lg:     52px;
+  --btn-fs:       13px;
+  --btn-fs-lg:    14px;
+  --btn-fw:       500;
+  --btn-ls:       0.06em;
+  --btn-primary-bg:       var(--ink);
+  --btn-primary-fg:       var(--cream);
+  --btn-primary-hover-bg: var(--deep-rose);
+  --btn-secondary-border: var(--blush);
+  --btn-secondary-fg:     var(--mauve);
+  --btn-press:    scale(0.97);
+  /* Мінімальна зона дотику на тач-екранах */
+  --hit-min:      44px;
+
   /* Motion */
   --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
@@ -61,7 +79,7 @@
   --shadow-sm: 0 2px 8px rgba(30,20,22,0.08), 0 1px 2px rgba(30,20,22,0.04);
   --shadow-md: 0 8px 24px rgba(30,20,22,0.10), 0 2px 6px rgba(30,20,22,0.06);
   --shadow-lg: 0 20px 48px rgba(30,20,22,0.12), 0 4px 12px rgba(30,20,22,0.08);
-  --shadow-rose: 0 8px 32px rgba(201,107,107,0.20);
+  --shadow-rose: 0 8px 32px rgba(178,80,80,0.20);
 }
 
 html {
@@ -121,11 +139,10 @@ img {
   display: block;
 }
 
-/* Focus */
+/* Focus — контур повторює радіус елемента, форму самого елемента не змінюємо */
 :focus-visible {
   outline: 2px solid var(--deep-rose);
   outline-offset: 3px;
-  border-radius: 4px;
 }
 
 /* Utility: hide visually but keep in a11y tree */

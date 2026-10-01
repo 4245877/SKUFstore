@@ -1,30 +1,93 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { PUBLISHED_LOCALES } from '../../i18n/locales';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { LOCALE_PRESENTATION, PUBLISHED_LOCALES } from '../../i18n/locales';
 import { switchLocalePath } from '../../i18n/paths';
-import { useLocale } from '../../i18n/client';
+import { useI18n } from '../../i18n/client';
+import styles from './LocaleSwitcher.module.css';
 
-export default function LocaleSwitcher() {
-  const locale = useLocale();
+type SwitcherProps = {
+  /** compact — сегменти «УКР | ENG» у шапці; full — повні назви в мобільному меню. */
+  variant?: 'compact' | 'full';
+  className?: string;
+  /** Lets a closed drawer take its copy out of the tab order. */
+  tabIndex?: number;
+};
+
+/**
+ * The exported HTML carries the bare path; after hydration the live query keeps
+ * the target href exact, including query-only navigations such as catalog
+ * paging, which never fire popstate.
+ */
+export default function LocaleSwitcher(props: SwitcherProps) {
+  return (
+    <Suspense fallback={<Switcher {...props} search="" />}>
+      <LiveSwitcher {...props} />
+    </Suspense>
+  );
+}
+
+function LiveSwitcher(props: SwitcherProps) {
+  const searchParams = useSearchParams();
+  // force-static routes (the catalog) prerender this with an empty query and
+  // hydration keeps a mismatched href, so match the HTML first, then apply the URL.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const query = mounted ? searchParams?.toString() ?? '' : '';
+  return <Switcher {...props} search={query ? `?${query}` : ''} />;
+}
+
+function Switcher({ variant = 'compact', className, tabIndex, search }: SwitcherProps & { search: string }) {
+  const { locale, t } = useI18n();
   const pathname = usePathname() || '/';
-  // First browser render matches the exported document, including query deep links.
-  const [suffix, setSuffix] = useState('');
+  const [hash, setHash] = useState('');
   useEffect(() => {
-    const update = () => setSuffix(window.location.search + window.location.hash);
+    const update = () => setHash(window.location.hash);
     update();
     window.addEventListener('hashchange', update);
-    window.addEventListener('popstate', update);
-    return () => { window.removeEventListener('hashchange', update); window.removeEventListener('popstate', update); };
-  }, [pathname]);
-  return <nav aria-label={locale === 'en' ? 'Language' : 'Мова'} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-    {PUBLISHED_LOCALES.map((target) => <a key={target} lang={target} hrefLang={target}
-      aria-current={target === locale ? 'true' : undefined}
-      href={switchLocalePath(target, pathname + suffix)}
-      onClick={(event) => {
-        // Read the live query at activation as well (SPA query changes keep pathname).
-        event.currentTarget.href = switchLocalePath(target, window.location.pathname + window.location.search + window.location.hash);
-      }}>{target.toUpperCase()}</a>)}
-  </nav>;
+    return () => window.removeEventListener('hashchange', update);
+  }, [pathname, search]);
+
+  return (
+    <nav
+      aria-label={t('header.language')}
+      className={[styles.switcher, variant === 'full' ? styles.full : '', className].filter(Boolean).join(' ')}
+    >
+      {PUBLISHED_LOCALES.map((target) => {
+        const { shortLabel, nativeName } = LOCALE_PRESENTATION[target];
+        // The visible abbreviation is a prefix of the spoken name (WCAG 2.5.3 label in name).
+        const label = variant === 'full'
+          ? nativeName
+          : <><span aria-hidden="true">{shortLabel}</span><span className="sr-only">{nativeName}</span></>;
+
+        // The current language is a state, not a destination: no reload-to-self link.
+        if (target === locale) {
+          return (
+            <span key={target} lang={target} className={`${styles.option} ${styles.current}`} aria-current="true">
+              {label}
+            </span>
+          );
+        }
+
+        return (
+          <a
+            key={target}
+            lang={target}
+            hrefLang={target}
+            title={variant === 'compact' ? nativeName : undefined}
+            className={`${styles.option} ${styles.link}`}
+            href={switchLocalePath(target, pathname + search + hash)}
+            tabIndex={tabIndex}
+            onClick={(event) => {
+              // Read the live URL at activation as well (a pushState hash change fires no event).
+              event.currentTarget.href = switchLocalePath(target, window.location.pathname + window.location.search + window.location.hash);
+            }}
+          >
+            {label}
+          </a>
+        );
+      })}
+    </nav>
+  );
 }

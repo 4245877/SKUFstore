@@ -128,8 +128,10 @@
   user-select: none;
   transition: background 0.15s;
 }
-.sidebarBlockHeader:hover {
-  background: var(--surface-alt);
+@media (hover: hover) {
+  .sidebarBlockHeader:hover {
+    background: var(--surface-alt);
+  }
 }
 .sidebarBlockTitle {
   font-family: var(--font-body);
@@ -160,8 +162,10 @@
   transition: background 0.15s;
   position: relative;
 }
-.filterRow:hover {
-  background: var(--surface-alt);
+@media (hover: hover) {
+  .filterRow:hover {
+    background: var(--surface-alt);
+  }
 }
 .filterRowCategory {
   padding-left: calc(8px + (var(--category-depth, 0) * 14px));
@@ -220,7 +224,7 @@
 }
 .priceInput:focus {
   border-color: var(--rose);
-  box-shadow: 0 0 0 3px rgba(201,107,107,0.08);
+  box-shadow: 0 0 0 3px rgba(178,80,80,0.08);
 }
 /* Ховаємо нативні спінери number-інпутів */
 .priceInput::-webkit-outer-spin-button,
@@ -251,9 +255,11 @@
   text-align: center;
   transition: background 0.15s, transform 0.15s;
 }
-.priceApply:hover {
-  background: var(--charcoal);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .priceApply:hover {
+    background: var(--charcoal);
+    transform: translateY(-1px);
+  }
 }
 /* Active filters / Reset */
 .filtersReset {
@@ -268,8 +274,10 @@
   padding: 10px 16px;
   transition: color 0.15s;
 }
-.filtersResetLink:hover {
-  color: var(--deep-rose);
+@media (hover: hover) {
+  .filtersResetLink:hover {
+    color: var(--deep-rose);
+  }
 }
 .searchActions {
   gap: 10px;
@@ -364,19 +372,21 @@
   color: inherit;
   text-decoration: none;
 }
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--border);
-}
-.card:hover .cardImage {
-  transform: scale(1.06);
-}
-.card:hover .cardImagePlaceholder {
-  transform: scale(1.03);
-}
-.card:hover .cardName {
-  color: var(--mauve);
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border);
+  }
+  .card:hover .cardImage {
+    transform: scale(1.06);
+  }
+  .card:hover .cardImagePlaceholder {
+    transform: scale(1.03);
+  }
+  .card:hover .cardName {
+    color: var(--mauve);
+  }
 }
 /* Stagger delays */
 .card:nth-child(1) { animation-delay: 0.04s; }
@@ -449,8 +459,10 @@
   filter: blur(16px);
   transition: filter 0.4s;
 }
-.card:hover .cardImageBlur {
-  filter: blur(16px);
+@media (hover: hover) {
+  .card:hover .cardImageBlur {
+    filter: blur(16px);
+  }
 }
 /* Затемнення поверх розмитого фото 18+ (раніше клас використовувався
    в розмітці, але не був визначений) */
@@ -501,17 +513,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--silver);
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s,
     transform 0.18s var(--ease-spring);
   z-index: 3;
 }
-.cardWishBtn:hover {
-  background: var(--lace);
-  border-color: var(--rose);
-  color: var(--deep-rose);
-  transform: scale(1.08);
+@media (hover: hover) {
+  .cardWishBtn:hover {
+    background: var(--lace);
+    border-color: var(--rose);
+    color: var(--deep-rose);
+    transform: scale(1.08);
+  }
 }
 .cardWishBtnActive {
   background: var(--lace);
@@ -585,7 +599,7 @@
 }
 .emptyIcon {
   font-size: 56px;
-  filter: drop-shadow(0 4px 12px rgba(201,107,107,0.2));
+  filter: drop-shadow(0 4px 12px rgba(178,80,80,0.2));
   animation: floatY 4s ease-in-out infinite;
 }
 .emptyTitle {
@@ -604,19 +618,35 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--ink);
-  color: var(--cream);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  padding: 12px 24px;
-  border-radius: var(--radius-sm);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 24px;
+  border-radius: var(--btn-radius);
   margin-top: 8px;
   transition: background 0.15s, transform 0.2s var(--ease-spring);
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
-.emptyBtn:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .emptyBtn:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+  }
+}
+
+.emptyBtn:active:not(:disabled) {
+  transform: var(--btn-press);
+}
+
+.emptyBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 /* ── Pagination ──────────────────────────── */
 .pagination {
@@ -645,11 +675,13 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
 }
-.pageBtn:hover {
-  background: var(--surface-alt);
-  border-color: var(--rose);
-  color: var(--ink);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .pageBtn:hover {
+    background: var(--surface-alt);
+    border-color: var(--rose);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
 }
 .pageBtnActive {
   background: var(--ink);
@@ -657,10 +689,12 @@
   color: var(--cream);
   cursor: default;
 }
-.pageBtnActive:hover {
-  background: var(--charcoal);
-  border-color: var(--charcoal);
-  transform: none;
+@media (hover: hover) {
+  .pageBtnActive:hover {
+    background: var(--charcoal);
+    border-color: var(--charcoal);
+    transform: none;
+  }
 }
 .pageBtnDisabled {
   opacity: 0.35;
@@ -690,8 +724,10 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.filterToggle:hover {
-  background: var(--surface-alt);
+@media (hover: hover) {
+  .filterToggle:hover {
+    background: var(--surface-alt);
+  }
 }
 .filterToggleIcon {
   display: inline-flex;
@@ -767,9 +803,11 @@
   transition: background 0.15s, color 0.15s;
   cursor: pointer;
 }
-.drawerClose:hover {
-  background: var(--surface-alt);
-  color: var(--ink);
+@media (hover: hover) {
+  .drawerClose:hover {
+    background: var(--surface-alt);
+    color: var(--ink);
+  }
 }
 /* ── Accessibility ───────────────────────── */
 .filterRow:focus-visible,
@@ -782,7 +820,7 @@
 .drawerClose:focus-visible,
 .cardWishBtn:focus-visible,
 .sidebarBlockHeader:focus-visible {
-  outline: 2px solid var(--rose);
+  outline: 2px solid var(--deep-rose);
   outline-offset: 2px;
 }
 /* ── Touch devices ───────────────────────── */
@@ -881,5 +919,28 @@
     min-width: 32px;
     height: 32px;
     font-size: 12px;
+  }
+}
+
+/* ── Тач-екрани: зони дотику не менші за 44px ── */
+@media (pointer: coarse) {
+  .cardWishBtn::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
+  .drawerClose {
+    width: var(--hit-min);
+    height: var(--hit-min);
+  }
+
+  .filterToggle {
+    min-height: var(--hit-min);
+  }
+
+  .pageBtn {
+    min-width: var(--hit-min);
+    height: var(--hit-min);
   }
 }

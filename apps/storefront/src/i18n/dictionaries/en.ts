@@ -69,6 +69,7 @@ export const en = {
   'header.searchSubmit': 'Search',
   'header.searchHint': '↵ Enter',
   'header.mobileNavigation': 'Mobile navigation',
+  'header.language': 'Site language',
   'header.mobileSearchPlaceholder': 'Search…',
   'header.collections': 'Browse collections',
   'footer.shop': 'Shop',

@@ -25,9 +25,13 @@ export function assertPublishedLocale(value: unknown): asserts value is Publishe
   if (!isPublishedLocale(value)) throw new Error(`Locale is not published: ${String(value)}`);
 }
 
-/** Presentation metadata, not a shipping-country or market mapping. */
+/**
+ * Presentation metadata, not a shipping-country or market mapping.
+ * Switcher labels are endonyms, identical in every UI language; the short label
+ * is never a country code ("UK" reads as the United Kingdom, "UA" is a country).
+ */
 export const LOCALE_PRESENTATION = {
-  uk: { languageTag: 'uk-UA', openGraphLocale: 'uk_UA' },
-  en: { languageTag: 'en-GB', openGraphLocale: 'en_GB' },
-  de: { languageTag: 'de-DE', openGraphLocale: 'de_DE' },
-} as const satisfies Record<Locale, { languageTag: string; openGraphLocale: string }>;
+  uk: { languageTag: 'uk-UA', openGraphLocale: 'uk_UA', shortLabel: 'УКР', nativeName: 'Українська' },
+  en: { languageTag: 'en-GB', openGraphLocale: 'en_GB', shortLabel: 'ENG', nativeName: 'English' },
+  de: { languageTag: 'de-DE', openGraphLocale: 'de_DE', shortLabel: 'DEU', nativeName: 'Deutsch' },
+} as const satisfies Record<Locale, { languageTag: string; openGraphLocale: string; shortLabel: string; nativeName: string }>;

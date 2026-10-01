@@ -106,18 +106,21 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--cream);
-  background: var(--ink);
-  padding: 12px 24px;
-  border-radius: 2px;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  color: var(--btn-primary-fg);
+  background: var(--btn-primary-bg);
+  padding: 0 24px;
+  border-radius: var(--btn-radius);
   white-space: nowrap;
   transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
 .catalogLink::after {
@@ -125,14 +128,28 @@
   transition: transform 0.2s var(--ease-spring);
 }
 
-.catalogLink:hover {
-  background: var(--charcoal);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+@media (hover: hover) {
+  .catalogLink:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .catalogLink:hover::after {
+    transform: translateX(4px);
+  }
 }
 
-.catalogLink:hover::after {
-  transform: translateX(4px);
+.catalogLink:active:not(:disabled) {
+  transform: var(--btn-press);
+  box-shadow: none;
+}
+
+.catalogLink:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ── Empty / Error State ─────────────────── */
@@ -152,7 +169,7 @@
   display: block;
   margin-bottom: 24px;
   animation: floatY 4s ease-in-out infinite;
-  filter: drop-shadow(0 8px 16px rgba(201, 107, 107, 0.25));
+  filter: drop-shadow(0 8px 16px rgba(178, 80, 80, 0.25));
 }
 
 .emptyTitle {
@@ -176,20 +193,37 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--deep-rose);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  padding: 13px 28px;
-  border-radius: 2px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-ls);
+  padding: 0 28px;
+  border-radius: var(--btn-radius);
   transition: background 0.2s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
+  justify-content: center;
+  min-height: var(--btn-h-md);
+  line-height: 1.2;
 }
 
-.primaryLink:hover {
-  background: var(--mauve);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-rose);
+@media (hover: hover) {
+  .primaryLink:hover {
+    background: var(--btn-primary-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-rose);
+  }
+}
+
+.primaryLink:active:not(:disabled) {
+  transform: var(--btn-press);
+  box-shadow: none;
+}
+
+.primaryLink:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .catalogLink,
@@ -246,14 +280,16 @@
   transition: opacity 0.25s;
 }
 
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--blush);
-}
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--blush);
+  }
 
-.card:hover::before {
-  opacity: 1;
+  .card:hover::before {
+    opacity: 1;
+  }
 }
 
 /* ── Card Top Row ────────────────────────── */
@@ -345,9 +381,9 @@
 }
 
 .statusCancelled {
-  background: rgba(201, 107, 107, 0.10);
+  background: rgba(178, 80, 80, 0.10);
   color: var(--deep-rose);
-  border: 1px solid rgba(201, 107, 107, 0.25);
+  border: 1px solid rgba(178, 80, 80, 0.25);
 }
 
 .statusConfirmed {
@@ -492,13 +528,15 @@
   transition: transform 0.2s var(--ease-spring);
 }
 
-.detailsLink:hover {
-  color: var(--deep-rose);
-  border-color: var(--deep-rose);
-}
+@media (hover: hover) {
+  .detailsLink:hover {
+    color: var(--deep-rose);
+    border-color: var(--deep-rose);
+  }
 
-.detailsLink:hover::after {
-  transform: translateX(3px);
+  .detailsLink:hover::after {
+    transform: translateX(3px);
+  }
 }
 
 /* ── Responsive ──────────────────────────── */
