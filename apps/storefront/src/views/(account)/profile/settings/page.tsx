@@ -408,7 +408,7 @@ export default function ProfileSettingsPage() {
 
         <header className={styles.hero}>
 
-          <p className={styles.eyebrow}>account settings</p>
+          <p className={styles.eyebrow}>{t('account.profileSettings')}</p>
 
           <h1 className={styles.title}>{t('account.profileSettings')}</h1>
 
@@ -602,7 +602,7 @@ export default function ProfileSettingsPage() {
 
                 <div>
 
-                  <p className={styles.cardLabel}>Security</p>
+                  <p className={styles.cardLabel}>{t('account.security')}</p>
 
                   <h2 className={styles.cardTitle}>{t('account.security')}</h2>
 
@@ -680,7 +680,7 @@ export default function ProfileSettingsPage() {
 
                 <div>
 
-                  <p className={styles.cardLabel}>Notifications</p>
+                  <p className={styles.cardLabel}>{t('account.notifications')}</p>
 
                   <h2 className={styles.cardTitle}>{t('account.notifications')}</h2>
 
@@ -808,7 +808,7 @@ export default function ProfileSettingsPage() {
 
                 <div>
 
-                  <p className={styles.cardLabel}>Danger zone</p>
+                  <p className={styles.cardLabel}>{t('account.accountDeletion')}</p>
 
                   <h2 className={styles.cardTitle}>{t('account.accountDeletion')}</h2>
 

@@ -13,14 +13,18 @@
 
 export type SnapshotIssue = string;
 
-export function validateCatalogSnapshot(payload: unknown): SnapshotIssue[] {
+export function validateCatalogSnapshot(payload: unknown, expectedBuildId?: string): SnapshotIssue[] {
   const issues: SnapshotIssue[] = [];
 
   if (!payload || typeof payload !== 'object') {
     return ['snapshot is not an object'];
   }
 
-  const snapshot = payload as { count?: unknown; items?: unknown };
+  const snapshot = payload as { buildId?: unknown; count?: unknown; items?: unknown };
+
+  if (expectedBuildId !== undefined && snapshot.buildId !== expectedBuildId) {
+    issues.push('snapshot belongs to a different build');
+  }
 
   if (!Array.isArray(snapshot.items)) {
     return ['snapshot.items is not an array'];

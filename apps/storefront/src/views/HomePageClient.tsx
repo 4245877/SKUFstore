@@ -1,5 +1,7 @@
 'use client';
 
+import { countNoun } from '../i18n/presentation';
+import type { PublishedLocale } from '../i18n/locales';
 import { useI18n } from '../i18n/client';
 import type { Translator } from '../i18n/translate';
 import Link from '../i18n/navigation'
@@ -88,30 +90,7 @@ function flattenCategoryTree(items: CatalogCategoryTreeItem[]): CatalogCategoryT
   return items.flatMap((item) => [item, ...flattenCategoryTree(item.children ?? [])])
 }
 
-function pluralizeProducts(t: Translator, count: number) {
-  const mod10 = count % 10
-  const mod100 = count % 100
-
-  if (mod10 === 1 && mod100 !== 11) return t('shop.product_757')
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return t('shop.products')
-  return t('shop.products_759')
-}
-
-function pluralizeCategories(t: Translator, count: number) {
-  const mod10 = count % 10
-  const mod100 = count % 100
-
-  if (mod10 === 1 && mod100 !== 11) return t('home.category')
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return t('home.categories')
-  return t('home.categories_1130')
-}
-
-function formatProductCount(t: Translator, count?: number) {
-  const value = Math.max(0, count ?? 0)
-  return `${value.toLocaleString('uk-UA')} ${pluralizeProducts(t, value)}`
-}
-
-function buildHomeCategories(t: Translator, items: CatalogCategoryTreeItem[]) {
+function buildHomeCategories(t: Translator, locale: PublishedLocale, items: CatalogCategoryTreeItem[]) {
   const selected: CatalogCategoryTreeItem[] = []
   const seen = new Set<string>()
 
@@ -133,7 +112,7 @@ function buildHomeCategories(t: Translator, items: CatalogCategoryTreeItem[]) {
     return {
       slug: item.slug,
       title: item.name,
-      countLabel: formatProductCount(t, item.productCount),
+      countLabel: `${Math.max(0, item.productCount ?? 0).toLocaleString(locale)} ${countNoun(t, locale, item.productCount ?? 0, 'products')}`,
       icon: decor.icon,
       color: decor.color,
     }
@@ -192,7 +171,7 @@ export default function HomePageClient() {
     }
   }, [])
 
-  const homeCategories = useMemo(() => buildHomeCategories(t, categoryTree), [categoryTree])
+  const homeCategories = useMemo(() => buildHomeCategories(t, locale, categoryTree), [categoryTree, locale])
 
   const flatCategories = useMemo(() => flattenCategoryTree(categoryTree), [categoryTree])
 
@@ -280,7 +259,7 @@ export default function HomePageClient() {
                 {isLoading ? '—' : totalProducts.toLocaleString('uk-UA')}
               </span>
               <span className={s.heroStatLabel}>
-                {isLoading ? t('home.products') : pluralizeProducts(t, totalProducts)} {t('home.inTheCatalog')} </span>
+                {isLoading ? t('home.products') : countNoun(t, locale, totalProducts, 'products')} {t('home.inTheCatalog')} </span>
             </div>
 
             <div className={s.heroStat}>
@@ -288,7 +267,7 @@ export default function HomePageClient() {
                 {isLoading ? '—' : totalCategories.toLocaleString('uk-UA')}
               </span>
               <span className={s.heroStatLabel}>
-                {isLoading ? t('home.categories_1140') : pluralizeCategories(t, totalCategories)}
+                {isLoading ? t('home.categories_1140') : countNoun(t, locale, totalCategories, 'categories')}
               </span>
             </div>
 
@@ -411,7 +390,7 @@ export default function HomePageClient() {
                       )}
 
                       {p.qualityScore >= 9 && (
-                        <div className={`${s.cardBadge} ${s.cardBadgeNew}`}>TOP</div>
+                        <div className={`${s.cardBadge} ${s.cardBadgeNew}`}>{t('home.topPick')}</div>
                       )}
 
                       <div className={s.cardActions}>
@@ -547,17 +526,17 @@ export default function HomePageClient() {
         <div className={s.promoBanner}>
           <div>
             <p className={s.promoLabel}>
-              <span>✦</span> {t('home.specialOffer')} </p>
+              <span>✦</span> {t('home.orderSupport')} </p>
             <h2 className={s.promoTitle} id="promo-title">
-              {t('home.yourFirstOrder')} <br />
-              <span className={s.promoTitleAccent}>{t('home.15Off')}</span>
+              {t('home.chooseYourFigure')} <br />
+              <span className={s.promoTitleAccent}>{t('home.confirmTheDetails')}</span>
             </h2>
             <p className={s.promoText}>
-              {t('home.useCode')} <strong style={{ color: '#e8d5aa' }}>SKUFNYA</strong> {t('home.whenPlacingYourOrderToGetA')} </p>
+              {t('home.orderSupportText')} </p>
           </div>
 
-          <Link href="/catalog" className={s.promoCta}>
-            {t('shop.browseCatalog_900')} <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <Link href="/contacts" className={s.promoCta}>
+            {t('nav.contacts')} <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path
                 d="M2 7h10M8 3l4 4-4 4"
                 stroke="currentColor"

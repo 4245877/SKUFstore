@@ -2,6 +2,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const results = [];
+const browserLocales = process.env.SMOKE_LOCALE ? [process.env.SMOKE_LOCALE] : ['uk-UA', 'en-US'];
+const routeLocales = process.env.SMOKE_ROUTE_LOCALE ? [process.env.SMOKE_ROUTE_LOCALE] : ['uk', 'en'];
 const base = process.env.SMOKE_BASE || 'http://127.0.0.1:54332';
 assert.equal(new URL(base).hostname, '127.0.0.1');
 const snapshot = JSON.parse(fs.readFileSync(process.env.SMOKE_SNAPSHOT || '.next/cache/skufnya-build/catalog-snapshot.json', 'utf8'));
@@ -10,9 +13,12 @@ const single = snapshot.items.find(p => !p.isAdult && !p.pricing?.hasPriceRange)
 assert.ok(range && single);
 const legacy = { ...snapshot.items.find(p => !p.isAdult && p.id !== range.id && p.id !== single.id), pricing: undefined };
 const products = [range, single, legacy];
+async function run(routeLocale, browserLocale) {
+const localized = path => routeLocale === 'en' ? '/en' + path : path;
+const m = routeLocale === 'en' ? { from: 'from ', favorite: 'Add to favorites', list: 'List' } : { from: 'від ', favorite: 'Додати до обраного', list: 'Список' };
 let account = false;
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE });
-const context = await browser.newContext({ locale: 'de-DE', viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({ locale: browserLocale, viewport: { width: 1440, height: 1000 } });
 await context.route('**/*', async route => {
   const request = route.request(), url = new URL(request.url());
   if (url.hostname === '127.0.0.1') return route.continue();
@@ -37,11 +43,11 @@ page.on('response', r => { if (r.status() >= 400 && r.status() !== 401) httpErro
 const normalized = s => s.replace(/\s/g, ' ');
 async function label(node, p) {
   const value = normalized(await node.innerText());
-  assert.equal(value.startsWith('від '), p.pricing?.hasPriceRange === true, `${p.title}: ${value}`);
+  assert.equal(value.startsWith(m.from), p.pricing?.hasPriceRange === true, `${p.title}: ${value}`);
   assert.ok(value.includes(normalized(p.priceFrom.toLocaleString('uk-UA'))), value);
   assert.doesNotMatch(value, /NaN|Infinity/);
 }
-async function go(path) { await page.goto(base + path); await page.waitForLoadState('networkidle'); }
+async function go(path) { await page.goto(base + localized(path)); await page.waitForLoadState('networkidle'); }
 async function guestPrices() {
   for (const p of [range, single]) {
     const card = page.locator('article').filter({ has: page.getByRole('heading', { name: p.title, exact: true }) });
@@ -59,19 +65,19 @@ try {
   for (const p of products) {
     const card = page.locator('article').filter({ hasText: p.title });
     await label(card.locator('[class*="cardPrice"]'), p);
-    if (p !== legacy) await card.getByRole('button', { name: 'Додати до обраного', exact: true }).click();
+    if (p !== legacy) await card.getByRole('button', { name: m.favorite, exact: true }).click();
   }
   const storage = await page.evaluate(() => localStorage.getItem('skufnya:favorites'));
   assert.equal(JSON.parse(storage).find(p => p.productId === range.id).hasPriceRange, true);
   checks.push('catalog: range, single, fallback; guest snapshot retains range');
   await go('/favorites/'); await guestPrices();
-  await page.getByRole('button', { name: 'Список', exact: true }).click(); await guestPrices();
+  await page.getByRole('button', { name: m.list, exact: true }).click(); await guestPrices();
   await page.reload(); await page.waitForLoadState('networkidle'); await guestPrices();
   assert.equal(await page.evaluate(() => localStorage.getItem('skufnya:favorites')), storage);
   checks.push('favorites grid/list/reload preserves price labels and storage');
   await page.evaluate(() => localStorage.removeItem('skufnya:favorites'));
   await go('/product/' + range.slug + '/');
-  await page.getByRole('button', { name: 'Додати до обраного', exact: true }).click();
+  await page.getByRole('button', { name: m.favorite, exact: true }).click();
   await page.waitForFunction(() => localStorage.getItem('skufnya:favorites') !== null);
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('skufnya:favorites'))[0].hasPriceRange), true);
   await go('/favorites/');
@@ -88,5 +94,12 @@ try {
   for (const p of products) await label(page.locator('article').filter({ hasText: p.title }).locator('[class*="cardPrice"]'), p);
   checks.push('account favorites: range, single, legacy DTO');
   assert.deepEqual(errors, []); assert.deepEqual(httpErrors, []);
-  console.log(JSON.stringify({ passed: true, checks, pageErrors: errors, httpErrors }));
-} finally { await browser.close(); }
+  results.push({ passed: true, routeLocale, browserLocale, checks, pageErrors: errors, httpErrors });
+  console.log(JSON.stringify(results.at(-1)));
+} catch (error) { results.push({ passed: false, routeLocale, browserLocale, error: error.stack, pageErrors: errors, httpErrors }); console.log(JSON.stringify(results.at(-1))); } finally { await browser.close(); }
+}
+for (const browserLocale of browserLocales) for (const routeLocale of routeLocales) await run(routeLocale, browserLocale);
+const output = { passed: results.filter(r => r.passed).length, failed: results.filter(r => !r.passed).length, skipped: 0, results };
+if (process.env.SMOKE_OUTPUT) fs.writeFileSync(process.env.SMOKE_OUTPUT, JSON.stringify(output, null, 2));
+console.log(JSON.stringify({ passed: output.passed, failed: output.failed, skipped: 0 }));
+if (output.failed) process.exitCode = 1;

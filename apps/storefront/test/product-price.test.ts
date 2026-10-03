@@ -40,3 +40,23 @@ describe('backend price presentation contract', () => {
     assert.doesNotMatch(formatMoney(1000, 'UAH'), /EUR|€/);
   });
 });
+
+
+describe('Stage 2 price labels preserve the monetary contract', () => {
+  it('changes only the range wording when the selected route changes locale', () => {
+    const pricing = { priceFrom: 1000, priceTo: 1700, activeVariantCount: 2, hasPriceRange: true };
+    const money = formatMoney(1000, 'UAH');
+    assert.equal(formatProductPriceLabel(pricing, 1000, 'UAH', 'uk'), `від ${money}`);
+    assert.equal(formatProductPriceLabel(pricing, 1000, 'UAH', 'en'), `from ${money}`);
+    assert.match(money, /(?:₴|грн)/);
+    assert.equal(pricing.priceFrom, 1000);
+    assert.equal(pricing.priceTo, 1700);
+  });
+  it('renders exact and legacy prices identically across both route locales', () => {
+    for (const amount of [0, 120, 1499, 1500, 1501]) {
+      for (const pricing of [undefined, { priceFrom: amount, priceTo: amount, activeVariantCount: 2, hasPriceRange: false }]) {
+        assert.equal(formatProductPriceLabel(pricing, amount, 'UAH', 'en'), formatProductPriceLabel(pricing, amount, 'UAH', 'uk'));
+      }
+    }
+  });
+});

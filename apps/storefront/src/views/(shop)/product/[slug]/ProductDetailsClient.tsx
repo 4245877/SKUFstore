@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDayCount } from '../../../../i18n/presentation';
 import { useI18n } from '../../../../i18n/client';
 import type { Translator } from '../../../../i18n/translate';
 import Link from '../../../../i18n/navigation';
@@ -101,23 +102,6 @@ function formatDate(value: string | null, locale: string) {
     month: 'long',
     year: 'numeric',
   }).format(date);
-}
-
-function formatLeadTime(t: Translator, days: number) {
-  return t('shop.withinValue', { value1: formatDaysLabel(t, days) });
-}
-
-function formatDaysLabel(t: Translator, days: number) {
-  const mod10 = days % 10;
-  const mod100 = days % 100;
-
-  if (mod10 === 1 && mod100 !== 11) return t('shop.valueDay', { value1: days });
-
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-    return t('shop.valueDays', { value1: days });
-  }
-
-  return t('shop.valueDays_1044', { value1: days });
 }
 
 function isAuthError(error: unknown) {
@@ -491,7 +475,7 @@ function FinishSelector({
                 <span className={styles.variantMeta}>
                   {isDisabled
                     ? item.disabledNote ?? t('shop.temporarilyUnavailable')
-                    : t('shop.dispatchTimeValue', { value1: formatDaysLabel(t, item.leadTimeDays) })}
+                    : t('shop.dispatchTimeValue', { value1: formatDayCount(t, locale, item.leadTimeDays) })}
                 </span>
               </div>
 
@@ -909,7 +893,7 @@ function ProductInfo({
     finishOption.priceDelta +
     (selectedFinish === 'MONO' ? selectedColor?.priceDelta ?? 0 : 0);
 
-  const estimatedShippingLabel = formatLeadTime(t, finishOption.leadTimeDays);
+  const estimatedShippingLabel = t('shop.withinValue', { value1: formatDayCount(t, locale, finishOption.leadTimeDays) });
   const maxQty = 99;
 
   useEffect(() => {
@@ -1282,7 +1266,7 @@ export default function ProductDetailsClient({
 
   const finishOption =
     FINISHES(t).find((item) => item.code === selectedFinish) ?? FINISHES(t)[0];
-  const estimatedShippingLabel = formatLeadTime(t, finishOption.leadTimeDays);
+  const estimatedShippingLabel = t('shop.withinValue', { value1: formatDayCount(t, locale, finishOption.leadTimeDays) });
 
   return (
     <main className={styles.page}>

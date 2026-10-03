@@ -1,9 +1,15 @@
 import type { NextConfig } from 'next'
 import { randomUUID } from 'node:crypto'
 
-// Inherited by build workers and inlined into server bundles. A new build never
-// reuses a previous catalog, while UK/EN workers share one collection run.
-const catalogBuildId = process.env.SKUF_CATALOG_BUILD_ID ?? randomUUID()
+// Next may evaluate this file several times in one build process. Stamp the
+// primary process once, ignoring an ID left in its environment by an older run.
+// Webpack workers inherit that ID; static workers consume the inlined value.
+const catalogBuildIdKey = Symbol.for('skufnya.catalog-build-id')
+const buildProcess = globalThis as typeof globalThis & { [key: symbol]: string | undefined }
+const catalogBuildId = process.env.NEXT_PRIVATE_BUILD_WORKER === '1'
+  ? process.env.SKUF_CATALOG_BUILD_ID
+  : (buildProcess[catalogBuildIdKey] ??= randomUUID())
+if (!catalogBuildId) throw new Error('Catalog build worker did not inherit its build ID')
 process.env.SKUF_CATALOG_BUILD_ID = catalogBuildId
 
 const deployTarget = process.env.DEPLOY_TARGET ?? 'server'

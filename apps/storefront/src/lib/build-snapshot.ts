@@ -11,7 +11,7 @@ import {
   type CatalogResinColor,
 } from './api';
 import { validateCatalogSnapshot } from './snapshot-integrity';
-import { collectSnapshotOnce } from './snapshot-collection';
+import { collectSnapshotOnce, snapshotCollectionPaths, writeJsonAtomically } from './snapshot-collection';
 
 /**
  * Снимок каталога для статической сборки витрины.
@@ -67,6 +67,7 @@ const MIN_REQUEST_INTERVAL_MS = 1_100;
 const RATE_LIMIT_FLOOR = 2;
 
 type SnapshotFile = {
+  buildId: string;
   generatedAt: string;
   count: number;
   items: Array<Record<string, any>>;
@@ -407,6 +408,7 @@ async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: numbe
   log(`catalog listing: ${listedSlugs.length} published product(s)`);
 
   const payload: SnapshotFile = {
+    buildId: process.env.SKUF_CATALOG_BUILD_ID ?? '',
     generatedAt: new Date().toISOString(),
     count: listedSlugs.length,
     items: await fetchProductDetails(listedSlugs),
@@ -438,7 +440,11 @@ async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: numbe
   const file: SnapshotFile = { ...payload, resinColors };
 
   fs.mkdirSync(path.dirname(SNAPSHOT_PATH), { recursive: true });
-  fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(file));
+  const paths = snapshotCollectionPaths(path.dirname(SNAPSHOT_PATH), file.buildId);
+  writeJsonAtomically(paths.snapshot, file);
+  // The export/CI verifier consumes this completed-build mirror. Render workers
+  // always read the isolated file above, so another build cannot replace theirs.
+  writeJsonAtomically(SNAPSHOT_PATH, file);
 
   const slugs = payload.items.map((item) => String(item.slug));
 
@@ -460,6 +466,7 @@ export function loadCatalogSnapshot(): Promise<{ slugs: string[]; count: number 
     directory: path.dirname(SNAPSHOT_PATH),
     buildId: process.env.SKUF_CATALOG_BUILD_ID ?? '',
     collect: collectCatalogSnapshot,
+    validate: validateCollectedSnapshot,
   });
 
   return collecting;
@@ -469,13 +476,30 @@ export function loadCatalogSnapshot(): Promise<{ slugs: string[]; count: number 
 // сотни килобайт JSON, — лишняя работа на ровном месте.
 let cached: { file: SnapshotFile; bySlug: Map<string, Record<string, any>> } | null = null;
 
+function validateCollectedSnapshot(result: { slugs: string[]; count: number }) {
+  const buildId = process.env.SKUF_CATALOG_BUILD_ID ?? '';
+  const { snapshot } = snapshotCollectionPaths(path.dirname(SNAPSHOT_PATH), buildId);
+  const file = JSON.parse(fs.readFileSync(snapshot, 'utf8')) as SnapshotFile;
+  const issues = validateCatalogSnapshot(file, buildId);
+  if (!result || !Array.isArray(result.slugs) || result.count !== file.count ||
+      JSON.stringify(result.slugs) !== JSON.stringify(file.items.map(item => item.slug))) {
+    issues.push('collection result does not match its catalog snapshot');
+  }
+  if (issues.length) throw new Error(`Invalid completed catalog snapshot: ${issues.join('; ')}`);
+}
+
 function readSnapshot() {
   if (cached) return cached;
 
   let file: SnapshotFile;
 
   try {
-    file = JSON.parse(fs.readFileSync(SNAPSHOT_PATH, 'utf8')) as SnapshotFile;
+    const buildId = process.env.SKUF_CATALOG_BUILD_ID ?? '';
+    const paths = snapshotCollectionPaths(path.dirname(SNAPSHOT_PATH), buildId);
+    if (fs.existsSync(paths.failed) || !fs.existsSync(paths.done)) throw new Error('Current catalog collection is not complete');
+    file = JSON.parse(fs.readFileSync(paths.snapshot, 'utf8')) as SnapshotFile;
+    const issues = validateCatalogSnapshot(file, buildId);
+    if (issues.length) throw new Error(issues.join('; '));
   } catch (error) {
     throw new Error(
       `Catalog snapshot is missing or unreadable at ${SNAPSHOT_PATH}: ` +

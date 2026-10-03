@@ -3,6 +3,9 @@ import { uiEn } from './ui-en.ts';
 export const en = {
   "catalog.sourceNotice": "Product names and descriptions are shown in their original catalog language. English descriptions are not available yet.",
   "catalog.deliveryNotice": "Delivery within Ukraine only. Prices are in Ukrainian hryvnias (UAH).",
+  "errors.cartSelection": "Choose the variant and color on the product page, then add the item again.",
+  "errors.codeTooManyAttempts": "Too many incorrect attempts. Request a new verification code.",
+  "errors.emailDelivery": "We couldn't send the verification email. Try again later or contact support.",
   "errors.generic": "We couldn’t complete this request. Please try again.",
   "errors.invalidCredentials": "Incorrect email or password.",
   "errors.validation": "Check your details and try again.",
@@ -48,7 +51,7 @@ export const en = {
   'nav.shortTerms': 'Terms',
   'nav.faq': 'FAQ',
   'header.catalogAnnouncement': 'Discover our current catalog on the home page',
-  'header.promoAnnouncement': '15% off your first order with code SKUFNYA',
+  'header.supportAnnouncement': "We can help confirm your order details before payment",
   'header.newestAnnouncement': 'New arrivals and popular figures, regularly updated',
   'header.freeDelivery': 'Free delivery from {amount}',
   'header.announcements': 'Store announcements',

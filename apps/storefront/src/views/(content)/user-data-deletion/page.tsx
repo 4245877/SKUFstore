@@ -14,7 +14,7 @@ export default function UserDataDeletionPage({ locale }: { locale: PublishedLoca
     <main className={s.page}>
       <div className={s.container}>
         <section className={s.hero}>
-          <p className={s.eyebrow}>User Data Deletion</p>
+          <p className={s.eyebrow}>{t('content.userDataDeletion')}</p>
           <h1 className={s.title}>{t('content.userDataDeletion')}</h1>
           <p className={s.lead}>
             {t('content.ifYouWantToDeletePersonalData')} </p>

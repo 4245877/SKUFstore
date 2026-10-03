@@ -21,7 +21,11 @@ export function productSlugsFromSitemap(xml, origin) {
   assert.match(xml, /<urlset[\s>]/, 'Invalid sitemap');
   const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => new URL(m[1].replaceAll('&amp;', '&')));
   assert.ok(urls.length, 'Empty sitemap');
-  for (const u of urls) assert.equal(u.origin, origin, 'Unexpected sitemap origin');
+  for (const u of urls) {
+    assert.equal(u.origin, origin, 'Unexpected sitemap origin');
+    assert.ok(!/^\/(uk|de)(\/|$)/.test(u.pathname), 'Unpublished locale in sitemap');
+    assert.ok(!u.pathname.startsWith('/en/product/'), 'Stage 2A untranslated EN products must stay out of sitemap');
+  }
   return urls.filter(u => u.pathname.startsWith('/product/')).map(u => {
     assert.match(u.pathname, /^\/product\/[^/]+\/$/, 'Invalid product URL/trailing slash');
     return decodeURIComponent(u.pathname.split('/')[2]);
@@ -54,19 +58,34 @@ export async function verifyFreshness({ site, api }, fetchResponse = request) {
   const sitemap = await fetchResponse(`${site}/sitemap.xml`);
   assert.equal(sitemap.status, 200, `Sitemap: HTTP ${sitemap.status}`);
   const diff = compareCatalogSlugs(live, productSlugsFromSitemap(await sitemap.text(), new URL(site).origin));
-  const pages = [], queue = [...live];
+  // Stage 2A publishes an EN buying route for every public product, while its
+  // untranslated catalog content remains excluded from indexing and sitemap.
+  const pages = [], queue = live.flatMap(slug => ['uk', 'en'].map(locale => ({ slug, locale })));
   await Promise.all(Array.from({ length: 4 }, async () => {
     while (queue.length) {
-      const slug = queue.shift(), url = `${site}/product/${encodeURIComponent(slug)}/`;
+      const { slug, locale } = queue.shift();
+      const prefix = locale === 'en' ? '/en' : '';
+      const url = `${site}${prefix}/product/${encodeURIComponent(slug)}/`;
       const r = await fetchResponse(url), html = await r.text();
       // A generic 200 fallback must not disguise a missing product page.
-      pages.push({ slug, status: r.status, canonical: html.includes(`<link rel="canonical" href="${url}"`), productJsonLd: /"@type"\s*:\s*"Product"/.test(html) });
+      const robots = (html.match(/<meta\b[^>]*name="robots"[^>]*content="([^"]*)"/i)?.[1] || '').split(/\s*,\s*/);
+      pages.push({
+        slug, locale, status: r.status,
+        canonical: html.includes(`<link rel="canonical" href="${url}"`),
+        productJsonLd: [...html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gis)].some(([, body]) => {
+          try { const product = JSON.parse(body); return product['@type'] === 'Product' && product.url === url; }
+          catch { return false; }
+        }),
+        language: new RegExp(`<html\\b[^>]*lang="${locale}"`).test(html),
+        indexing: locale === 'en' ? robots.includes('noindex') : robots.includes('index') && !robots.includes('noindex'),
+        translationAlternates: !/<link\b[^>]*rel="alternate"[^>]*hrefLang="en"[^>]*href="[^"]*\/en\/product\//i.test(html),
+      });
     }
   }));
   const after = await readLiveSlugs(api, fetchResponse);
   assert.deepEqual([...after].sort(), [...live].sort(), 'Catalog changed during verification; retry');
-  const broken = pages.filter(p => p.status !== 200 || !p.canonical || !p.productJsonLd);
-  return { checkedAt: new Date().toISOString(), ...diff, checkedPages: pages.length, broken, fresh: !diff.missing.length && !diff.stale.length && !broken.length };
+  const broken = pages.filter(p => p.status !== 200 || !p.canonical || !p.productJsonLd || !p.language || !p.indexing || !p.translationAlternates);
+  return { checkedAt: new Date().toISOString(), ...diff, checkedPages: pages.length, checkedUkPages: pages.filter(p => p.locale === 'uk').length, checkedEnPages: pages.filter(p => p.locale === 'en').length, enSeoEligibleProducts: 0, broken, fresh: !diff.missing.length && !diff.stale.length && !broken.length };
 }
 async function main() {
   const site = (process.env.STOREFRONT_URL || 'https://www.skufnya.com').replace(/\/$/, '');

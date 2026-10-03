@@ -1,5 +1,6 @@
 'use client';
 
+import { formatLocaleDate } from '../../../../i18n/presentation';
 import { useI18n } from '../../../../i18n/client';
 import type { Translator } from '../../../../i18n/translate';
 import Link from '../../../../i18n/navigation';
@@ -10,7 +11,6 @@ import { useSearchParams } from 'next/navigation';
 import styles from './CheckoutSuccessPage.module.css';
 import { IconBow } from '../../../../components/icons';
 import {
-  formatDate,
   formatPrice,
   readLastOrder,
 } from '../../../../lib/demo-store';
@@ -170,7 +170,7 @@ function CheckoutSuccessContent() {
         <div className={styles.infoItem}>
           <span className={styles.infoLabel}>{t('shop.date')}</span>
           <strong className={styles.infoValue}>
-            {order ? formatDate(order.createdAt) : t('shop.toBeConfirmed')}
+            {order ? formatLocaleDate(order.createdAt, locale) : t('shop.toBeConfirmed')}
           </strong>
         </div>
 

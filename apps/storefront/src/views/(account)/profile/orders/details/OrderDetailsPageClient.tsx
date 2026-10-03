@@ -1,6 +1,7 @@
 'use client';
 import { presentApiError } from '../../../../../i18n/api-errors';
 
+import { formatLocaleDate, orderStatusLabel, orderPaymentLabel, presentConfiguration, presentItemSubtitle } from '../../../../../i18n/presentation';
 import { useI18n } from '../../../../../i18n/client';
 import type { Translator } from '../../../../../i18n/translate';
 import Link from '../../../../../i18n/navigation';
@@ -9,11 +10,8 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import styles from '../OrderDetailsPage.module.css';
 import {
-  formatDate,
   formatPrice,
-  getStatusLabel,
 } from '../../../../../lib/demo-store';
-import { configurationLabel } from '../../../../../lib/cart-lines';
 import { getAccountOrder, type OrderRecord } from '../../../../../lib/api';
 
 const statusClassMap: Record<string, string> = {
@@ -86,7 +84,7 @@ export default function OrderDetailsPage() {
 
   const normalizedStatus = order ? normalizeStatus(order.status) : 'pending';
   // Неизвестный статус не должен ломать страницу и не должен показывать undefined.
-  const statusClassName = statusClassMap[normalizedStatus] ?? 'statusUnknown';
+  const statusClassName = Object.hasOwn(statusClassMap, normalizedStatus) ? statusClassMap[normalizedStatus] : 'statusUnknown';
 
   if (!isReady) {
     return (
@@ -130,12 +128,12 @@ export default function OrderDetailsPage() {
             <p className={styles.eyebrow}>{t('account.orderDetails')}</p>
             <h1 className={styles.title}>{order.number}</h1>
             <p className={styles.subtitle}>
-              {t('account.placedOn')} {formatDate(order.createdAt)}
+              {t('account.placedOn')} {formatLocaleDate(order.createdAt, locale)}
             </p>
           </div>
 
           <span className={`${styles.status} ${styles[statusClassName]}`}>
-            {getStatusLabel(order.status)}
+            {orderStatusLabel(t, order.status)}
           </span>
         </div>
 
@@ -153,9 +151,9 @@ export default function OrderDetailsPage() {
                       {item.name}
                     </Link>
 
-                    {item.configurationSnapshot ? <p className={styles.itemSubtitle}>{configurationLabel(item.configurationSnapshot)}</p> : null}
+                    {item.configurationSnapshot ? <p className={styles.itemSubtitle}>{presentConfiguration(t, item.configurationSnapshot)}</p> : null}
                     {item.subtitle ? (
-                      <p className={styles.itemSubtitle}>{item.subtitle}</p>
+                      <p className={styles.itemSubtitle}>{presentItemSubtitle(t, item.subtitle, item.configurationSnapshot)}</p>
                     ) : null}
 
                     <p className={styles.itemMeta}>
@@ -245,9 +243,7 @@ export default function OrderDetailsPage() {
                 <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>{t('account.paymentMethod')}</span>
                   <strong className={styles.detailValue}>
-                    {order.customer.paymentMethod === 'card'
-                      ? t('account.cardPayment')
-                      : t('account.cashOnDelivery')}
+                    {orderPaymentLabel(t, order.customer.paymentMethod)}
                   </strong>
                 </div>
 

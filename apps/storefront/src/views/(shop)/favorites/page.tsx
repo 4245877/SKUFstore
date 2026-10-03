@@ -1,5 +1,7 @@
 'use client';
 
+import { formatLocaleDate } from '../../../i18n/presentation';
+import { countNoun } from '../../../i18n/presentation';
 import { useI18n } from '../../../i18n/client';
 import type { Translator } from '../../../i18n/translate';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -56,15 +58,6 @@ function isAuthError(error: unknown) {
   return status === 401 || status === 403;
 }
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('uk-UA', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
 function formatPrice(value: number, currency: string) {
   return new Intl.NumberFormat('uk-UA', {
     style: 'currency',
@@ -79,15 +72,6 @@ function getSeriesLabel(t: Translator, ...values: Array<string | null | undefine
 
 function getMetaLabel(...values: Array<string | null | undefined>) {
   return values.find((value) => Boolean(value?.trim()))?.trim() ?? null;
-}
-
-function pluralizeFigures(t: Translator, count: number) {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-
-  if (mod10 === 1 && mod100 !== 11) return t('shop.figure');
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return t('shop.figures');
-  return t('shop.figures_974');
 }
 
 function mapAccountFavorite(t: Translator, item: AccountFavoriteItem): FavoriteItem {
@@ -106,7 +90,6 @@ function mapAccountFavorite(t: Translator, item: AccountFavoriteItem): FavoriteI
     currency: item.currency,
     metaLabel: getMetaLabel(
       item.defaultVariant?.sizeLabel,
-      item.productType,
       item.category?.name as string | undefined,
     ),
     imageUrl: item.coverImage?.url ?? null,
@@ -169,7 +152,7 @@ function mapCatalogProductToFavorite(t: Translator, product: CatalogProductListI
     price: product.priceFrom,
     hasPriceRange: Boolean(product.pricing?.hasPriceRange),
     currency: product.currency,
-    metaLabel: getMetaLabel(product.productType, product.category?.name as string | undefined),
+    metaLabel: getMetaLabel(product.category?.name as string | undefined),
     imageUrl: product.coverImage?.url ?? null,
     imageAlt: product.coverImage?.alt ?? product.title,
     addedAt: new Date().toISOString(),
@@ -240,7 +223,7 @@ function GridCard({
         </div>
 
         <div className={s.cardFooter}>
-          <span className={s.cardAddedDate}>{formatDate(item.addedAt)}</span>
+          <span className={s.cardAddedDate}>{formatLocaleDate(item.addedAt, locale, 'short')}</span>
         </div>
       </div>
     </article>
@@ -511,7 +494,7 @@ export default function FavoritesPage() {
                 <IconHeart size={17} filled />
               </span>
               <span className={s.headerCountText}>{items.length}</span>
-              <span className={s.headerCountLabel}>{pluralizeFigures(t, items.length)}</span>
+              <span className={s.headerCountLabel}>{countNoun(t, locale, items.length, 'figures')}</span>
             </div>
           </div>
         </div>

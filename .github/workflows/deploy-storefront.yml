@@ -40,7 +40,7 @@ jobs:
     needs: freshness
     if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.freshness.outputs.needs_build == 'true') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     # Newer pushes supersede an older build, so a queued/stuck build can never
     # block later commits from reaching Pages.
     concurrency:
@@ -104,6 +104,9 @@ jobs:
       - name: Storefront regression tests
         run: pnpm --filter storefront test
 
+      - name: Storefront typecheck
+        run: pnpm --filter storefront exec tsc --noEmit --incremental false
+
       - name: Build Storefront
         run: pnpm --filter storefront build
 
@@ -144,6 +147,7 @@ jobs:
             sleep 1
           done
           node test/browser-catalog-hydration.mjs
+          SMOKE_BASE=http://127.0.0.1:54332 node test/browser-stage2.mjs
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

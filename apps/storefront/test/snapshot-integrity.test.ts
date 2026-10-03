@@ -34,6 +34,12 @@ describe('целостность снимка каталога', () => {
     assert.deepEqual(issues, []);
   });
 
+  it('rejects a snapshot from an earlier build', () => {
+    assert.deepEqual(validateCatalogSnapshot(snapshot([product()], { buildId: 'current' }), 'current'), []);
+    assert.ok(validateCatalogSnapshot(snapshot([product()], { buildId: 'previous' }), 'current').includes('snapshot belongs to a different build'));
+    assert.ok(validateCatalogSnapshot(snapshot([product()]), 'current').includes('snapshot belongs to a different build'));
+  });
+
   it('ловит дубликат slug — иначе одна страница молча перетёрла бы другую', () => {
     const issues = validateCatalogSnapshot(snapshot([product(), product({ id: 'p2' })]));
 

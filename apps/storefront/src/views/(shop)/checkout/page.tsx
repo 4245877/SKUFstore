@@ -1,6 +1,7 @@
 'use client';
 import { presentApiError } from '../../../i18n/api-errors';
 
+import { presentCartItemSubtitle } from '../../../i18n/presentation';
 import { useI18n } from '../../../i18n/client';
 import type { Translator } from '../../../i18n/translate';
 import Link from '../../../i18n/navigation';
@@ -938,13 +939,13 @@ export default function CheckoutPage() {
 
                         <Link href={`/product/${item.slug}`}>
 
-                          {item.name}
+                          {item.name === 'Товар кошика' ? t('shop.product') : item.name}
 
                         </Link>
 
                         {item.subtitle ? (
 
-                          <small>{item.subtitle}</small>
+                          <small>{presentCartItemSubtitle(t, item)}</small>
 
                         ) : null}
 
@@ -1079,4 +1080,3 @@ export default function CheckoutPage() {
   );
 
 }
-

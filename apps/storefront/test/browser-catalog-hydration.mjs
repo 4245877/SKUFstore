@@ -5,6 +5,14 @@ import fs from 'node:fs';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const base = process.env.SMOKE_BASE || 'http://127.0.0.1:54332';
 const live = process.env.CATALOG_API_MODE === 'live';
+const browserLocales = process.env.SMOKE_LOCALE ? [process.env.SMOKE_LOCALE] : ['uk-UA', 'en-US'];
+const routeLocales = process.env.SMOKE_ROUTE_LOCALE ? [process.env.SMOKE_ROUTE_LOCALE] : ['uk', 'en'];
+const messages = {
+  uk: { sort: 'Сортувати за', from: 'від ', heading: 'Каталог товарів', loading: 'Завантаження товарів', next: 'Наступна сторінка', pagination: 'Пагінація каталогу', apply: 'Застосувати', search: 'Знайти', empty: 'Нічого не знайдено' },
+  en: { sort: 'Sort by', from: 'from ', heading: 'Product catalog', loading: 'Loading products', next: 'Next page', pagination: 'Catalog pagination', apply: 'Apply', search: 'Search', empty: 'No results found' },
+};
+let routeLocale = 'uk', browserLocale = 'en-US';
+const localize = path => routeLocale === 'en' ? '/en' + path : path;
 const source = live ? [] : JSON.parse(fs.readFileSync(process.env.SMOKE_SNAPSHOT || '.next/cache/skufnya-build/catalog-snapshot.json', 'utf8')).items;
 const products = source.slice(0, 60).map((p, i) => ({
   id: p.id, slug: p.slug, title: `Sans figure ${i}`,
@@ -14,7 +22,10 @@ const products = source.slice(0, 60).map((p, i) => ({
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE });
 const results = [];
 async function scenario(name, path, action) {
-  const context = await browser.newContext({ locale: process.env.SMOKE_LOCALE || 'en-US', viewport: { width: 1440, height: 1000 } });
+  const m = messages[routeLocale];
+  name = `${routeLocale}/${browserLocale}: ${name}`;
+  path = localize(path);
+  const context = await browser.newContext({ locale: browserLocale, viewport: { width: 1440, height: 1000 } });
   const errors = [], requests = [], responses = [];
   await context.route('**/*', async route => {
     const req = route.request(), u = new URL(req.url());
@@ -64,23 +75,42 @@ async function scenario(name, path, action) {
   const pending = [];
   page.on('response', r => {
     if (r.status() >= 400) errors.push(`HTTP ${r.status()} ${r.url()}`);
-    if (new URL(r.url()).pathname === '/api/catalog/products') pending.push(r.json().then(data => responses.push(data)).catch(e => errors.push(e.message)));
+    if (new URL(r.url()).pathname === '/api/catalog/products') pending.push(r.json().then(data => responses.push({ data, url: r.url() })).catch(e => errors.push(e.message)));
   });
   async function verify() {
     await page.waitForLoadState('networkidle');
-    await page.locator('article').first().waitFor();
+    const expectedQuery = new URL(page.url()).searchParams;
+    function matchesCurrentQuery(response) {
+      const query = new URL(response.url).searchParams;
+      return ['q', 'category', 'minPrice', 'maxPrice', 'adult', 'sort', 'page'].every(key => {
+        const fallback = key === 'sort' ? 'newest' : key === 'page' ? '1' : '';
+        return (query.get(key) || fallback) === (expectedQuery.get(key) || fallback);
+      });
+    }
+    const responseDeadline = Date.now() + 15000;
+    while (!responses.some(matchesCurrentQuery)) {
+      assert.ok(Date.now() < responseDeadline, 'Catalog response did not match current URL query');
+      await page.waitForTimeout(50);
+    }
     await Promise.all(pending);
-    const data = responses.at(-1); assert.ok(data?.items.length);
+    const data = responses.findLast(matchesCurrentQuery).data; assert.ok(Array.isArray(data?.items));
+    // History/SPA changes can reuse an already settled load state. Wait for React
+    // to render this response's cards rather than observing a transient loading tree.
+    await page.waitForFunction(slugs => {
+      const cards = [...document.querySelectorAll('article')];
+      return cards.length === slugs.length && slugs.every((slug, i) => cards[i].querySelector('a')?.getAttribute('href').includes('/product/' + slug));
+    }, data.items.map(item => item.slug));
+    if (!data.items.length) await page.getByRole('heading', { name: m.empty, exact: true }).waitFor();
     const cards = page.locator('article'); assert.equal(await cards.count(), data.items.length);
     for (let i = 0; i < data.items.length; i++) {
       const p = data.items[i], card = cards.nth(i);
       assert.ok((await card.locator('a').first().getAttribute('href')).includes('/product/' + p.slug));
       const label = (await card.locator('[class*="cardPrice"]').innerText()).replace(/\s/g, ' ');
       assert.ok(label.includes(new Intl.NumberFormat('uk-UA').format(p.priceFrom).replace(/\s/g, ' ')), label);
-      assert.equal(label.startsWith('від '), p.pricing?.hasPriceRange === true);
+      assert.equal(label.startsWith(m.from), p.pricing?.hasPriceRange === true);
     }
     const q = new URL(page.url()).searchParams;
-    assert.equal(await page.getByLabel('Сортувати за').inputValue(), q.get('sort') || 'newest');
+    assert.equal(await page.getByLabel(m.sort).inputValue(), q.get('sort') || 'newest');
     assert.equal(await page.locator('#catalog-search').inputValue(), q.get('q') || '');
     assert.equal(await page.locator('#catalog-min-price').inputValue(), q.get('minPrice') || '');
     assert.equal(await page.locator('#catalog-max-price').inputValue(), q.get('maxPrice') || '');
@@ -91,7 +121,9 @@ async function scenario(name, path, action) {
       if (q.get('sort') === 'price_asc') assert.ok(data.items[i - 1].priceFrom <= data.items[i].priceFrom);
       if (q.get('sort') === 'price_desc') assert.ok(data.items[i - 1].priceFrom >= data.items[i].priceFrom);
     }
-    assert.equal(await page.locator('html').getAttribute('lang'), 'uk');
+    assert.equal(await page.locator('html').getAttribute('lang'), routeLocale);
+    assert.equal(new URL(page.url()).pathname.startsWith('/en/'), routeLocale === 'en', 'Browser language must never redirect the selected route');
+    assert.ok(requests.every(q => !('locale' in q) && !('currency' in q)), 'Locale must not enter catalog API payloads');
     await settleNetwork();
     return data;
   }
@@ -99,7 +131,7 @@ async function scenario(name, path, action) {
     const response = await page.goto(base + path); assert.equal(response.status(), 200);
     // The server document still includes a heading, loading content and sidebar.
     const html = await response.text();
-    assert.match(html, /Каталог товарів/); assert.match(html, /Завантаження товарів/);
+    assert.ok(html.includes(m.heading)); assert.ok(html.includes(m.loading));
     assert.match(html, /id="catalog-search"/);
     await verify();
     const expected = new URL(base + path).searchParams;
@@ -114,12 +146,14 @@ async function scenario(name, path, action) {
   finally { console.log(JSON.stringify({ scenario: name, passed: results.at(-1)?.passed, error: results.at(-1)?.error })); await context.close(); }
 }
 try {
-  for (const path of ['/catalog/', '/catalog/?sort=price_asc', '/catalog/?sort=price_desc', '/catalog/?minPrice=1000&maxPrice=5000', '/catalog/?q=Sans']) await scenario(path, path);
+ for (browserLocale of browserLocales) for (routeLocale of routeLocales) {
+  const m = messages[routeLocale];
+  for (const path of ['/catalog/', '/catalog/?sort=price_asc', '/catalog/?sort=price_desc', '/catalog/?minPrice=1000&maxPrice=5000', '/catalog/?q=Sans', '/catalog/?q=DefinitelyMissingStage2Figure']) await scenario(path, path);
   const combined = '/catalog/?sort=price_asc&minPrice=1000&maxPrice=5000' + (live ? '' : '&q=Sans');
   await scenario('pagination, reload, history preserve combined query', combined, async ({ page, verify }) => {
     const before = new URL(page.url()).searchParams;
     const first = (await verify()).items.map(p => p.id);
-    await page.getByRole('link', { name: 'Наступна сторінка', exact: true }).click();
+    await page.getByRole('link', { name: m.next, exact: true }).click();
     await page.waitForURL(u => u.searchParams.get('page') === '2');
     const second = (await verify()).items.map(p => p.id);
     assert.ok(second.every(id => !first.includes(id)));
@@ -127,24 +161,37 @@ try {
     await page.reload(); await verify();
     const backResponse = page.waitForResponse(r => new URL(r.url()).pathname === '/api/catalog/products' && new URL(r.url()).searchParams.get('page') === '1');
     await page.goBack(); await backResponse;
-    await page.waitForFunction(() => document.querySelector('nav[aria-label="Пагінація каталогу"] [aria-current="page"]')?.textContent.trim() === '1');
+    await page.waitForFunction(label => document.querySelector(`nav[aria-label="${label}"] [aria-current="page"]`)?.textContent.trim() === '1', m.pagination);
     await verify();
     assert.equal(new URL(page.url()).searchParams.has('page'), false);
     for (const [k, v] of before) assert.equal(new URL(page.url()).searchParams.get(k), v);
   });
   await scenario('sort control and filter GET form preserve query', '/catalog/?sort=price_asc', async ({ page, verify }) => {
-    await page.getByLabel('Сортувати за').selectOption('price_desc');
+    await page.getByLabel(m.sort).selectOption('price_desc');
     await page.waitForURL(u => u.searchParams.get('sort') === 'price_desc'); await verify();
     await page.locator('#catalog-min-price').fill('1000'); await page.locator('#catalog-max-price').fill('5000');
-    await page.getByRole('button', { name: 'Застосувати', exact: true }).click();
+    await page.getByRole('button', { name: m.apply, exact: true }).click();
     await page.waitForURL(u => u.searchParams.get('minPrice') === '1000'); await verify();
     assert.equal(new URL(page.url()).searchParams.get('sort'), 'price_desc');
   });
   await scenario('search GET form preserves sort', '/catalog/?sort=price_asc', async ({ page, verify }) => {
-    await page.locator('#catalog-search').fill('Sans'); await page.getByRole('button', { name: 'Знайти', exact: true }).click();
+    await page.locator('#catalog-search').fill('Sans'); await page.getByRole('search').getByRole('button', { name: m.search, exact: true }).click();
     await page.waitForURL(u => u.searchParams.get('q') === 'Sans'); await verify();
     assert.equal(new URL(page.url()).searchParams.get('sort'), 'price_asc');
   });
+  await scenario('language switch preserves live query and fragment', '/catalog/?sort=price_desc&minPrice=1000&maxPrice=5000#catalog-search', async ({ page }) => {
+    const before = new URL(page.url());
+    const target = routeLocale === 'uk' ? 'en' : 'uk';
+    const link = page.locator(`header a[hreflang="${target}"]`).first();
+    const expectedPath = target === 'en' ? '/en/catalog/' : '/catalog/';
+    await link.click();
+    await page.waitForURL(u => u.pathname === expectedPath);
+    await page.waitForLoadState('networkidle');
+    const after = new URL(page.url());
+    assert.equal(after.search, before.search); assert.equal(after.hash, before.hash);
+    assert.equal(await page.locator('html').getAttribute('lang'), target);
+  });
+ }
 } finally { await browser.close(); }
 const output = { base, mode: live ? 'live' : 'fixture', passed: results.filter(r => r.passed).length, failed: results.filter(r => !r.passed).length, skipped: 0, results };
 if (process.env.SMOKE_OUTPUT) fs.writeFileSync(process.env.SMOKE_OUTPUT, JSON.stringify(output, null, 2));

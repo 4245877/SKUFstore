@@ -11,7 +11,7 @@ import { DEFAULT_LOCALE } from '../i18n/locales';
  */
 export default function NotFound() {
   return (
-    <StorefrontDocument locale={DEFAULT_LOCALE}>
+    <StorefrontDocument locale={DEFAULT_LOCALE} isNotFound>
       <Body locale={DEFAULT_LOCALE} />
     </StorefrontDocument>
   );

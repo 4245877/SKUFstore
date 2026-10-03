@@ -3,6 +3,9 @@ import { uiUk } from './ui-uk.ts';
 export const uk = {
   "catalog.sourceNotice": "Назви й описи товарів наведено мовою каталогу.",
   "catalog.deliveryNotice": "Доставка лише в межах України. Ціни у гривнях (UAH).",
+  "errors.cartSelection": "Уточніть варіант і колір на сторінці товару та додайте його знову.",
+  "errors.codeTooManyAttempts": "Забагато невдалих спроб. Запросіть новий код підтвердження.",
+  "errors.emailDelivery": "Не вдалося надіслати лист підтвердження. Спробуйте пізніше або зверніться до підтримки.",
   "errors.generic": "Не вдалося виконати дію. Спробуйте ще раз.",
   "errors.invalidCredentials": "Неправильна електронна пошта або пароль.",
   "errors.validation": "Перевірте введені дані та спробуйте ще раз.",
@@ -48,7 +51,7 @@ export const uk = {
   "nav.shortTerms": "Умови",
   "nav.faq": "FAQ",
   "header.catalogAnnouncement": "Актуальні товари з каталогу на головній",
-  "header.promoAnnouncement": "-15% на перше замовлення за промокодом SKUFNYA",
+  "header.supportAnnouncement": "Допоможемо узгодити деталі замовлення перед оплатою",
   "header.newestAnnouncement": "Новинки та хіти регулярно оновлюються",
   "header.freeDelivery": "Безкоштовна доставка від {amount}",
   "header.announcements": "Оголошення магазину",

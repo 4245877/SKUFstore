@@ -1,5 +1,6 @@
 'use client';
 
+import { countNoun, presentCartItemSubtitle } from '../../../i18n/presentation';
 import { useI18n } from '../../../i18n/client';
 import type { Translator } from '../../../i18n/translate';
 import Link from '../../../i18n/navigation';
@@ -151,24 +152,13 @@ const SUMMARY_NOTES = (t: Translator) => ([
 
 const DEFAULT_SERIES_LABEL = (t: Translator) => (t('shop.figureFromTheCatalog'));
 
-function pluralizeProducts(t: Translator, count: number) {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-
-  if (mod10 === 1 && mod100 !== 11) return t('shop.product_757');
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-    return t('shop.products');
-  }
-
-  return t('shop.products_759');
-}
-
 function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
   const { locale, t, path } = useI18n();
 
   const currency = item.currency ?? "UAH";
   const subtotal = item.price * item.quantity;
-  const seriesLabel = item.series || item.subtitle || DEFAULT_SERIES_LABEL(t);
+  const subtitle = presentCartItemSubtitle(t, item);
+  const seriesLabel = item.series || subtitle || DEFAULT_SERIES_LABEL(t);
   const imageSrc = item.imageUrl ? resolveMediaUrl(item.imageUrl) : null;
   const productHref = `/product/${item.slug}`;
 
@@ -198,13 +188,13 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
           <p className={styles.cartItemSeries}>{seriesLabel}</p>
 
           <Link href={productHref} className={styles.cartItemName}>
-            {item.name}
+            {item.name === 'Товар кошика' ? t('shop.product') : item.name}
           </Link>
 
           <div className={styles.cartItemMeta}>
-            {item.configurationIssue ? <p role="alert">{item.configurationIssue}</p> : null}
-            {item.subtitle && item.subtitle !== item.series ? (
-              <span className={styles.cartItemTag}>{item.subtitle}</span>
+            {item.configurationIssue ? <p role="alert">{t('errors.cartSelection')}</p> : null}
+            {subtitle && subtitle !== item.series ? (
+              <span className={styles.cartItemTag}>{subtitle}</span>
             ) : null}
 
             <Link href={productHref} className={styles.cartItemLink}>
@@ -287,7 +277,7 @@ function OrderSummary({
           <div>
             <h2 className={styles.summaryTitle}>{SUMMARY_COPY(t).title}</h2>
             <p className={styles.summaryHint}>
-              {itemsCount} {pluralizeProducts(t, itemsCount)}{" "}
+              {itemsCount} {countNoun(t, locale, itemsCount, 'products')}{" "}
               {SUMMARY_COPY(t).itemsInCartSuffix}
             </p>
           </div>
@@ -550,7 +540,7 @@ export default function CartPage() {
           {isReady && !isEmpty ? (
             <div className={styles.pageHeaderMeta}>
               <span className={styles.itemCount}>
-                {itemCount} {pluralizeProducts(t, itemCount)}
+                {itemCount} {countNoun(t, locale, itemCount, 'products')}
               </span>
               <button
                 type="button"

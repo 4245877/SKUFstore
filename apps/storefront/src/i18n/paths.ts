@@ -17,6 +17,21 @@ export function switchLocalePath(locale: Locale, href: string): string {
   return localizeHref(locale, href);
 }
 
+/** The global 404 shell can hydrate at a reserved or malformed URL. Only the
+ * switcher falls back to a published home page; ordinary navigation stays strict. */
+export function localeSwitcherDestination(locale: Locale, href: string, isNotFound = false): string {
+  assertPublishedLocale(locale);
+  const home = buildLocalizedPath({ locale, path: '/' });
+  if (isNotFound || !href.startsWith('/') || href.startsWith('//')) return home;
+  try {
+    const pathname = decodeURIComponent(unprefixedPath(href).split(/[?#]/, 1)[0]);
+    if (/^\/(?:_[^/]*|api|uploads|404(?:\.html)?)(?:\/|$)/.test(pathname)) return home;
+    return switchLocalePath(locale, href);
+  } catch {
+    return home;
+  }
+}
+
 /**
  * Storefront hrefs only: preserves the caller's slash, query and fragment verbatim.
  * Existing links use both /catalog and /catalog/; canonical callers supply /.

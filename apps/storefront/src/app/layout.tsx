@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SITE_URL } from '../i18n/metadata';
 import { DEFAULT_LOCALE } from '../i18n/locales';
 import { getTranslator } from '../i18n/translate';
 
@@ -12,11 +13,15 @@ import { getTranslator } from '../i18n/translate';
  * groups. Without this file there is no app-owned 404 at all, and Next exports
  * its unbranded English fallback as /404.html for the whole site.
  *
- * Only the title the 404 needs is declared here. A full rootMetadata() would
+ * The title and production asset base the 404 needs are declared here.
+ * A full rootMetadata() would
  * put its '%s | SKUFnya' template above every locale layout and rewrite titles
  * that pages are already indexed under.
  */
-export const metadata: Metadata = { title: getTranslator(DEFAULT_LOCALE)('seo.title') };
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: getTranslator(DEFAULT_LOCALE)('seo.title'),
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return children;

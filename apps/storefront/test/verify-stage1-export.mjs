@@ -4,13 +4,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { buildProductUrl } from '../src/lib/product-meta.ts';
 import { sitemapUrls } from '../src/lib/sitemap-urls.ts';
-import { DEFAULT_LOCALE, PUBLISHED_LOCALES } from '../src/i18n/locales.ts';
+import { DEFAULT_LOCALE, PUBLISHED_LOCALES, LOCALE_PRESENTATION } from '../src/i18n/locales.ts';
 import { getTranslator } from '../src/i18n/translate.ts';
 import { buildLocalizedPath } from '../src/i18n/paths.ts';
 import { SITE_URL } from '../src/i18n/metadata.ts';
 
 const root = path.resolve(process.env.EXPORT_ROOT || 'out');
 const snapshot = JSON.parse(fs.readFileSync('.next/cache/skufnya-build/catalog-snapshot.json', 'utf8'));
+assert.match(snapshot.buildId, /^[a-zA-Z0-9-]+$/, 'Missing current catalog build ID');
+const compiledBuildId = JSON.parse(fs.readFileSync('.next/required-server-files.json', 'utf8')).config.env.SKUF_CATALOG_BUILD_ID;
+assert.equal(snapshot.buildId, compiledBuildId, 'Catalog snapshot belongs to a different compiled build');
+const collectionRoot = path.join('.next/cache/skufnya-build', `collection-${snapshot.buildId}`);
+assert.deepEqual(JSON.parse(fs.readFileSync(path.join(collectionRoot, 'catalog-snapshot.json'), 'utf8')), snapshot, 'Verifier mirror differs from the validated worker snapshot');
+const completion = JSON.parse(fs.readFileSync(path.join(collectionRoot, 'result.json'), 'utf8'));
+assert.equal(completion.buildId, snapshot.buildId);
+assert.equal(completion.result.count, snapshot.items.length);
+assert.deepEqual(completion.result.slugs, snapshot.items.map(item => item.slug));
+assert.equal(fs.existsSync(path.join(collectionRoot, 'failed')), false, 'Failed catalog collection cannot be published');
 const sitemap = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
 const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1].replaceAll('&amp;', '&'));
 assert.deepEqual(urls, sitemapUrls(snapshot.items.map((item) => item.slug)));
@@ -53,6 +63,14 @@ function htmlFiles(dir) {
     return entry.isDirectory() ? htmlFiles(file) : file.endsWith('.html') ? [file] : [];
   });
 }
+function metaContent(html, attribute, name) {
+  return html.match(new RegExp(`<meta ${attribute}="${name}" content="([^"]*)"`))?.[1];
+}
+function productJsonLd(html) {
+  const match = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s);
+  assert.ok(match, 'Missing Product JSON-LD');
+  return JSON.parse(match[1]);
+}
 function seo(html) {
   // Compare the actual rendered metadata and JSON-LD; ignore Next build IDs/assets.
   return [
@@ -70,6 +88,22 @@ for (const file of files) {
   const locale = exportLocale(relative);
   const html = fs.readFileSync(file, 'utf8');
   assert.match(html, new RegExp(`<html[^>]+lang="${locale}"`), `Wrong document language: ${relative}`);
+  if (!relative.startsWith('404')) {
+    const pathname = '/' + relative.replace(/index\.html$/, '');
+    assert.ok(html.includes(`<link rel="canonical" href="${SITE_URL}${pathname}"`), `Wrong self canonical: ${relative}`);
+    assert.equal(metaContent(html, 'property', 'og:locale'), LOCALE_PRESENTATION[locale].openGraphLocale, `Wrong OG locale: ${relative}`);
+    for (const [attribute, key] of [['name', 'description'], ['property', 'og:title'], ['property', 'og:description'], ['name', 'twitter:title'], ['name', 'twitter:description']]) {
+      assert.ok(metaContent(html, attribute, key)?.trim(), `Missing ${key}: ${relative}`);
+    }
+  }
+  assert.doesNotMatch(html, /https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?=[:/\"])/i, `Development host URL: ${relative}`);
+  assert.doesNotMatch(html, /<a\b[^>]*href="\/(?:en\/)?(?:_[^/"]*|api|uploads)(?:\/|")/, `Internal route in navigation: ${relative}`);
+  if (relative.startsWith('404')) {
+    for (const [, href] of html.matchAll(/<a[^>]*hrefLang="en"[^>]*href="([^"]*)"/g)) {
+      assert.equal(href, '/en/', 'Static 404 switcher must target an exported home');
+    }
+    assert.ok(metaContent(html, 'property', 'og:image')?.startsWith(SITE_URL + '/'), '404 OG image must use production origin');
+  }
   // A published page must never link into an unpublished locale.
   assert.doesNotMatch(html, /href="\/(?:uk|de)(?:\/|"|\?)/, `Link to an unpublished locale: ${relative}`);
   // Alternates are the published pair and nothing else, and both sides must really be exported.
@@ -101,9 +135,18 @@ for (const product of snapshot.items) {
   const enHtml = fs.readFileSync(path.join(root, 'en', 'product', product.slug, 'index.html'), 'utf8');
   assert.ok(enHtml.includes(`<link rel="canonical" href="${buildProductUrl(product.slug, 'en')}"`));
   assert.match(enHtml, /<meta name="robots" content="noindex/, `EN product page must not be indexed: ${product.slug}`);
+  for (const html of [ukHtml, enHtml]) assert.doesNotMatch(html, /<link rel="alternate"/, `Untranslated product alternate: ${product.slug}`);
+  assert.ok(enHtml.includes(getTranslator('en')('catalog.sourceNotice')), `Missing source-language notice: ${product.slug}`);
+  const ukData = productJsonLd(ukHtml), enData = productJsonLd(enHtml);
+  for (const key of ['name', 'description', 'sku', 'brand', 'category', 'image']) assert.deepEqual(enData[key], ukData[key], `Changed catalog data ${key}: ${product.slug}`);
+  for (const key of ['price', 'priceCurrency', 'availability', 'hasMerchantReturnPolicy']) assert.deepEqual(enData.offers?.[key], ukData.offers?.[key], `Locale changed offer ${key}: ${product.slug}`);
+  assert.equal(enData.url, buildProductUrl(product.slug, 'en'));
+  assert.equal(enData.offers?.price, product.priceFrom);
+  assert.equal(enData.offers?.priceCurrency, product.currency);
+
 }
 if (process.env.EXPORT_BASELINE) {
   assert.deepEqual(files.map((f) => path.relative(root, f)), htmlFiles(process.env.EXPORT_BASELINE).map((f) => path.relative(process.env.EXPORT_BASELINE, f)));
   assert.equal(sitemap, fs.readFileSync(path.join(process.env.EXPORT_BASELINE, 'sitemap.xml'), 'utf8'));
 }
-console.log(JSON.stringify({ passed: true, products: snapshot.items.length, sitemapUrls: urls.length, htmlPages: files.length, locales: [...PUBLISHED_LOCALES], baselineCompared: Boolean(process.env.EXPORT_BASELINE) }));
+console.log(JSON.stringify({ passed: 1, failed: 0, skipped: 0, products: snapshot.items.length, ukProductPages: snapshot.items.length, enProductRoutes: snapshot.items.length, enIndexableProducts: 0, ukHtmlPages: files.filter(f => exportLocale(path.relative(root, f).split(path.sep).join('/')) === 'uk').length, enHtmlPages: files.filter(f => exportLocale(path.relative(root, f).split(path.sep).join('/')) === 'en').length, sitemapUrls: urls.length, htmlPages: files.length, locales: [...PUBLISHED_LOCALES], baselineCompared: Boolean(process.env.EXPORT_BASELINE) }));

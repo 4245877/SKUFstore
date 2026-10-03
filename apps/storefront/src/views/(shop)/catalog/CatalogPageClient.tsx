@@ -748,7 +748,7 @@ export default function CatalogPageClient() {
 
                 <noscript>
                   <button type="submit" className={styles.pageBtn}>
-                    OK
+                    {t('shop.apply')}
                   </button>
                 </noscript>
               </form>

@@ -1,14 +1,13 @@
 'use client';
 
+import { formatLocaleDate, orderStatusLabel } from '../../../../i18n/presentation';
 import { useI18n } from '../../../../i18n/client';
 import type { Translator } from '../../../../i18n/translate';
 import Link from '../../../../i18n/navigation';
 import { useEffect, useState } from 'react';
 import styles from './OrdersPage.module.css';
 import {
-  formatDate,
   formatPrice,
-  getStatusLabel,
 } from '../../../../lib/demo-store';
 import { getAccountOrders, type OrderRecord } from '../../../../lib/api';
 
@@ -118,7 +117,7 @@ export default function ProfileOrdersPage() {
             {orders.map((order) => {
               // Незнакомый статус получает нейтральный стиль вместо падения вёрстки.
               const statusKey = String(order.status).toLowerCase();
-              const statusClassName = statusClassMap[statusKey] ?? 'statusUnknown';
+              const statusClassName = Object.hasOwn(statusClassMap, statusKey) ? statusClassMap[statusKey] : 'statusUnknown';
               const itemsCount = order.items.reduce(
                 (sum, item) => sum + item.quantity,
                 0,
@@ -130,12 +129,12 @@ export default function ProfileOrdersPage() {
                     <div>
                       <p className={styles.orderNumber}>{order.number}</p>
                       <p className={styles.orderDate}>
-                        {formatDate(order.createdAt)}
+                        {formatLocaleDate(order.createdAt, locale)}
                       </p>
                     </div>
 
                     <span className={`${styles.status} ${styles[statusClassName]}`}>
-                      {getStatusLabel(order.status)}
+                      {orderStatusLabel(t, order.status)}
                     </span>
                   </div>
 

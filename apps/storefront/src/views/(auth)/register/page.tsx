@@ -78,7 +78,6 @@ export default function RegisterPage() {
     confirm: '',
     code: '',
     agree: false,
-    newsletter: false,
   });
 
   const [showPw, setShowPw] = useState(false);
@@ -501,18 +500,11 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <label className={s.checkRow}>
-              <input
-                type="checkbox"
-                className={s.checkboxInput}
-                checked={form.newsletter}
-                onChange={handleFieldChange('newsletter')}
-                id={`${uid}-nl`}
-              />
-              <span className={s.checkboxBox} aria-hidden="true" />
-              <span className={s.checkLabel}>
-                {t('auth.sendMeNewArrivalsRestocksAndExclusive')} </span>
-            </label>
+            <p className={s.checkLabel}>
+              <a href="https://t.me/+l3_CI64EkuxlZmYy" target="_blank" rel="noreferrer" className={s.checkLabelLink}>
+                {t('auth.followNewsOnTelegram')}
+              </a>
+            </p>
 
             <button type="submit" className={s.submitBtn} disabled={loading} aria-busy={loading}>
               {loading ? (

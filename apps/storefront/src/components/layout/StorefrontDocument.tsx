@@ -32,8 +32,8 @@ const fontJp = Shippori_Mincho({
 });
 
 export default function StorefrontDocument({
-  children, locale,
-}: Readonly<{ children: React.ReactNode; locale: PublishedLocale }>) {
+  children, locale, isNotFound = false,
+}: Readonly<{ children: React.ReactNode; locale: PublishedLocale; isNotFound?: boolean }>) {
   return (
     <html
       lang={locale}
@@ -42,7 +42,7 @@ export default function StorefrontDocument({
       <body>
         <LocaleProvider locale={locale}>
         <StoreAnalytics />
-        <Header locale={locale} />
+        <Header locale={locale} isNotFound={isNotFound} />
         {children}
         <Footer locale={locale} />
         </LocaleProvider>

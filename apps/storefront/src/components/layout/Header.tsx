@@ -45,7 +45,7 @@ type NavItem = {
   }>;
 };
 
-export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+export default function Header({ locale = DEFAULT_LOCALE, isNotFound = false }: { locale?: Locale; isNotFound?: boolean }) {
   const t = getTranslator(locale);
   const href = (path: string) => buildLocalizedPath({ locale, path });
 
@@ -117,7 +117,7 @@ export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale })
 
   const ANNOUNCEMENTS = [
     t('header.catalogAnnouncement'),
-    t('header.promoAnnouncement'),
+    t('header.supportAnnouncement'),
     t('header.newestAnnouncement'),
   ];
 
@@ -412,7 +412,7 @@ export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale })
           </nav>
 
           <div className={styles.actions}>
-            <LocaleSwitcher className={styles.localeDesktop} />
+            <LocaleSwitcher isNotFound={isNotFound} className={styles.localeDesktop} />
             <button
               type="button"
               className={`${styles.iconBtn} ${styles.searchToggle} ${
@@ -675,7 +675,7 @@ export default function Header({ locale = DEFAULT_LOCALE }: { locale?: Locale })
             {/* На вузьких екранах перемикач мови живе тут, а не в шапці */}
             <div className={styles.mobileLocale}>
               <p className={styles.mobileQuickTitle}>{t('header.language')}</p>
-              <LocaleSwitcher variant="full" tabIndex={mobileOpen ? 0 : -1} />
+              <LocaleSwitcher isNotFound={isNotFound} variant="full" tabIndex={mobileOpen ? 0 : -1} />
             </div>
 
             <div className={styles.mobileNavLinks}>

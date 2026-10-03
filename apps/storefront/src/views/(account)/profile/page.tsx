@@ -1,5 +1,6 @@
 'use client';
 
+import { formatLocaleDate, orderStatusLabel } from '../../../i18n/presentation';
 import { useI18n } from '../../../i18n/client';
 import type { Translator } from '../../../i18n/translate';
 import Link from '../../../i18n/navigation';
@@ -22,30 +23,6 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('uk-UA', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(value));
-}
-
-const statusLabels = (t: Translator): Record<string, string> => ({
-  pending: t('account.awaitingConfirmation'),
-  confirmed: t('account.confirmed'),
-  awaiting_payment: t('account.awaitingPayment'),
-  paid: t('account.paid'),
-  processing: t('account.inProgress'),
-  shipped: t('account.shipped'),
-  delivered: t('account.delivered'),
-  cancelled: t('account.cancelled'),
-  returned: t('account.return'),
-});
-
-function getStatusLabel(t: Translator, status: string) {
-  return statusLabels(t)[String(status ?? '').toLowerCase()] ?? t('account.unknown');
-}
-
 const statusClassMap: Record<string, string> = {
   pending: 'statusPending',
   confirmed: 'statusConfirmed',
@@ -63,7 +40,8 @@ const statusClassMap: Record<string, string> = {
  * в className нельзя, а статика на Pages может отставать от backend.
  */
 function getStatusClassName(status: string) {
-  const key = statusClassMap[String(status ?? '').toLowerCase()] ?? 'statusUnknown';
+  const value = String(status ?? '').toLowerCase();
+  const key = Object.hasOwn(statusClassMap, value) ? statusClassMap[value] : 'statusUnknown';
   return styles[key] ?? styles.statusUnknown;
 }
 
@@ -255,11 +233,11 @@ export default function ProfilePage() {
                   <div className={styles.orderTop}>
                     <div>
                       <p className={styles.orderNumber}>{lastOrder.number}</p>
-                      <p className={styles.orderDate}>{formatDate(lastOrder.createdAt)}</p>
+                      <p className={styles.orderDate}>{formatLocaleDate(lastOrder.createdAt, locale)}</p>
                     </div>
 
                     <span className={`${styles.status} ${getStatusClassName(lastOrder.status)}`}>
-                      {getStatusLabel(t, lastOrder.status)}
+                      {orderStatusLabel(t, lastOrder.status)}
                     </span>
                   </div>
 

@@ -37,22 +37,72 @@ test('freshness checks page availability even when sitemap matches, including so
       if (url.endsWith('sitemap.xml')) return new Response('<urlset><url><loc>https://site.test/product/frieren/</loc></url></urlset>');
       return new Response('<h1>Not found</h1>', { status });
     });
-    assert.equal(result.fresh, false); assert.equal(result.broken.length, 1);
+    assert.equal(result.fresh, false); assert.equal(result.broken.length, 2);
   }
 });
 test('freshness accepts matching live URLs only after checking real product HTML', async () => {
   const result = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, async (url: string) => {
     if (url.includes('/api/catalog/')) return new Response(JSON.stringify({ items: [{ slug: 'frieren' }], meta: { page: 1, total: 1 } }));
     if (url.endsWith('sitemap.xml')) return new Response('<urlset><url><loc>https://site.test/product/frieren/</loc></url></urlset>');
-    return new Response('<link rel="canonical" href="https://site.test/product/frieren/"><script type="application/ld+json">{"@type":"Product"}</script>');
+    return new Response(productHtml(url));
   });
-  assert.equal(result.fresh, true); assert.equal(result.checkedPages, 1);
+  assert.equal(result.fresh, true); assert.equal(result.checkedPages, 2);
+  assert.equal(result.checkedUkPages, 1); assert.equal(result.checkedEnPages, 1); assert.equal(result.enSeoEligibleProducts, 0);
 });
 test('freshness does not give a green result if the live catalog changes during page checks', async () => {
   let listings = 0;
   await assert.rejects(verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, async (url: string) => {
     if (url.includes('/api/catalog/')) return new Response(JSON.stringify({ items: [{ slug: ++listings === 1 ? 'frieren' : 'new-product' }], meta: { page: 1, total: 1 } }));
     if (url.endsWith('sitemap.xml')) return new Response('<urlset><url><loc>https://site.test/product/frieren/</loc></url></urlset>');
-    return new Response('<link rel="canonical" href="https://site.test/product/frieren/">{"@type":"Product"}');
+    return new Response(productHtml(url));
   }), /Catalog changed during verification/);
+});
+
+function productHtml(url: string) {
+  const locale = new URL(url).pathname.startsWith('/en/') ? 'en' : 'uk';
+  return `<html lang="${locale}"><head><link rel="canonical" href="${url}"><meta name="robots" content="${locale === 'en' ? 'noindex' : 'index'}, follow"><script type="application/ld+json">${JSON.stringify({ '@type': 'Product', url })}</script></head></html>`;
+}
+
+function fixtureFetch(transform: (html: string, url: string) => string = html => html, enStatus = 200) {
+  return async (url: string) => {
+    if (url.includes('/api/catalog/')) return new Response(JSON.stringify({ items: [{ slug: 'frieren' }], meta: { page: 1, total: 1 } }));
+    if (url.endsWith('sitemap.xml')) return new Response('<urlset><url><loc>https://site.test/product/frieren/</loc></url></urlset>');
+    return new Response(transform(productHtml(url), url), { status: url.includes('/en/') ? enStatus : 200 });
+  };
+}
+
+test('Stage 2A freshness rejects missing EN routes even when UK sitemap and pages are fresh', async () => {
+  const result = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, fixtureFetch(undefined, 404));
+  assert.equal(result.fresh, false);
+  assert.equal(result.broken.length, 1);
+  assert.equal(result.broken[0].locale, 'en');
+});
+
+test('Stage 2A freshness rejects wrong EN language, canonical, indexing and translation alternates', async () => {
+  const changes = [
+    (html: string) => html.replace('lang="en"', 'lang="uk"'),
+    (html: string) => html.replace('href="https://site.test/en/product/', 'href="https://site.test/product/'),
+    (html: string) => html.replace('content="noindex', 'content="index'),
+    (html: string) => html.replace('</head>', '<link rel="alternate" hrefLang="en" href="https://site.test/en/product/frieren/"/></head>'),
+  ];
+  for (const change of changes) {
+    const result = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, fixtureFetch((html, url) => url.includes('/en/') ? change(html) : html));
+    assert.equal(result.fresh, false); assert.equal(result.broken.length, 1); assert.equal(result.broken[0].locale, 'en');
+  }
+});
+
+test('Stage 2A sitemap excludes untranslated EN product routes and unpublished locale prefixes', () => {
+  for (const path of ['/en/product/frieren/', '/de/catalog/', '/uk/catalog/']) {
+    assert.throws(() => productSlugsFromSitemap(`<urlset><url><loc>https://site.test${path}</loc></url></urlset>`, 'https://site.test'));
+  }
+});
+
+test('freshness requires actual Product JSON-LD matching the locale URL', async () => {
+  for (const change of [
+    (html: string) => html.replace('application/ld+json', 'text/plain'),
+    (html: string) => html.replace('"url":"https://site.test/en/product/', '"url":"https://site.test/product/'),
+  ]) {
+    const result = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, fixtureFetch((html, url) => url.includes('/en/') ? change(html) : html));
+    assert.equal(result.fresh, false); assert.equal(result.broken.length, 1);
+  }
 });

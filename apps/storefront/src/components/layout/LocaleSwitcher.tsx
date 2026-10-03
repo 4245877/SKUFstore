@@ -3,12 +3,14 @@
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { LOCALE_PRESENTATION, PUBLISHED_LOCALES } from '../../i18n/locales';
-import { switchLocalePath } from '../../i18n/paths';
+import { localeSwitcherDestination } from '../../i18n/paths';
 import { useI18n } from '../../i18n/client';
 import styles from './LocaleSwitcher.module.css';
 
 type SwitcherProps = {
-  /** compact — сегменти «УКР | ENG» у шапці; full — повні назви в мобільному меню. */
+  /** A missing route has no equivalent; link to a published home in both render phases. */
+  isNotFound?: boolean;
+  /** compact — сегменти «UK | EN» у шапці; full — повні назви в мобільному меню. */
   variant?: 'compact' | 'full';
   className?: string;
   /** Lets a closed drawer take its copy out of the tab order. */
@@ -38,7 +40,7 @@ function LiveSwitcher(props: SwitcherProps) {
   return <Switcher {...props} search={query ? `?${query}` : ''} />;
 }
 
-function Switcher({ variant = 'compact', className, tabIndex, search }: SwitcherProps & { search: string }) {
+function Switcher({ variant = 'compact', className, tabIndex, search, isNotFound = false }: SwitcherProps & { search: string }) {
   const { locale, t } = useI18n();
   const pathname = usePathname() || '/';
   const [hash, setHash] = useState('');
@@ -56,10 +58,10 @@ function Switcher({ variant = 'compact', className, tabIndex, search }: Switcher
     >
       {PUBLISHED_LOCALES.map((target) => {
         const { shortLabel, nativeName } = LOCALE_PRESENTATION[target];
-        // The visible abbreviation is a prefix of the spoken name (WCAG 2.5.3 label in name).
+        // Include the exact visible abbreviation in the accessible name (WCAG 2.5.3).
         const label = variant === 'full'
           ? nativeName
-          : <><span aria-hidden="true">{shortLabel}</span><span className="sr-only">{nativeName}</span></>;
+          : <><span aria-hidden="true">{shortLabel}</span><span className="sr-only">{shortLabel} — {nativeName}</span></>;
 
         // The current language is a state, not a destination: no reload-to-self link.
         if (target === locale) {
@@ -77,11 +79,11 @@ function Switcher({ variant = 'compact', className, tabIndex, search }: Switcher
             hrefLang={target}
             title={variant === 'compact' ? nativeName : undefined}
             className={`${styles.option} ${styles.link}`}
-            href={switchLocalePath(target, pathname + search + hash)}
+            href={localeSwitcherDestination(target, pathname + search + hash, isNotFound)}
             tabIndex={tabIndex}
             onClick={(event) => {
               // Read the live URL at activation as well (a pushState hash change fires no event).
-              event.currentTarget.href = switchLocalePath(target, window.location.pathname + window.location.search + window.location.hash);
+              event.currentTarget.href = localeSwitcherDestination(target, window.location.pathname + window.location.search + window.location.hash, isNotFound);
             }}
           >
             {label}

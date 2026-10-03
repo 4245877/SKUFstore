@@ -84,7 +84,7 @@ export default function VerifyAgeClient() {
           {t('shop.thisSectionMayIncludeProductsMarked18')} </p>
 
         <p className={styles.text}>
-          {t('shop.pleaseConfirmThatYouAre')} <strong>{t('shop.18YearsOld')}</strong>
+          {t('shop.pleaseConfirmThatYouAre')} <strong>{t('shop.18YearsOld')}</strong>{' '}
            {t('shop.orOlderToContinueBrowsing')} </p>
 
         {error ? (

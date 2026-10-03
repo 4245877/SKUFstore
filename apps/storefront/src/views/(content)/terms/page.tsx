@@ -14,7 +14,7 @@ export default function TermsPage({ locale }: { locale: PublishedLocale }) {
     <main className={s.page}>
       <div className={s.container}>
         <section className={s.hero}>
-          <p className={s.eyebrow}>Terms of Service</p>
+          <p className={s.eyebrow}>{t('content.termsOfUse')}</p>
           <h1 className={s.title}>{t('content.termsOfUse')}</h1>
           <p className={s.lead}>
             {t('content.theseTermsGovernUseOfTheSkufnya')} </p>
