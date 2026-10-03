@@ -51,6 +51,7 @@ import {
 import { useCartQuote } from "../../../lib/use-cart-quote";
 
 import { cartOrderItems, orderCartItems } from "../../../lib/cart-lines";
+import { readCheckoutDraft, saveCheckoutDraft, clearCheckoutDraft } from "../../../lib/checkout-draft";
 
 import { NovaPoshtaPicker } from "./NovaPoshtaPicker";
 
@@ -269,6 +270,9 @@ export default function CheckoutPage() {
 
   useEffect(() => {
 
+    const draft = readCheckoutDraft();
+    if (draft) setForm(draft);
+
     const sync = () => { setItems(readCart()); setIsReady(true); };
 
     sync();
@@ -276,6 +280,10 @@ export default function CheckoutPage() {
     return subscribeToCartChange(sync);
 
   }, []);
+
+  useEffect(() => {
+    if (isReady) saveCheckoutDraft(form);
+  }, [form, isReady]);
 
   const pricing = useCartQuote(cartItems, form.deliveryMethod);
 
@@ -392,6 +400,8 @@ export default function CheckoutPage() {
         normalizedCustomer,
 
       );
+
+      clearCheckoutDraft();
 
       writeLastOrder(storedOrder);
 

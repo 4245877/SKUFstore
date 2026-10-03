@@ -125,6 +125,14 @@ after UK/EN switching. Cart storage and source/historical text remain intact. Kn
 backend error codes have actionable copy; unknown/prototype codes
 have safe generic copy without displaying transport messages.
 
+Checkout uses a shared per-tab session draft so full-document UK/EN navigation
+preserves selected delivery/payment and entered contact/address details. Only the
+existing form fields are stored in a versioned private session key; prices, cart
+items, quoteToken and locale are excluded. The draft restores before cart readiness
+and the first server quote, remains through quote review/retry and clears after a
+successful order response. Cart storage, order/quote payloads and backend contracts
+are unchanged. Browser regression asserts both language directions and reloads.
+
 Compact switcher labels are UK/EN. The global static 404 explicitly links to the
 target language's published home before and after hydration, including unknown and
 reserved-prefix paths. Service/internal routes are rejected by the switcher. Ordinary

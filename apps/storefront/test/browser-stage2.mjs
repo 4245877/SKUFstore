@@ -343,6 +343,34 @@ try {
   await page.getByPlaceholder('+380 00 000 00 00').fill('+380501112233');
   await page.getByPlaceholder(t('shop.kyiv')).fill('Київ');
   await page.getByPlaceholder(t('shop.forExampleArrangeWithTheStore')).fill('Узгодити з менеджером');
+  await page.locator('input[name="paymentMethod"][value="full-prepayment"]').check();
+  await settleNetwork();
+  const draftBeforeSwitch = await page.evaluate(() => sessionStorage.getItem('skufnya:checkout-draft'));
+  assert.ok(draftBeforeSwitch, 'The shared checkout draft exists before document navigation');
+  const quoteCallsBeforeSwitch = quoteCalls.length;
+  for (const nextLocale of [target, routeLocale]) {
+    await settleNetwork();
+    await page.locator(`header a[hreflang="${nextLocale}"]`).first().click();
+    await page.waitForURL(u => u.pathname === (nextLocale === 'en' ? '/en' : '') + '/checkout/');
+    await settleNetwork();
+    const nextT = getTranslator(nextLocale);
+    assert.equal(await page.locator('html').getAttribute('lang'), nextLocale);
+    assert.equal(await page.locator('input[name="deliveryMethod"][value="pickup"]').isChecked(), true);
+    assert.equal(await page.locator('input[name="paymentMethod"][value="full-prepayment"]').isChecked(), true);
+    assert.equal(await page.getByPlaceholder(nextT('shop.forExampleMykhailoPetrenko')).inputValue(), 'Тестовий Покупець');
+    assert.equal(await page.getByPlaceholder('name@example.com').inputValue(), 'buyer@example.com');
+    assert.equal(await page.getByPlaceholder('+380 00 000 00 00').inputValue(), '+380501112233');
+    assert.equal(await page.getByPlaceholder(nextT('shop.kyiv')).inputValue(), 'Київ');
+    assert.equal(await page.getByPlaceholder(nextT('shop.forExampleArrangeWithTheStore')).inputValue(), 'Узгодити з менеджером');
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('skufnya:checkout-draft')), draftBeforeSwitch);
+  }
+  assert.ok(quoteCalls.length > quoteCallsBeforeSwitch);
+  assert.ok(quoteCalls.slice(quoteCallsBeforeSwitch).every(call => call.deliveryMethod === 'pickup'), 'Locale remount must never quote the default delivery method');
+  await page.reload();
+  await settleNetwork();
+  assert.equal(await page.locator('input[name="deliveryMethod"][value="pickup"]').isChecked(), true);
+  assert.equal(await page.locator('input[name="paymentMethod"][value="full-prepayment"]').isChecked(), true);
+  check('Checkout language switches and reload preserve delivery, payment, contact/address draft and pickup quote contract');
   await capture('checkout');
   const confirm = page.getByRole('button', { name: t('shop.confirmOrder') });
   await confirm.click();
@@ -365,6 +393,11 @@ try {
   assert.ok(order.items[0].configurationSnapshot.color.name);
   assert.equal(order.items[0].configurationSnapshot.finishLabel, 'Монохромна версія', 'Display translation must not rewrite the backend historical snapshot');
   assert.equal(await page.evaluate(() => localStorage.getItem('skufnya:cart')), null);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('skufnya:checkout-draft')), null, 'Successful order clears its UI draft');
+  assert.equal(createCalls[0].deliveryMethod, 'pickup');
+  assert.equal(createCalls[0].paymentMethod, 'full-prepayment');
+  assert.equal(createCalls[1].deliveryMethod, 'pickup');
+  assert.equal(createCalls[1].paymentMethod, 'full-prepayment');
   check('Non-default variant, two resin colors, favorites/storage, cart quote, pickup, checkout 409/review/retry and saved snapshot');
   authenticated = true;
   for (const [path, heading] of [['/profile/', t('account.profile')], ['/profile/orders/', t('account.myOrders')], ['/profile/orders/details/?id=browser-order', savedOrder.number]]) {
