@@ -2,15 +2,19 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildProductUrl } from '../src/lib/product-meta.ts';
+import { buildProductUrl, buildProductPageMeta, buildProductJsonLd, toPlainText } from '../src/lib/product-meta.ts';
 import { sitemapUrls } from '../src/lib/sitemap-urls.ts';
 import { DEFAULT_LOCALE, PUBLISHED_LOCALES, LOCALE_PRESENTATION } from '../src/i18n/locales.ts';
 import { getTranslator } from '../src/i18n/translate.ts';
 import { buildLocalizedPath } from '../src/i18n/paths.ts';
 import { SITE_URL } from '../src/i18n/metadata.ts';
+import { isEnglishProductReady, getProductLocalizationVersion, resolveProductPresentation } from '../src/i18n/catalog-policy.ts';
+import { validateCatalogSnapshot } from '../src/lib/snapshot-integrity.ts';
 
 const root = path.resolve(process.env.EXPORT_ROOT || 'out');
 const snapshot = JSON.parse(fs.readFileSync('.next/cache/skufnya-build/catalog-snapshot.json', 'utf8'));
+assert.deepEqual(validateCatalogSnapshot(snapshot), [], 'Invalid catalog/translation snapshot');
+const enReadySlugs = snapshot.items.filter(isEnglishProductReady).map(item => item.slug);
 assert.match(snapshot.buildId, /^[a-zA-Z0-9-]+$/, 'Missing current catalog build ID');
 const compiledBuildId = JSON.parse(fs.readFileSync('.next/required-server-files.json', 'utf8')).config.env.SKUF_CATALOG_BUILD_ID;
 assert.equal(snapshot.buildId, compiledBuildId, 'Catalog snapshot belongs to a different compiled build');
@@ -23,13 +27,12 @@ assert.deepEqual(completion.result.slugs, snapshot.items.map(item => item.slug))
 assert.equal(fs.existsSync(path.join(collectionRoot, 'failed')), false, 'Failed catalog collection cannot be published');
 const sitemap = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
 const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1].replaceAll('&amp;', '&'));
-assert.deepEqual(urls, sitemapUrls(snapshot.items.map((item) => item.slug)));
+assert.deepEqual(urls, sitemapUrls(snapshot.items.map((item) => item.slug), enReadySlugs));
 for (const url of urls) {
   const pathname = decodeURIComponent(new URL(url).pathname);
   // uk is served unprefixed and de is not published, so neither prefix may ever be submitted.
   assert.ok(!/^\/(uk|de)(\/|$)/.test(pathname), `Unpublished locale prefix in sitemap: ${pathname}`);
-  // EN product pages are exported for buyers but carry noindex, so they stay out of the sitemap.
-  assert.ok(!pathname.startsWith('/en/product/'), `Non-indexable EN product page in sitemap: ${pathname}`);
+  if (pathname.startsWith('/en/product/')) assert.ok(enReadySlugs.includes(pathname.split('/')[3]), `Non-indexable EN product in sitemap: ${pathname}`);
   assert.ok(fs.existsSync(path.join(root, pathname, 'index.html')), `Missing export: ${pathname}`);
 }
 for (const locale of ['uk', 'de']) assert.equal(fs.existsSync(path.join(root, locale)), false);
@@ -127,26 +130,51 @@ for (const file of files) {
     assert.deepEqual(seo(html), seo(previous), `Metadata changed: ${path.relative(root, file)}`);
   }
 }
+function decodeHtml(value) {
+  return value.replaceAll('&amp;', '&').replaceAll('&quot;', '"').replaceAll('&#x27;', "'").replaceAll('&#39;', "'").replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+}
+const imageResolver = value => value ? /^https?:\/\//i.test(value) ? value : `https://api.skufnya.com${value}` : null;
 for (const product of snapshot.items) {
+  const ready = isEnglishProductReady(product), version = getProductLocalizationVersion(product);
   const ukHtml = fs.readFileSync(path.join(root, 'product', product.slug, 'index.html'), 'utf8');
-  assert.ok(ukHtml.includes(`<link rel="canonical" href="${buildProductUrl(product.slug)}"`));
-  assert.match(ukHtml, /<meta name="robots" content="index/, `Ukrainian product page is not indexable: ${product.slug}`);
-  // Stage 2A: the EN route exists for buyers, but stays out of the index until the copy is reviewed.
   const enHtml = fs.readFileSync(path.join(root, 'en', 'product', product.slug, 'index.html'), 'utf8');
-  assert.ok(enHtml.includes(`<link rel="canonical" href="${buildProductUrl(product.slug, 'en')}"`));
-  assert.match(enHtml, /<meta name="robots" content="noindex/, `EN product page must not be indexed: ${product.slug}`);
-  for (const html of [ukHtml, enHtml]) assert.doesNotMatch(html, /<link rel="alternate"/, `Untranslated product alternate: ${product.slug}`);
-  assert.ok(enHtml.includes(getTranslator('en')('catalog.sourceNotice')), `Missing source-language notice: ${product.slug}`);
+  for (const [locale, html] of [['uk', ukHtml], ['en', enHtml]]) {
+    const presentation = resolveProductPresentation(product, locale);
+    assert.ok(html.includes(`<link rel="canonical" href="${buildProductUrl(product.slug, locale)}"`));
+    assert.equal(metaContent(html, 'name', 'skufnya-en-content-version'), version, `Wrong content version: ${locale}/${product.slug}`);
+    const robots = (metaContent(html, 'name', 'robots') || '').split(/\s*,\s*/);
+    assert.ok(robots.includes('follow'));
+    assert.equal(robots.includes('noindex'), locale === 'en' && !ready, `Wrong indexability: ${locale}/${product.slug}`);
+    if (locale === 'uk' || ready) assert.ok(robots.includes('index'));
+    assert.equal(urls.includes(buildProductUrl(product.slug, locale)), locale === 'uk' || ready, `Wrong sitemap eligibility: ${locale}/${product.slug}`);
+    if (ready) {
+      for (const alternateLocale of ['uk', 'en']) assert.ok(html.includes(`<link rel="alternate" hrefLang="${alternateLocale}" href="${buildProductUrl(product.slug, alternateLocale)}"`), `Missing reciprocal alternate: ${locale}/${product.slug}`);
+    } else assert.doesNotMatch(html, /<link rel="alternate"/, `Untranslated product alternate: ${product.slug}`);
+    const heading = html.match(/<h1\b[^>]*>(.*?)<\/h1>/s)?.[1];
+    assert.equal(toPlainText(decodeHtml(heading || '')), toPlainText(presentation.title), `Wrong static product title: ${locale}/${product.slug}`);
+    const meta = buildProductPageMeta(presentation, imageResolver, locale);
+    assert.equal(decodeHtml(metaContent(html, 'property', 'og:image:alt') || ''), meta.image.alt, `Wrong image alt: ${locale}/${product.slug}`);
+    for (const [attribute, key, expected] of [
+      ['name', 'description', meta.description], ['property', 'og:title', meta.socialTitle],
+      ['property', 'og:description', meta.description], ['name', 'twitter:title', meta.socialTitle], ['name', 'twitter:description', meta.description],
+    ]) assert.equal(decodeHtml(metaContent(html, attribute, key) || ''), expected, `Wrong ${key}: ${locale}/${product.slug}`);
+    assert.equal(decodeHtml(html.match(/<title>(.*?)<\/title>/s)?.[1] || ''), `${meta.documentTitle} | SKUFnya`, `Wrong SEO title: ${locale}/${product.slug}`);
+    const actualLd = productJsonLd(html), expectedLd = buildProductJsonLd(presentation, imageResolver, locale);
+    // Media origin is a build setting; the identity, presentation and offers must match exactly.
+    for (const key of ['name', 'description', 'sku', 'brand', 'category', 'url', 'offers']) assert.deepEqual(actualLd[key], expectedLd[key], `Wrong JSON-LD ${key}: ${locale}/${product.slug}`);
+  }
+  if (ready) assert.ok(!enHtml.includes(getTranslator('en')('catalog.sourceNotice')), `Ready product displays fallback notice: ${product.slug}`);
+  else assert.ok(enHtml.includes(getTranslator('en')('catalog.sourceNotice')), `Missing source-language notice: ${product.slug}`);
   const ukData = productJsonLd(ukHtml), enData = productJsonLd(enHtml);
-  for (const key of ['name', 'description', 'sku', 'brand', 'category', 'image']) assert.deepEqual(enData[key], ukData[key], `Changed catalog data ${key}: ${product.slug}`);
+  for (const key of ['sku', 'image']) assert.deepEqual(enData[key], ukData[key], `Locale changed commerce data ${key}: ${product.slug}`);
+  if (!ready) for (const key of ['name', 'description', 'brand', 'category']) assert.deepEqual(enData[key], ukData[key], `Changed fallback catalog data ${key}: ${product.slug}`);
   for (const key of ['price', 'priceCurrency', 'availability', 'hasMerchantReturnPolicy']) assert.deepEqual(enData.offers?.[key], ukData.offers?.[key], `Locale changed offer ${key}: ${product.slug}`);
   assert.equal(enData.url, buildProductUrl(product.slug, 'en'));
   assert.equal(enData.offers?.price, product.priceFrom);
   assert.equal(enData.offers?.priceCurrency, product.currency);
-
 }
 if (process.env.EXPORT_BASELINE) {
   assert.deepEqual(files.map((f) => path.relative(root, f)), htmlFiles(process.env.EXPORT_BASELINE).map((f) => path.relative(process.env.EXPORT_BASELINE, f)));
   assert.equal(sitemap, fs.readFileSync(path.join(process.env.EXPORT_BASELINE, 'sitemap.xml'), 'utf8'));
 }
-console.log(JSON.stringify({ passed: 1, failed: 0, skipped: 0, products: snapshot.items.length, ukProductPages: snapshot.items.length, enProductRoutes: snapshot.items.length, enIndexableProducts: 0, ukHtmlPages: files.filter(f => exportLocale(path.relative(root, f).split(path.sep).join('/')) === 'uk').length, enHtmlPages: files.filter(f => exportLocale(path.relative(root, f).split(path.sep).join('/')) === 'en').length, sitemapUrls: urls.length, htmlPages: files.length, locales: [...PUBLISHED_LOCALES], baselineCompared: Boolean(process.env.EXPORT_BASELINE) }));
+console.log(JSON.stringify({ passed: 1, failed: 0, skipped: 0, products: snapshot.items.length, ukProductPages: snapshot.items.length, enProductRoutes: snapshot.items.length, enIndexableProducts: enReadySlugs.length, nonReadyProducts: snapshot.items.length - enReadySlugs.length, catalogBuildId: snapshot.buildId, ukHtmlPages: files.filter(f => exportLocale(path.relative(root, f).split(path.sep).join('/')) === 'uk').length, enHtmlPages: files.filter(f => exportLocale(path.relative(root, f).split(path.sep).join('/')) === 'en').length, sitemapUrls: urls.length, htmlPages: files.length, locales: [...PUBLISHED_LOCALES], baselineCompared: Boolean(process.env.EXPORT_BASELINE) }));

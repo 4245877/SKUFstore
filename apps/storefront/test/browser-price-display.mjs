@@ -1,6 +1,7 @@
 // Local exported pages with fixture API only. No requests reach production.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { resolveProductPresentation } from '../src/i18n/catalog-policy.ts';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const results = [];
 const browserLocales = process.env.SMOKE_LOCALE ? [process.env.SMOKE_LOCALE] : ['uk-UA', 'en-US'];
@@ -14,6 +15,7 @@ assert.ok(range && single);
 const legacy = { ...snapshot.items.find(p => !p.isAdult && p.id !== range.id && p.id !== single.id), pricing: undefined };
 const products = [range, single, legacy];
 async function run(routeLocale, browserLocale) {
+const titleFor = product => resolveProductPresentation(product, routeLocale).title;
 const localized = path => routeLocale === 'en' ? '/en' + path : path;
 const m = routeLocale === 'en' ? { from: 'from ', favorite: 'Add to favorites', list: 'List' } : { from: 'від ', favorite: 'Додати до обраного', list: 'Список' };
 let account = false;
@@ -30,7 +32,8 @@ await context.route('**/*', async route => {
   if (url.pathname === '/api/catalog/products') return json({ items: products, meta: { page: 1, pageCount: 1, total: 3, limit: 24 } });
   if (url.pathname === '/api/catalog/categories') return json({ items: [] });
   if (url.pathname === '/api/catalog/resin-colors') return json({ items: snapshot.resinColors || [] });
-  if (url.pathname === '/api/catalog/products/' + range.slug) return json(range);
+  const detail = products.find(product => url.pathname === '/api/catalog/products/' + product.slug);
+  if (detail) return json(detail);
   if (url.pathname === '/api/account/favorites' && account) return json({ items: products.map(p => ({ ...p, productId: p.id, createdAt: '2026-09-17T00:00:00Z' })) });
   if (url.pathname.includes('/auth/') || url.pathname.includes('/account/')) return json({ error: 'UNAUTHORIZED' }, 401);
   if (url.pathname.includes('/analytics')) return json({ ok: true });
@@ -50,20 +53,20 @@ async function label(node, p) {
 async function go(path) { await page.goto(base + localized(path)); await page.waitForLoadState('networkidle'); }
 async function guestPrices() {
   for (const p of [range, single]) {
-    const card = page.locator('article').filter({ has: page.getByRole('heading', { name: p.title, exact: true }) });
+    const card = page.locator('article').filter({ has: page.getByRole('heading', { name: titleFor(p), exact: true }) });
     await label(card.locator('[class*="cardPrice"], [class*="listCardPrice"]'), p);
   }
 }
 try {
   await go('/');
   for (const p of products) {
-    const card = page.locator('main a').filter({ has: page.getByRole('heading', { name: p.title, exact: true }) }).first();
+    const card = page.locator('main a').filter({ has: page.getByRole('heading', { name: titleFor(p), exact: true }) }).first();
     await label(card.locator('[class*="cardPrice"]'), p);
   }
   checks.push('home: range, single, legacy DTO');
   await go('/catalog/');
   for (const p of products) {
-    const card = page.locator('article').filter({ hasText: p.title });
+    const card = page.locator('article').filter({ hasText: titleFor(p) });
     await label(card.locator('[class*="cardPrice"]'), p);
     if (p !== legacy) await card.getByRole('button', { name: m.favorite, exact: true }).click();
   }
@@ -81,17 +84,17 @@ try {
   await page.waitForFunction(() => localStorage.getItem('skufnya:favorites') !== null);
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('skufnya:favorites'))[0].hasPriceRange), true);
   await go('/favorites/');
-  await label(page.locator('article').filter({ hasText: range.title }).locator('[class*="cardPrice"]'), range);
+  await label(page.locator('article').filter({ hasText: titleFor(range) }).locator('[class*="cardPrice"]'), range);
   checks.push('product → guest favorite retains range');
   // Existing snapshots without the optional field remain readable and unmodified.
   const old = { productId: single.id, slug: single.slug, title: single.title, priceFrom: single.priceFrom, currency: 'UAH', addedAt: '2026-09-16T00:00:00Z' };
   await page.evaluate(value => localStorage.setItem('skufnya:favorites', JSON.stringify([value])), old);
   await go('/favorites/');
-  await label(page.locator('article').filter({ hasText: single.title }).locator('[class*="cardPrice"]'), single);
+  await label(page.locator('article').filter({ hasText: titleFor(single) }).locator('[class*="cardPrice"]'), single);
   assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('skufnya:favorites'))), [old]);
   checks.push('legacy favorites persistence requires no migration');
   account = true; await go('/favorites/');
-  for (const p of products) await label(page.locator('article').filter({ hasText: p.title }).locator('[class*="cardPrice"]'), p);
+  for (const p of products) await label(page.locator('article').filter({ hasText: titleFor(p) }).locator('[class*="cardPrice"]'), p);
   checks.push('account favorites: range, single, legacy DTO');
   assert.deepEqual(errors, []); assert.deepEqual(httpErrors, []);
   results.push({ passed: true, routeLocale, browserLocale, checks, pageErrors: errors, httpErrors });

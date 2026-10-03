@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compareCatalogSlugs, productSlugsFromSitemap, readLiveSlugs, verifyFreshness } from '../scripts/catalog-freshness.mjs';
+import { compareCatalogSlugs, productSlugsFromSitemap, readLiveSlugs, readEnglishState, verifyFreshness } from '../scripts/catalog-freshness.mjs';
 
 test('freshness detects a public product absent from a consistent older snapshot', () => {
   const old = Array.from({ length: 165 }, (_, i) => `p-${i}`);
@@ -60,7 +60,7 @@ test('freshness does not give a green result if the live catalog changes during 
 
 function productHtml(url: string) {
   const locale = new URL(url).pathname.startsWith('/en/') ? 'en' : 'uk';
-  return `<html lang="${locale}"><head><link rel="canonical" href="${url}"><meta name="robots" content="${locale === 'en' ? 'noindex' : 'index'}, follow"><script type="application/ld+json">${JSON.stringify({ '@type': 'Product', url })}</script></head></html>`;
+  return `<html lang="${locale}"><head><link rel="canonical" href="${url}"><meta name="skufnya-en-content-version" content="untranslated"><meta name="robots" content="${locale === 'en' ? 'noindex' : 'index'}, follow"><script type="application/ld+json">${JSON.stringify({ '@type': 'Product', url })}</script></head></html>`;
 }
 
 function fixtureFetch(transform: (html: string, url: string) => string = html => html, enStatus = 200) {
@@ -91,8 +91,9 @@ test('Stage 2A freshness rejects wrong EN language, canonical, indexing and tran
   }
 });
 
-test('Stage 2A sitemap excludes untranslated EN product routes and unpublished locale prefixes', () => {
-  for (const path of ['/en/product/frieren/', '/de/catalog/', '/uk/catalog/']) {
+test('sitemap rejects unpublished prefixes and identifies EN URLs for readiness checks', () => {
+  assert.deepEqual(productSlugsFromSitemap('<urlset><url><loc>https://site.test/en/product/frieren/</loc></url></urlset>', 'https://site.test', 'en'), ['frieren']);
+  for (const path of ['/de/catalog/', '/uk/catalog/']) {
     assert.throws(() => productSlugsFromSitemap(`<urlset><url><loc>https://site.test${path}</loc></url></urlset>`, 'https://site.test'));
   }
 });
@@ -104,5 +105,69 @@ test('freshness requires actual Product JSON-LD matching the locale URL', async 
   ]) {
     const result = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, fixtureFetch((html, url) => url.includes('/en/') ? change(html) : html));
     assert.equal(result.fresh, false); assert.equal(result.broken.length, 1);
+  }
+});
+
+
+const version = 'a'.repeat(64);
+function translated(versionValue = version): any {
+  return { slug: 'frieren', translations: [{ locale: 'en', title: 'Editorial English title', shortDescription: 'Editorial short description', description: 'Editorial full description', categoryName: 'Figures' }], localization: { en: { ready: true, version: versionValue } } };
+}
+function readyHtml(url: string, contentVersion = version) {
+  const base = productHtml(url).replace('content="untranslated"', `content="${contentVersion}"`).replace('content="noindex, follow"', 'content="index, follow"');
+  const name = new URL(url).pathname.startsWith('/en/') ? 'Editorial English title' : 'Source title';
+  return base.replace(JSON.stringify({ '@type': 'Product', url }), JSON.stringify({ '@type': 'Product', url, name, sku: 'same-sku', offers: { price: 1000, priceCurrency: 'UAH', availability: 'https://schema.org/InStock', url } })).replace('</head>', '<link rel="alternate" hrefLang="en" href="https://site.test/en/product/frieren/"/><link rel="alternate" hrefLang="uk" href="https://site.test/product/frieren/"/></head>');
+}
+function readyFetch(options: { product?: any; sitemapEn?: boolean; version?: string; transform?: (html: string, url: string) => string } = {}) {
+  return async (url: string) => {
+    if (url.includes('/api/catalog/')) return new Response(JSON.stringify({ items: [options.product || translated()], meta: { page: 1, total: 1 } }));
+    if (url.endsWith('sitemap.xml')) return new Response('<urlset><url><loc>https://site.test/product/frieren/</loc></url>' + (options.sitemapEn === false ? '' : '<url><loc>https://site.test/en/product/frieren/</loc></url>') + '</urlset>');
+    const html = readyHtml(url, options.version || version);
+    return new Response(options.transform ? options.transform(html, url) : html);
+  };
+}
+
+test('English ready state requires one published complete EN row and a version', () => {
+  assert.deepEqual(readEnglishState({}), { ready: false, version: null, title: null });
+  assert.equal(readEnglishState(translated()).ready, true);
+  for (const product of [
+    { localization: { en: { ready: false, version: null } } },
+    { ...translated(), localization: { en: { ready: true, version: 'bad' } } },
+    { ...translated(), translations: [] },
+    { ...translated(), translations: [translated().translations[0], translated().translations[0]] },
+    { ...translated(), translations: [{ ...translated().translations[0], locale: 'de' }] },
+    { ...translated(), translations: [{ ...translated().translations[0], description: '  ' }] },
+    { ...translated(), localization: { en: { ready: false, version: null } } },
+  ]) assert.throws(() => readEnglishState(product));
+});
+test('ready products require indexability, exact EN sitemap membership and reciprocal alternates', async () => {
+  const result = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, readyFetch());
+  assert.equal(result.fresh, true); assert.equal(result.enSeoEligibleProducts, 1); assert.equal(result.enSitemapProducts, 1);
+  const missing = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, readyFetch({ sitemapEn: false }));
+  assert.equal(missing.fresh, false); assert.deepEqual(missing.enMissing, ['frieren']);
+  const mismatch = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, readyFetch({ version: 'b'.repeat(64) }));
+  assert.equal(mismatch.fresh, false); assert.equal(mismatch.broken.length, 2);
+  for (const transform of [
+    (html: string) => html.replace('content="index, follow"', 'content="noindex, follow"'),
+    (html: string) => html.replace('<link rel="alternate" hrefLang="uk" href="https://site.test/product/frieren/"/>', ''),
+    (html: string) => html.replace('Editorial English title', 'Source title'),
+    (html: string) => html.replace('"price":1000', '"price":2000'),
+  ]) {
+    const broken = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, readyFetch({ transform: (html, url) => url.includes('/en/') ? transform(html) : html }));
+    assert.equal(broken.fresh, false);
+  }
+});
+test('unready translations are rejected from the sitemap even with otherwise valid fallback pages', async () => {
+  const fetcher = fixtureFetch();
+  const result = await verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, async (url: string) => url.endsWith('sitemap.xml') ? new Response('<urlset><url><loc>https://site.test/product/frieren/</loc></url><url><loc>https://site.test/en/product/frieren/</loc></url></urlset>') : fetcher(url));
+  assert.equal(result.fresh, false); assert.deepEqual(result.enStale, ['frieren']);
+});
+test('freshness detects an unchanged-slug content edit and publication change during checks', async () => {
+  for (const after of [translated('b'.repeat(64)), { slug: 'frieren', translations: [], localization: { en: { ready: false, version: null } } }]) {
+    let listings = 0; const fetcher = readyFetch();
+    await assert.rejects(verifyFreshness({ site: 'https://site.test', api: 'https://api.test' }, async (url: string) => {
+      if (url.includes('/api/catalog/')) return new Response(JSON.stringify({ items: [++listings === 1 ? translated() : after], meta: { page: 1, total: 1 } }));
+      return fetcher(url);
+    }), /Catalog changed during verification/);
   }
 });

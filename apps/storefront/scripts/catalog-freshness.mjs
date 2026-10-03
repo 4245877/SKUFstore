@@ -1,4 +1,4 @@
-// Read-only availability check: build consistency and live freshness are separate gates.
+// Read-only live content/availability check, independent of the build snapshot.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -17,26 +17,50 @@ export function compareCatalogSlugs(liveSlugs, exportedSlugs) {
     stale: [...exported].filter(s => !live.has(s)).sort(),
   };
 }
-export function productSlugsFromSitemap(xml, origin) {
+export function productSlugsFromSitemap(xml, origin, locale = 'uk') {
+  assert.ok(['uk', 'en'].includes(locale), 'Invalid sitemap locale');
   assert.match(xml, /<urlset[\s>]/, 'Invalid sitemap');
   const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => new URL(m[1].replaceAll('&amp;', '&')));
   assert.ok(urls.length, 'Empty sitemap');
+  const prefix = locale === 'en' ? '/en/product/' : '/product/';
   for (const u of urls) {
     assert.equal(u.origin, origin, 'Unexpected sitemap origin');
     assert.ok(!/^\/(uk|de)(\/|$)/.test(u.pathname), 'Unpublished locale in sitemap');
-    assert.ok(!u.pathname.startsWith('/en/product/'), 'Stage 2A untranslated EN products must stay out of sitemap');
+    if (/^\/(en\/)?product\//.test(u.pathname)) assert.match(u.pathname, /^\/(en\/)?product\/[^/]+\/$/, 'Invalid product URL/trailing slash');
   }
-  return urls.filter(u => u.pathname.startsWith('/product/')).map(u => {
-    assert.match(u.pathname, /^\/product\/[^/]+\/$/, 'Invalid product URL/trailing slash');
-    return decodeURIComponent(u.pathname.split('/')[2]);
-  });
+  const slugs = urls.filter(u => u.pathname.startsWith(prefix)).map(u => decodeURIComponent(u.pathname.slice(prefix.length, -1)));
+  uniqueSlugs(slugs, `${locale} sitemap`);
+  return slugs;
+}
+export function readEnglishState(product) {
+  const absent = product.localization === undefined && product.translations === undefined;
+  if (absent) return { ready: false, version: null, title: null };
+  assert.ok(product.localization && typeof product.localization === 'object' && !Array.isArray(product.localization), 'Invalid localization envelope');
+  assert.deepEqual(Object.keys(product.localization), ['en'], 'Unpublished localization envelope');
+  const state = product.localization.en;
+  assert.ok(state && typeof state.ready === 'boolean', 'Invalid English readiness');
+  assert.ok(Array.isArray(product.translations), 'Invalid translations envelope');
+  const translations = product.translations;
+  const seen = new Set();
+  for (const row of translations) {
+    assert.ok(row && row.locale === 'en' && !seen.has(row.locale), 'Invalid or duplicate translation locale');
+    seen.add(row.locale);
+    for (const field of ['title', 'shortDescription', 'description', 'categoryName']) assert.ok(typeof row[field] === 'string' && row[field].trim().length, `Invalid English ${field}`);
+  }
+  if (state.ready) {
+    assert.match(state.version, /^[a-f0-9]{64}$/, 'Invalid English content version');
+    assert.equal(translations.length, 1, 'English ready content is missing');
+  } else {
+    assert.equal(state.version, null, 'Unready English content has a version');
+    assert.equal(translations.length, 0, 'Unready English content must stay private');
+  }
+  return { ready: state.ready, version: state.version, title: translations[0]?.title ?? null };
 }
 async function request(url) {
-  const r = await fetch(url, { headers: { 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(30000) });
-  return r;
+  return fetch(url, { headers: { 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(30000) });
 }
-export async function readLiveSlugs(api, fetchResponse = request) {
-  const slugs = []; let expected;
+export async function readLiveCatalog(api, fetchResponse = request) {
+  const items = []; let expected;
   for (let page = 1; ; page++) {
     const r = await fetchResponse(`${api}/api/catalog/products?page=${page}&limit=100`);
     assert.equal(r.status, 200, `Catalog page ${page}: HTTP ${r.status}`);
@@ -45,47 +69,82 @@ export async function readLiveSlugs(api, fetchResponse = request) {
     expected ??= data.meta.total;
     assert.equal(data.meta.total, expected, 'Catalog changed during listing; retry');
     assert.equal(data.meta.page, page, 'Wrong API page');
-    slugs.push(...data.items.map(p => p.slug));
-    if (slugs.length >= expected) break;
+    items.push(...data.items.map(p => ({ slug: p.slug, en: readEnglishState(p) })));
+    if (items.length >= expected) break;
     assert.ok(data.items.length, 'Truncated listing');
   }
-  assert.equal(slugs.length, expected, 'Incomplete listing');
-  uniqueSlugs(slugs, 'live');
-  return slugs;
+  assert.equal(items.length, expected, 'Incomplete listing');
+  uniqueSlugs(items.map(p => p.slug), 'live');
+  return items;
+}
+export async function readLiveSlugs(api, fetchResponse = request) {
+  return (await readLiveCatalog(api, fetchResponse)).map(p => p.slug);
+}
+function meta(html, name) {
+  return html.match(new RegExp(`<meta\\b[^>]*name="${name}"[^>]*content="([^"]*)"`, 'i'))?.[1] ?? null;
+}
+function presentationText(value) {
+  const entities = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+  return value.replace(/<[^>]*>/g, ' ').replace(/&#(\d+);/g, (match, code) => Number(code) > 0 && Number(code) <= 0x10ffff ? String.fromCodePoint(Number(code)) : match).replace(/&(amp|lt|gt|quot|apos|nbsp);/gi, (_, entity) => entities[entity.toLowerCase()]).replace(/\s+/g, ' ').trim();
+}
+function productData(html, url) {
+  for (const [, body] of html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gis)) {
+    try { const product = JSON.parse(body); if (product['@type'] === 'Product' && product.url === url) return product; }
+    catch { /* Invalid JSON-LD is a failed page check below. */ }
+  }
+  return null;
+}
+function alternates(html) {
+  return [...html.matchAll(/<link\b[^>]*rel="alternate"[^>]*hrefLang="([^"]+)"[^>]*href="([^"]+)"/gi)].map(([, locale, url]) => ({ locale, url })).sort((a, b) => a.locale.localeCompare(b.locale));
 }
 export async function verifyFreshness({ site, api }, fetchResponse = request) {
-  const live = await readLiveSlugs(api, fetchResponse);
-  const sitemap = await fetchResponse(`${site}/sitemap.xml`);
-  assert.equal(sitemap.status, 200, `Sitemap: HTTP ${sitemap.status}`);
-  const diff = compareCatalogSlugs(live, productSlugsFromSitemap(await sitemap.text(), new URL(site).origin));
-  // Stage 2A publishes an EN buying route for every public product, while its
-  // untranslated catalog content remains excluded from indexing and sitemap.
-  const pages = [], queue = live.flatMap(slug => ['uk', 'en'].map(locale => ({ slug, locale })));
+  const live = await readLiveCatalog(api, fetchResponse);
+  const sitemapResponse = await fetchResponse(`${site}/sitemap.xml`);
+  assert.equal(sitemapResponse.status, 200, `Sitemap: HTTP ${sitemapResponse.status}`);
+  const sitemap = await sitemapResponse.text(), origin = new URL(site).origin;
+  const diff = compareCatalogSlugs(live.map(p => p.slug), productSlugsFromSitemap(sitemap, origin));
+  const enDiff = compareCatalogSlugs(live.filter(p => p.en.ready).map(p => p.slug), productSlugsFromSitemap(sitemap, origin, 'en'));
+  const pages = [], queue = live.flatMap(product => ['uk', 'en'].map(locale => ({ ...product, locale })));
   await Promise.all(Array.from({ length: 4 }, async () => {
     while (queue.length) {
-      const { slug, locale } = queue.shift();
-      const prefix = locale === 'en' ? '/en' : '';
-      const url = `${site}${prefix}/product/${encodeURIComponent(slug)}/`;
-      const r = await fetchResponse(url), html = await r.text();
-      // A generic 200 fallback must not disguise a missing product page.
-      const robots = (html.match(/<meta\b[^>]*name="robots"[^>]*content="([^"]*)"/i)?.[1] || '').split(/\s*,\s*/);
+      const { slug, en, locale } = queue.shift();
+      const ukUrl = `${site}/product/${encodeURIComponent(slug)}/`, enUrl = `${site}/en/product/${encodeURIComponent(slug)}/`;
+      const url = locale === 'en' ? enUrl : ukUrl;
+      const r = await fetchResponse(url), html = await r.text(), data = productData(html, url);
+      const robots = (meta(html, 'robots') || '').split(/\s*,\s*/);
+      const expectedAlternates = en.ready ? [{ locale: 'en', url: enUrl }, { locale: 'uk', url: ukUrl }] : [];
+      const actualAlternates = alternates(html);
       pages.push({
         slug, locale, status: r.status,
         canonical: html.includes(`<link rel="canonical" href="${url}"`),
-        productJsonLd: [...html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gis)].some(([, body]) => {
-          try { const product = JSON.parse(body); return product['@type'] === 'Product' && product.url === url; }
-          catch { return false; }
-        }),
+        productJsonLd: Boolean(data),
         language: new RegExp(`<html\\b[^>]*lang="${locale}"`).test(html),
-        indexing: locale === 'en' ? robots.includes('noindex') : robots.includes('index') && !robots.includes('noindex'),
-        translationAlternates: !/<link\b[^>]*rel="alternate"[^>]*hrefLang="en"[^>]*href="[^"]*\/en\/product\//i.test(html),
+        indexing: robots.includes('follow') && (locale === 'en' && !en.ready ? robots.includes('noindex') : robots.includes('index') && !robots.includes('noindex')),
+        translationAlternates: JSON.stringify(actualAlternates) === JSON.stringify(expectedAlternates),
+        contentVersion: meta(html, 'skufnya-en-content-version') === (en.version || 'untranslated'),
+        translatedName: locale !== 'en' || !en.ready || data?.name === presentationText(en.title),
+        data,
       });
     }
   }));
-  const after = await readLiveSlugs(api, fetchResponse);
-  assert.deepEqual([...after].sort(), [...live].sort(), 'Catalog changed during verification; retry');
-  const broken = pages.filter(p => p.status !== 200 || !p.canonical || !p.productJsonLd || !p.language || !p.indexing || !p.translationAlternates);
-  return { checkedAt: new Date().toISOString(), ...diff, checkedPages: pages.length, checkedUkPages: pages.filter(p => p.locale === 'uk').length, checkedEnPages: pages.filter(p => p.locale === 'en').length, enSeoEligibleProducts: 0, broken, fresh: !diff.missing.length && !diff.stale.length && !broken.length };
+  // Locale can change presentation and URLs only; pricing and identity remain equal.
+  for (const { slug } of live) {
+    const uk = pages.find(p => p.slug === slug && p.locale === 'uk'), en = pages.find(p => p.slug === slug && p.locale === 'en');
+    const invariant = data => data && { sku: data.sku, image: data.image, offer: data.offers && Object.fromEntries(Object.entries(data.offers).filter(([key]) => key !== 'url')) };
+    uk.commerceSemantics = en.commerceSemantics = !uk.data || !en.data || JSON.stringify(invariant(uk.data)) === JSON.stringify(invariant(en.data));
+  }
+  const after = await readLiveCatalog(api, fetchResponse);
+  const state = items => items.map(p => ({ slug: p.slug, ready: p.en.ready, version: p.en.version, title: p.en.title })).sort((a, b) => a.slug.localeCompare(b.slug));
+  assert.deepEqual(state(after), state(live), 'Catalog changed during verification; retry');
+  const broken = pages.filter(p => p.status !== 200 || !p.canonical || !p.productJsonLd || !p.language || !p.indexing || !p.translationAlternates || !p.contentVersion || !p.translatedName || !p.commerceSemantics).map(({ data, ...page }) => page);
+  return {
+    checkedAt: new Date().toISOString(), ...diff,
+    enMissing: enDiff.missing, enStale: enDiff.stale,
+    checkedPages: pages.length, checkedUkPages: live.length, checkedEnPages: live.length,
+    enSeoEligibleProducts: enDiff.liveProducts, enSitemapProducts: enDiff.exportedProducts,
+    nonReadyProducts: live.length - enDiff.liveProducts, broken,
+    fresh: !diff.missing.length && !diff.stale.length && !enDiff.missing.length && !enDiff.stale.length && !broken.length,
+  };
 }
 async function main() {
   const site = (process.env.STOREFRONT_URL || 'https://www.skufnya.com').replace(/\/$/, '');
@@ -101,7 +160,7 @@ async function main() {
   if (process.env.FRESHNESS_OUTPUT) fs.writeFileSync(process.env.FRESHNESS_OUTPUT, JSON.stringify(result, null, 2));
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `needs_build=${!result.fresh}\n`);
   if (!result.fresh) {
-    console.error('::warning::Live public catalog differs from published Pages. Rebuild and verify; snapshot consistency alone cannot ensure freshness.');
+    console.error('::warning::Live public catalog or English editorial content differs from published Pages. Rebuild and verify; snapshot consistency alone cannot ensure freshness.');
     if (!process.argv.includes('--reconcile')) process.exitCode = 1;
   }
 }

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { getTranslator } from '../src/i18n/translate.ts';
+import { resolveProductPresentation } from '../src/i18n/catalog-policy.ts';
 const results = [];
 const browserLocales = process.env.SMOKE_LOCALE ? [process.env.SMOKE_LOCALE] : ['uk-UA', 'en-US'];
 const routeLocales = process.env.SMOKE_ROUTE_LOCALE ? [process.env.SMOKE_ROUTE_LOCALE] : ['uk', 'en'];
@@ -233,7 +234,7 @@ try {
   const favoritesBefore = await page.evaluate(() => localStorage.getItem('skufnya:favorites'));
   assert.ok(favoritesBefore);
   await goto(base + localized('/favorites/'));
-  await page.getByRole('heading', { name: product.title, exact: true }).first().waitFor();
+  await page.getByRole('heading', { name: resolveProductPresentation(product, routeLocale).title, exact: true }).first().waitFor();
   assert.equal(await page.evaluate(() => localStorage.getItem('skufnya:favorites')), favoritesBefore);
   await capture('favorites');
   await goto(base + localized(`/product/${product.slug}/`));

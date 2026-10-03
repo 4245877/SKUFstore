@@ -2,6 +2,7 @@
 
 import { formatDayCount } from '../../../../i18n/presentation';
 import { useI18n } from '../../../../i18n/client';
+import { getSourceProductPresentation } from '../../../../i18n/catalog-policy';
 import type { Translator } from '../../../../i18n/translate';
 import Link from '../../../../i18n/navigation';
 import { useRouter } from '../../../../i18n/navigation';
@@ -110,6 +111,7 @@ function isAuthError(error: unknown) {
 }
 
 function buildGuestFavoritePayload(product: Product) {
+  product = getSourceProductPresentation(product);
   const coverImage = product.images.find((image) => image.isCover) ?? product.images[0] ?? null;
 
   return {
@@ -959,9 +961,10 @@ function ProductInfo({
     if (!selectedVariant || selectedFinish !== 'MONO' || !selectedColor) return;
 
     const safeQuantity = Math.max(1, Math.min(quantity, maxQty));
+    const sourceProduct = getSourceProductPresentation(product);
     const cartTitle = selectedVariant
-      ? `${product.title} — ${selectedVariant.name}`
-      : product.title;
+      ? `${sourceProduct.title} — ${selectedVariant.name}`
+      : sourceProduct.title;
 
     const coverImage =
       (selectedVariant ? getVariantCoverImage(selectedVariant) : null) ??
@@ -991,9 +994,9 @@ function ProductInfo({
       ]
         .filter(Boolean)
         .join(' · '),
-      series: product.series ?? product.franchise?.name ?? product.brand?.name ?? null,
+      series: sourceProduct.series ?? sourceProduct.franchise?.name ?? sourceProduct.brand?.name ?? null,
       imageUrl: coverImage?.url ?? null,
-      imageAlt: coverImage?.alt ?? cartTitle,
+      imageAlt: cartTitle,
       isAdult: product.isAdult,
     });
 
@@ -1060,7 +1063,7 @@ function ProductInfo({
     <div className={styles.info}>
       <p className={styles.seriesLabel}>{subtitle}</p>
       <h1 className={styles.productTitle}>{product.title}</h1>
-      {locale === 'en' && <p role="note">{t('catalog.sourceNotice')} {t('catalog.deliveryNotice')}</p>}
+      {locale === 'en' && <p role="note">{product.usesSourceContent && <>{t('catalog.sourceNotice')} </>}{t('catalog.deliveryNotice')}</p>}
 
       {topMeta ? (
         <div className={styles.ratingRow}>

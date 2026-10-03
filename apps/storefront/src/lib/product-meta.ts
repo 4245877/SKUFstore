@@ -1,6 +1,7 @@
 import { buildLocalizedPath } from '../i18n/paths.ts';
 import { getTranslator } from '../i18n/translate.ts';
 import { DEFAULT_LOCALE, type Locale } from '../i18n/locales.ts';
+import { isEnglishProductReady } from '../i18n/catalog-policy.ts';
 
 /**
  * Метаданные страницы товара для поисковиков и превью ссылок.
@@ -177,7 +178,8 @@ export function buildProductPageMeta(
   // человек ждёт увидеть в чате, а не SEO-формулировку из админки. Она остаётся
   // заголовком вкладки и сниппета, где и должна работать.
   const socialTitle = title || metaTitle || t('productMeta.title');
-  const documentTitle = locale === 'en' ? socialTitle : metaTitle || socialTitle;
+  const translated = locale === 'en' && isEnglishProductReady(product) && product.presentationLocale === 'en';
+  const documentTitle = locale === 'en' && !translated ? socialTitle : metaTitle || socialTitle;
 
   const description = firstNonEmpty(
     product.metaDescription,
@@ -200,7 +202,7 @@ export function buildProductPageMeta(
     canonicalUrl: buildProductUrl(product.slug, locale),
     documentTitle,
     socialTitle,
-    description: truncateText((locale === 'en' ? '' : description) || fallbackDescription, DESCRIPTION_LIMIT),
+    description: truncateText((locale === 'en' && !translated ? '' : description) || fallbackDescription, DESCRIPTION_LIMIT),
     image: previewImage ?? { url: FALLBACK_IMAGE_URL, alt: t('productMeta.imageAlt') },
     usesProductPhoto: previewImage !== null,
   };

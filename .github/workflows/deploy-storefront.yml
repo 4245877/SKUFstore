@@ -12,7 +12,7 @@ on:
       - ".github/workflows/deploy-storefront.yml"
   workflow_dispatch:
   schedule:
-    # Reconcile new/renamed/removed public URLs without a backend token.
+    # Reconcile public URLs and English editorial publication/content without a backend token.
     - cron: "17 * * * *"
 
 permissions:
@@ -107,6 +107,14 @@ jobs:
       - name: Storefront typecheck
         run: pnpm --filter storefront exec tsc --noEmit --incremental false
 
+      - name: Install Chromium for catalog regression
+        working-directory: apps/storefront
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Localized product SEO synthetic build and browser regression
+        working-directory: apps/storefront
+        run: node --experimental-strip-types test/build-stage2b-fixture.mjs
+
       - name: Build Storefront
         run: pnpm --filter storefront build
 
@@ -131,10 +139,6 @@ jobs:
       - name: Verify exported routes and SEO
         working-directory: apps/storefront
         run: node --experimental-strip-types test/verify-stage1-export.mjs
-
-      - name: Install Chromium for catalog regression
-        working-directory: apps/storefront
-        run: pnpm exec playwright install --with-deps chromium
 
       - name: Catalog query hydration and navigation regression
         working-directory: apps/storefront

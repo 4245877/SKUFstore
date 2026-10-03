@@ -6,6 +6,16 @@ import { buildProductUrl } from '../src/lib/product-meta.ts';
 import { PUBLISHED_LOCALES } from '../src/i18n/locales.ts';
 
 describe('snapshot sitemap', () => {
+  it('adds only EN SEO-ready products without dropping any UK public product', () => {
+    const urls = sitemapUrls(['translated', 'fallback'], ['translated']);
+    assert.ok(urls.includes(buildProductUrl('translated')));
+    assert.ok(urls.includes(buildProductUrl('fallback')));
+    assert.ok(urls.includes(buildProductUrl('translated', 'en')));
+    assert.equal(urls.includes(buildProductUrl('fallback', 'en')), false);
+    assert.equal(urls.length, STATIC_SITEMAP_PATHS.length * PUBLISHED_LOCALES.length + 3);
+    assert.throws(() => sitemapUrls(['translated'], ['unpublished']));
+    assert.throws(() => sitemapUrls(['translated'], ['translated', 'translated']));
+  });
   it('includes every snapshot slug and all existing static URLs with canonical trailing slashes', () => {
     const snapshot = { count: 3, items: ['figure-one', 'figure-two', 'фігурка'].map((slug) => ({ id: slug, title: slug, slug, status: 'ACTIVE', images: [], variants: [] })) };
     assert.deepEqual(validateCatalogSnapshot(snapshot), []);

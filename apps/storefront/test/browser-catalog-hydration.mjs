@@ -123,7 +123,7 @@ async function scenario(name, path, action) {
     }
     assert.equal(await page.locator('html').getAttribute('lang'), routeLocale);
     assert.equal(new URL(page.url()).pathname.startsWith('/en/'), routeLocale === 'en', 'Browser language must never redirect the selected route');
-    assert.ok(requests.every(q => !('locale' in q) && !('currency' in q)), 'Locale must not enter catalog API payloads');
+    assert.ok(requests.every(q => q.locale === routeLocale && !('currency' in q) && !('market' in q) && !('shippingCountry' in q)), 'Catalog locale may choose search presentation only');
     await settleNetwork();
     return data;
   }

@@ -83,3 +83,19 @@ describe('целостность снимка каталога', () => {
     ]);
   });
 });
+
+it('snapshot permits source-only UK products and validates complete claimed-ready EN data', () => {
+  const translation = { locale: 'en', title: 'English title', shortDescription: 'English short description', description: 'English full description', categoryName: 'Figures' };
+  const ready = { translations: [translation], localization: { en: { ready: true, version: 'a'.repeat(64) } } };
+  assert.deepEqual(validateCatalogSnapshot(snapshot([product(ready)])), []);
+  assert.deepEqual(validateCatalogSnapshot(snapshot([product({ translations: [], localization: { en: { ready: false, version: null } } })])), []);
+  for (const invalid of [
+    { translations: [translation] },
+    { ...ready, localization: { en: { ready: true, version: null } } },
+    { ...ready, translations: [] },
+    { ...ready, translations: [{ ...translation, locale: 'de' }] },
+    { ...ready, translations: [translation, translation] },
+    { ...ready, translations: [{ ...translation, title: '  ' }] },
+    { ...ready, localization: { en: { ready: false, version: null } } },
+  ]) assert.ok(validateCatalogSnapshot(snapshot([product(invalid)])).length, JSON.stringify(invalid));
+});

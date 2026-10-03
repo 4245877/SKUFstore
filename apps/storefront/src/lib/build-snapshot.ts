@@ -10,7 +10,7 @@ import {
   type CatalogProductDetail,
   type CatalogResinColor,
 } from './api';
-import { validateCatalogSnapshot } from './snapshot-integrity';
+import { assertCatalogPublicationStable, validateCatalogSnapshot } from './snapshot-integrity';
 import { collectSnapshotOnce, snapshotCollectionPaths, writeJsonAtomically } from './snapshot-collection';
 
 /**
@@ -25,10 +25,11 @@ import { collectSnapshotOnce, snapshotCollectionPaths, writeJsonAtomically } fro
  * Собирается он из тех эндпоинтов, которые у публичного API действительно есть:
  * `GET /api/catalog/products?page&limit` даёт список опубликованных товаров
  * (страницами по 100), `GET /api/catalog/products/{slug}` — карточку с
- * описанием, изображениями и вариантами. Массовой выгрузки каталога у API нет,
- * поэтому запросов ровно столько же, сколько страниц, — но все они теперь
- * сделаны до экспорта, последовательно и с оглядкой на лимит, а не изнутри
- * 60-секундного окна рендера.
+ * описанием, изображениями и вариантами. Backend также имеет bulk export,
+ * но существующая Stage 2 коллекция сохраняет paced listing/detail pipeline.
+ * Начальный и
+ * заключительный listing проверяют неизменность product identity и EN version
+ * за время той же коллекции; отдельной translation pipeline нет.
  *
  * Главное правило этого модуля: **частичный каталог — не результат**. Если
  * снимок не приехал или в нём чего-то не хватает, сборка обязана упасть. Магазин,
@@ -303,8 +304,9 @@ type CatalogListResponse = {
  * оказаться на витрине. Страницами по 100, то есть на текущий каталог это два
  * запроса.
  */
-async function fetchPublishedSlugs(): Promise<string[]> {
+async function fetchPublishedProducts(): Promise<Array<Record<string, any>>> {
   const slugs: string[] = [];
+  const products: Array<Record<string, any>> = [];
   let page = 1;
   let pageCount = 1;
   let total: number | null = null;
@@ -326,6 +328,7 @@ async function fetchPublishedSlugs(): Promise<string[]> {
       }
 
       slugs.push(slug);
+      products.push(item);
     }
 
     const reportedPageCount = Number(response.meta?.pageCount);
@@ -354,7 +357,8 @@ async function fetchPublishedSlugs(): Promise<string[]> {
     );
   }
 
-  return slugs;
+  assertCatalogPublicationStable(products);
+  return products;
 }
 
 /**
@@ -362,10 +366,11 @@ async function fetchPublishedSlugs(): Promise<string[]> {
  * зато здесь, до экспорта, где спешить некуда: шаг задан бюджетом запросов, а
  * не таймаутом рендера страницы.
  */
-async function fetchProductDetails(slugs: string[]): Promise<Array<Record<string, any>>> {
+async function fetchProductDetails(listing: Array<Record<string, any>>): Promise<Array<Record<string, any>>> {
   const items: Array<Record<string, any>> = [];
 
-  for (const [index, slug] of slugs.entries()) {
+  for (const [index, listed] of listing.entries()) {
+    const slug = String(listed.slug);
     const item = await fetchJson<Record<string, any>>(
       `/api/catalog/products/${encodeURIComponent(slug)}`,
       { quiet: true },
@@ -378,11 +383,12 @@ async function fetchProductDetails(slugs: string[]): Promise<Array<Record<string
         `Requested product "${slug}" but the API answered with "${item?.slug ?? 'nothing'}".`,
       );
     }
+    assertCatalogPublicationStable([listed], [item]);
 
     items.push(item);
 
-    if ((index + 1) % 25 === 0 || index + 1 === slugs.length) {
-      log(`products ${index + 1}/${slugs.length}`);
+    if ((index + 1) % 25 === 0 || index + 1 === listing.length) {
+      log(`products ${index + 1}/${listing.length}`);
     }
   }
 
@@ -403,7 +409,8 @@ async function fetchProductDetails(slugs: string[]): Promise<Array<Record<string
 async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: number }> {
   const startedAt = Date.now();
 
-  const listedSlugs = await fetchPublishedSlugs();
+  const listing = await fetchPublishedProducts();
+  const listedSlugs = listing.map(product => String(product.slug));
 
   log(`catalog listing: ${listedSlugs.length} published product(s)`);
 
@@ -411,7 +418,7 @@ async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: numbe
     buildId: process.env.SKUF_CATALOG_BUILD_ID ?? '',
     generatedAt: new Date().toISOString(),
     count: listedSlugs.length,
-    items: await fetchProductDetails(listedSlugs),
+    items: await fetchProductDetails(listing),
     resinColors: null,
   };
 
@@ -438,6 +445,10 @@ async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: numbe
   }
 
   const file: SnapshotFile = { ...payload, resinColors };
+
+  // Publication/readiness may change independently of this several-minute
+  // build. Fail before any atomic snapshot write if the live state drifted.
+  assertCatalogPublicationStable(listing, payload.items, await fetchPublishedProducts());
 
   fs.mkdirSync(path.dirname(SNAPSHOT_PATH), { recursive: true });
   const paths = snapshotCollectionPaths(path.dirname(SNAPSHOT_PATH), file.buildId);
@@ -545,4 +556,9 @@ export function getSnapshotProductSlugs(): string[] {
   const issues = validateCatalogSnapshot(file);
   if (issues.length) throw new Error(`Invalid sitemap snapshot: ${issues.join('; ')}`);
   return [...bySlug.keys()];
+}
+
+/** Sitemap and product SEO consume the same completed collection. */
+export function getSnapshotProducts(): CatalogProductDetail[] {
+  return getSnapshotProductSlugs().map(getSnapshotProduct);
 }

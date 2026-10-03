@@ -1,6 +1,7 @@
 'use client';
 
 import { useI18n } from '../../../../i18n/client';
+import { resolveProductPresentation } from '../../../../i18n/catalog-policy';
 import type { Translator } from '../../../../i18n/translate';
 import Image from 'next/image';
 import Link from '../../../../i18n/navigation';
@@ -39,8 +40,9 @@ function getMetaLine(product: CatalogProductListItem) {
   return Array.from(new Set(parts)).join(' · ');
 }
 
-export function CatalogProductCard({ product }: CatalogProductCardProps) {
+export function CatalogProductCard({ product: sourceProduct }: CatalogProductCardProps) {
   const { locale, t, path } = useI18n();
+  const product = resolveProductPresentation(sourceProduct, locale);
 
   const imageUrl = resolveMediaUrl(product.coverImage?.url);
   const metaLine = getMetaLine(product);
@@ -75,17 +77,17 @@ export function CatalogProductCard({ product }: CatalogProductCardProps) {
     addFavorite({
       productId: product.id,
       slug: product.slug,
-      title: product.title,
+      title: sourceProduct.title,
       series:
-        product.series ??
-        product.franchise?.name ??
-        product.brand?.name ??
+        sourceProduct.series ??
+        sourceProduct.franchise?.name ??
+        sourceProduct.brand?.name ??
         null,
       priceFrom: product.priceFrom,
       hasPriceRange: product.pricing?.hasPriceRange === true,
       currency: product.currency,
       isAdult: product.isAdult,
-      coverImage: product.coverImage,
+      coverImage: sourceProduct.coverImage,
     });
   }
 

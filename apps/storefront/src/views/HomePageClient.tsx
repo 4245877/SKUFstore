@@ -2,6 +2,7 @@
 
 import { countNoun } from '../i18n/presentation';
 import type { PublishedLocale } from '../i18n/locales';
+import { resolveProductPresentation } from '../i18n/catalog-policy';
 import { useI18n } from '../i18n/client';
 import type { Translator } from '../i18n/translate';
 import Link from '../i18n/navigation'
@@ -142,7 +143,8 @@ function formatShowcaseBadge(t: Translator, product: HomeProductItem) {
 export default function HomePageClient() {
   const { locale, t, path } = useI18n();
 
-  const [products, setProducts] = useState<HomeProductItem[]>([])
+  const [sourceProducts, setProducts] = useState<HomeProductItem[]>([])
+  const products = useMemo(() => sourceProducts.map(product => resolveProductPresentation(product, locale)), [sourceProducts, locale])
   const [categoryTree, setCategoryTree] = useState<CatalogCategoryTreeItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -153,7 +155,7 @@ export default function HomePageClient() {
       setIsLoading(true)
 
       const [productsResult, categoriesResult] = await Promise.allSettled([
-        getHomeProducts(),
+        getHomeProducts(locale),
         getCatalogCategories(),
       ])
 
@@ -169,7 +171,7 @@ export default function HomePageClient() {
     return () => {
       isCancelled = true
     }
-  }, [])
+  }, [locale])
 
   const homeCategories = useMemo(() => buildHomeCategories(t, locale, categoryTree), [categoryTree, locale])
 

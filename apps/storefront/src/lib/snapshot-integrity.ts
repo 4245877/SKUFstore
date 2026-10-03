@@ -11,7 +11,27 @@
  * предыдущая рабочая версия.
  */
 
+import { getProductLocalizationVersion, productLocalizationIssues } from '../i18n/catalog-policy.ts';
+
 export type SnapshotIssue = string;
+
+/** Publication and translation revisions must remain stable throughout collection. */
+export function assertCatalogPublicationStable(...collections: Array<Array<Record<string, any>>>): void {
+  const signatures = collections.map(products => {
+    const seen = new Set<string>();
+    return JSON.stringify(products.map(product => {
+      const issues = productLocalizationIssues(product);
+      if (!product.id || !product.slug || seen.has(product.slug) || issues.length) {
+        throw new Error(`Invalid catalog publication listing: ${product.slug ?? 'missing slug'} ${issues.join('; ')}`);
+      }
+      seen.add(product.slug);
+      return [product.slug, product.id, getProductLocalizationVersion(product)];
+    }).sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  });
+  if (signatures.some(signature => signature !== signatures[0])) {
+    throw new Error('Catalog publication/localization changed during collection; retry the build');
+  }
+}
 
 export function validateCatalogSnapshot(payload: unknown, expectedBuildId?: string): SnapshotIssue[] {
   const issues: SnapshotIssue[] = [];
@@ -63,6 +83,9 @@ export function validateCatalogSnapshot(payload: unknown, expectedBuildId?: stri
     if (!item.title) issues.push(`${slug}: missing title`);
     if (!Array.isArray(item.images)) issues.push(`${slug}: images is not an array`);
     if (!Array.isArray(item.variants)) issues.push(`${slug}: variants is not an array`);
+    // Older API responses have neither additive field. A partial/new envelope
+    // must be coherent: do not silently export broken editorial readiness.
+    issues.push(...productLocalizationIssues(item).map(issue => `${slug}: ${issue}`));
   });
 
   return issues;

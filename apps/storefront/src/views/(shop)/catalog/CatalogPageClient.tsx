@@ -315,6 +315,7 @@ export default function CatalogPageClient() {
       const currentCategorySlug = selectedCategory?.slug;
 
       const buildProductsParams = (page: number) => ({
+        locale,
         q: currentQuery,
         categorySlug: currentCategorySlug,
         brandSlug: currentBrandSlug,
@@ -374,6 +375,7 @@ export default function CatalogPageClient() {
       cancelled = true;
     };
   }, [
+    locale,
     mounted,
     currentBrandSlug,
     currentCharacterSlug,

@@ -3,6 +3,8 @@
 import { formatLocaleDate } from '../../../i18n/presentation';
 import { countNoun } from '../../../i18n/presentation';
 import { useI18n } from '../../../i18n/client';
+import { getSourceProductPresentation, resolveProductPresentation } from '../../../i18n/catalog-policy';
+import type { PublishedLocale } from '../../../i18n/locales';
 import type { Translator } from '../../../i18n/translate';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from '../../../i18n/navigation';
@@ -12,10 +14,12 @@ import {
   addAccountFavorite,
   getAccountFavorites,
   getCatalogProducts,
+  getCatalogProductBySlug,
   removeAccountFavorite,
   resolveMediaUrl,
   type AccountFavoriteItem,
   type CatalogProductListItem,
+  type CatalogProductDetail,
 } from '../../../lib/api';
 import {
   addFavorite,
@@ -74,7 +78,8 @@ function getMetaLabel(...values: Array<string | null | undefined>) {
   return values.find((value) => Boolean(value?.trim()))?.trim() ?? null;
 }
 
-function mapAccountFavorite(t: Translator, item: AccountFavoriteItem): FavoriteItem {
+function mapAccountFavorite(t: Translator, source: AccountFavoriteItem, locale: PublishedLocale): FavoriteItem {
+  const item = resolveProductPresentation(source, locale);
   return {
     productId: item.productId,
     slug: item.slug,
@@ -115,16 +120,12 @@ function mapGuestFavorite(t: Translator, item: FavoriteSnapshot): FavoriteItem {
 }
 
 function buildGuestFavoriteSnapshot(t: Translator, product: CatalogProductListItem): Omit<FavoriteSnapshot, 'addedAt'> {
+  product = getSourceProductPresentation(product);
   return {
     productId: product.id,
     slug: product.slug,
     title: product.title,
-    series: getSeriesLabel(t, 
-      product.series,
-      product.franchise?.name as string | undefined,
-      product.brand?.name as string | undefined,
-      product.category?.name as string | undefined,
-    ),
+    series: product.series ?? product.franchise?.name ?? product.brand?.name ?? product.category?.name ?? null,
     priceFrom: product.priceFrom,
     hasPriceRange: Boolean(product.pricing?.hasPriceRange),
     currency: product.currency,
@@ -138,7 +139,7 @@ function buildGuestFavoriteSnapshot(t: Translator, product: CatalogProductListIt
   };
 }
 
-function mapCatalogProductToFavorite(t: Translator, product: CatalogProductListItem): FavoriteItem {
+function mapCatalogProductToFavorite(t: Translator, product: CatalogProductListItem | CatalogProductDetail): FavoriteItem {
   return {
     productId: product.id,
     slug: product.slug,
@@ -323,10 +324,31 @@ export default function FavoritesPage() {
     window.setTimeout(() => setToast(null), 3000);
   }, []);
 
+  const loadGuestFavorites = useCallback(async () => {
+    const snapshots = readFavorites();
+    // Old snapshots retain their source text. Resolve current presentation at
+    // display without mutating storage, IDs, or historical addedAt values.
+    const resolved = snapshots.map(item => mapGuestFavorite(t, item));
+    const queue = snapshots.map((item, index) => ({ item, index }));
+    await Promise.all(Array.from({ length: Math.min(4, queue.length) }, async () => {
+      while (queue.length) {
+        const { item, index } = queue.shift()!;
+        try {
+          const source = await getCatalogProductBySlug(item.slug);
+          if (source.id !== item.productId) continue;
+          const product = resolveProductPresentation(source, locale);
+          resolved[index] = { ...mapCatalogProductToFavorite(t, product), addedAt: item.addedAt };
+        } catch { /* Offline or unpublished products retain their source snapshot. */ }
+      }
+    }));
+    // Ignore an in-flight result if the customer removed/added a favorite.
+    if (JSON.stringify(readFavorites()) === JSON.stringify(snapshots)) setItems(resolved);
+  }, [locale]);
+
   const loadFavorites = useCallback(async () => {
     try {
       const response = await getAccountFavorites();
-      setItems(response.items.map((item) => mapAccountFavorite(t, item)));
+      setItems(response.items.map((item) => mapAccountFavorite(t, item, locale)));
       setSourceMode('account');
     } catch (error) {
       if (!isAuthError(error)) {
@@ -335,10 +357,11 @@ export default function FavoritesPage() {
 
       setItems(readFavorites().map((item) => mapGuestFavorite(t, item)));
       setSourceMode('guest');
+      await loadGuestFavorites();
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [locale, loadGuestFavorites]);
 
   useEffect(() => {
     void loadFavorites();
@@ -347,10 +370,10 @@ export default function FavoritesPage() {
   useEffect(() => {
     let active = true;
 
-    void getCatalogProducts({ page: 1, limit: 8 })
+    void getCatalogProducts({ page: 1, limit: 8, locale })
       .then((response) => {
         if (!active) return;
-        setSuggestions(response.items);
+        setSuggestions(response.items.map(product => resolveProductPresentation(product, locale)));
       })
       .catch((error) => {
         console.error(error);
@@ -359,15 +382,16 @@ export default function FavoritesPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     if (sourceMode !== 'guest') return;
 
     return subscribeToFavoritesChange(() => {
       setItems(readFavorites().map((item) => mapGuestFavorite(t, item)));
+      void loadGuestFavorites();
     });
-  }, [sourceMode]);
+  }, [sourceMode, loadGuestFavorites]);
 
   const sorted = useMemo(() => {
     const arr = [...items];
@@ -375,10 +399,10 @@ export default function FavoritesPage() {
     if (sort === 'added') arr.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
     if (sort === 'price-asc') arr.sort((a, b) => a.price - b.price);
     if (sort === 'price-desc') arr.sort((a, b) => b.price - a.price);
-    if (sort === 'name') arr.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+    if (sort === 'name') arr.sort((a, b) => a.name.localeCompare(b.name, locale));
 
     return arr;
-  }, [items, sort]);
+  }, [items, sort, locale]);
 
   const totalPrice = items.reduce((acc, item) => acc + item.price, 0);
   const favoriteIds = new Set(items.map((item) => item.productId));
@@ -455,6 +479,7 @@ export default function FavoritesPage() {
       } else {
         addFavorite(buildGuestFavoriteSnapshot(t, product));
         setItems(readFavorites().map((item) => mapGuestFavorite(t, item)));
+        await loadGuestFavorites();
       }
 
       showToast(t('shop.valueAddedToFavorites', { value1: product.title }));

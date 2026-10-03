@@ -1,5 +1,6 @@
 import { LOCALE_PRESENTATION, type PublishedLocale } from '../../../../i18n/locales';
-import { isProductIndexable } from '../../../../i18n/catalog-policy';
+import { getProductLocalizationVersion, isEnglishProductReady, isProductIndexable, resolveProductPresentation } from '../../../../i18n/catalog-policy';
+import { languageAlternates } from '../../../../i18n/metadata';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -119,13 +120,17 @@ export async function productMetadata({
     throw error;
   }
 
+  product = resolveProductPresentation(product, locale);
   const meta = buildProductPageMeta(product, resolveMediaUrl, locale);
 
   return {
     title: meta.documentTitle,
     description: meta.description,
-    alternates: { canonical: meta.canonicalUrl },
-    robots: { index: isProductIndexable(locale), follow: true },
+    alternates: { canonical: meta.canonicalUrl, ...(isEnglishProductReady(product) ? {
+      languages: languageAlternates(`/product/${encodeURIComponent(product.slug)}/`),
+    } : {}) },
+    robots: { index: isProductIndexable(locale, product), follow: true },
+    other: { 'skufnya-en-content-version': getProductLocalizationVersion(product) },
     // Метаданные Next сливает поверхностно: объект `openGraph` со страницы
     // заменяет объект из layout целиком, поэтому siteName и locale приходится
     // повторить — иначе они просто исчезнут со страниц товаров.
@@ -156,7 +161,7 @@ export async function ProductPage({
   const { slug } = await params;
 
   try {
-    const product = await loadProduct(slug);
+    const product = resolveProductPresentation(await loadProduct(slug), locale);
 
     if (!product) {
       notFound();
