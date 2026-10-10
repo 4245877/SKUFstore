@@ -7,7 +7,9 @@ import { useI18n } from '../i18n/client';
 import type { Translator } from '../i18n/translate';
 import Link from '../i18n/navigation'
 import Image from 'next/image'
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import CatalogLoadError from '../components/catalog/CatalogLoadError'
+import { getCatalogFailureKind, type CatalogFailureKind } from '../lib/catalog-errors'
 import {
   getCatalogCategories,
   getHomeProducts,
@@ -147,22 +149,40 @@ export default function HomePageClient() {
   const products = useMemo(() => sourceProducts.map(product => resolveProductPresentation(product, locale)), [sourceProducts, locale])
   const [categoryTree, setCategoryTree] = useState<CatalogCategoryTreeItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [failure, setFailure] = useState<{ products?: CatalogFailureKind; categories?: CatalogFailureKind }>({})
+  const [retryVersion, setRetryVersion] = useState(0)
+  const requestInFlight = useRef(false)
+  const isInitialLoading = isLoading && !failure.products && !failure.categories
+
+  function retryHomeData() {
+    if (requestInFlight.current) return
+    requestInFlight.current = true
+    setIsLoading(true)
+    setRetryVersion(version => version + 1)
+  }
 
   useEffect(() => {
     let isCancelled = false
+    const controller = new AbortController()
+    requestInFlight.current = true
 
     async function loadHomeData() {
       setIsLoading(true)
 
       const [productsResult, categoriesResult] = await Promise.allSettled([
-        getHomeProducts(locale),
-        getCatalogCategories(),
+        getHomeProducts(locale, { signal: controller.signal }),
+        getCatalogCategories({ signal: controller.signal }),
       ])
 
       if (isCancelled) return
 
       setProducts(productsResult.status === 'fulfilled' ? productsResult.value.items : [])
       setCategoryTree(categoriesResult.status === 'fulfilled' ? categoriesResult.value : [])
+      setFailure({
+        products: productsResult.status === 'rejected' ? getCatalogFailureKind(productsResult.reason) : undefined,
+        categories: categoriesResult.status === 'rejected' ? getCatalogFailureKind(categoriesResult.reason) : undefined,
+      })
+      requestInFlight.current = false
       setIsLoading(false)
     }
 
@@ -170,8 +190,9 @@ export default function HomePageClient() {
 
     return () => {
       isCancelled = true
+      controller.abort()
     }
-  }, [locale])
+  }, [locale, retryVersion])
 
   const homeCategories = useMemo(() => buildHomeCategories(t, locale, categoryTree), [categoryTree, locale])
 
@@ -258,23 +279,23 @@ export default function HomePageClient() {
           <div className={s.heroStats}>
             <div className={s.heroStat}>
               <span className={s.heroStatNum}>
-                {isLoading ? '—' : totalProducts.toLocaleString('uk-UA')}
+                {isInitialLoading || failure.categories ? '—' : totalProducts.toLocaleString('uk-UA')}
               </span>
               <span className={s.heroStatLabel}>
-                {isLoading ? t('home.products') : countNoun(t, locale, totalProducts, 'products')} {t('home.inTheCatalog')} </span>
+                {isInitialLoading ? t('home.products') : countNoun(t, locale, totalProducts, 'products')} {t('home.inTheCatalog')} </span>
             </div>
 
             <div className={s.heroStat}>
               <span className={s.heroStatNum}>
-                {isLoading ? '—' : totalCategories.toLocaleString('uk-UA')}
+                {isInitialLoading || failure.categories ? '—' : totalCategories.toLocaleString('uk-UA')}
               </span>
               <span className={s.heroStatLabel}>
-                {isLoading ? t('home.categories_1140') : countNoun(t, locale, totalCategories, 'categories')}
+                {isInitialLoading ? t('home.categories_1140') : countNoun(t, locale, totalCategories, 'categories')}
               </span>
             </div>
 
             <div className={s.heroStat}>
-              <span className={s.heroStatNum}>{isLoading ? '—' : products.length}</span>
+              <span className={s.heroStatNum}>{isInitialLoading || failure.products ? '—' : products.length}</span>
               <span className={s.heroStatLabel}>{t('home.featuredNow')}</span>
             </div>
           </div>
@@ -369,7 +390,9 @@ export default function HomePageClient() {
             </Link>
           </div>
 
-          {isLoading ? (
+          {failure.products ? (
+            <CatalogLoadError kind={failure.products} retrying={isLoading} onRetry={retryHomeData} />
+          ) : isInitialLoading ? (
             <div className={s.sectionNotice}>{t('shop.loadingProducts')}</div>
           ) : products.length > 0 ? (
             <div className={s.productGrid} role="list">
@@ -452,7 +475,13 @@ export default function HomePageClient() {
             </Link>
           </div>
 
-          {isLoading ? (
+          {failure.categories ? (
+            failure.products ? (
+              <div className={s.sectionNotice} lang="uk">Категорії повернуться разом із каталогом. Дякую, що чекаєш.</div>
+            ) : (
+              <CatalogLoadError kind={failure.categories} retrying={isLoading} onRetry={retryHomeData} />
+            )
+          ) : isInitialLoading ? (
             <div className={s.sectionNotice}>{t('home.loadingCategories')}</div>
           ) : homeCategories.length > 0 ? (
             <div className={s.catGrid}>

@@ -3,7 +3,7 @@
 import { useI18n } from '../../../i18n/client';
 import type { Translator } from '../../../i18n/translate';
 import Link from '../../../i18n/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '../../../i18n/navigation';
 
@@ -15,6 +15,8 @@ import {
 } from '../../../lib/api';
 
 import { IconFilter } from '../../../components/icons';
+import CatalogLoadError from '../../../components/catalog/CatalogLoadError';
+import { getCatalogFailureKind, type CatalogFailureKind } from '../../../lib/catalog-errors';
 import CatalogPagination from './_components/CatalogPagination';
 import { CatalogProductCard } from './_components/CatalogProductCard';
 import { CatalogSidebar } from './_components/CatalogSidebar';
@@ -130,6 +132,7 @@ function CatalogStateMessage({
 type LoadState =
   | {
       kind: 'loading';
+      failure?: CatalogFailureKind;
       categories: CatalogCategoryTreeItem[];
       data: CatalogProductsResponse | null;
       selectedCategory?: CatalogCategoryTreeItem;
@@ -138,6 +141,7 @@ type LoadState =
     }
   | {
       kind: 'categories-error';
+      failure: CatalogFailureKind;
       categories: CatalogCategoryTreeItem[];
       data: CatalogProductsResponse | null;
       selectedCategory?: CatalogCategoryTreeItem;
@@ -154,6 +158,7 @@ type LoadState =
     }
   | {
       kind: 'products-error';
+      failure: CatalogFailureKind;
       categories: CatalogCategoryTreeItem[];
       data: CatalogProductsResponse | null;
       selectedCategory?: CatalogCategoryTreeItem;
@@ -243,6 +248,16 @@ export default function CatalogPageClient() {
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [readySearchParamsKey, setReadySearchParamsKey] = useState<string | null>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
+  const requestInFlight = useRef(false);
+
+  function retryCatalog() {
+    if (requestInFlight.current || (state.kind !== 'categories-error' && state.kind !== 'products-error')) return;
+    requestInFlight.current = true;
+    // Keep the composition and its button mounted while checking the connection.
+    setState((prev) => ({ ...prev, kind: 'loading' }));
+    setRetryVersion((version) => version + 1);
+  }
 
   // Закриваємо мобільний drawer фільтрів, коли змінюються параметри пошуку
   useEffect(() => {
@@ -267,6 +282,8 @@ export default function CatalogPageClient() {
     if (!mounted) return;
 
     let cancelled = false;
+    const controller = new AbortController();
+    requestInFlight.current = true;
 
     async function load() {
       setReadySearchParamsKey(null);
@@ -278,20 +295,20 @@ export default function CatalogPageClient() {
       let categories: CatalogCategoryTreeItem[] = [];
 
       try {
-        categories = (await getCatalogCategories()) ?? [];
-      } catch {
+        categories = (await getCatalogCategories({ signal: controller.signal })) ?? [];
+      } catch (error) {
         if (cancelled) return;
 
-        setState({
+        setState((prev) => ({
+          ...prev,
           kind: 'categories-error',
-          categories: [],
+          failure: getCatalogFailureKind(error),
           data: null,
-          selectedCategory: undefined,
-          flatCategories: [],
-          safePage: 1,
-        });
+        }));
         return;
       }
+
+      if (cancelled) return;
 
       const flatCategories = flattenCategoryTree(categories);
       const selectedCategory = requestedCategorySlug
@@ -330,13 +347,13 @@ export default function CatalogPageClient() {
       });
 
       try {
-        let data = await getCatalogProducts(buildProductsParams(requestedPage));
+        let data = await getCatalogProducts(buildProductsParams(requestedPage), { signal: controller.signal });
 
         const pageCount = Math.max(1, data.meta.pageCount ?? 1);
         const clampedPage = Math.min(Math.max(requestedPage, 1), pageCount);
 
         if (clampedPage !== requestedPage) {
-          data = await getCatalogProducts(buildProductsParams(clampedPage));
+          data = await getCatalogProducts(buildProductsParams(clampedPage), { signal: controller.signal });
         }
 
         const safePage = Math.min(
@@ -355,11 +372,12 @@ export default function CatalogPageClient() {
           flatCategories,
           safePage,
         });
-      } catch {
+      } catch (error) {
         if (cancelled) return;
 
         setState({
           kind: 'products-error',
+          failure: getCatalogFailureKind(error),
           categories,
           data: null,
           selectedCategory,
@@ -369,10 +387,13 @@ export default function CatalogPageClient() {
       }
     }
 
-    void load();
+    void load().finally(() => {
+      if (!cancelled) requestInFlight.current = false;
+    });
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [
     locale,
@@ -388,6 +409,7 @@ export default function CatalogPageClient() {
     requestedCategorySlug,
     requestedPage,
     searchParamsKey,
+    retryVersion,
   ]);
 
   const pageTitle =
@@ -487,7 +509,7 @@ export default function CatalogPageClient() {
     state.kind,
   ]);
 
-  if (state.kind === 'categories-error') {
+  if (state.kind === 'categories-error' || state.kind === 'products-error' || (state.kind === 'loading' && state.failure)) {
     return (
       <div className={styles.page}>
         <header className={styles.pageHeader}>
@@ -507,14 +529,23 @@ export default function CatalogPageClient() {
           </div>
         </header>
 
-        <div className={styles.main}>
+        <div className={`${styles.main} ${state.categories.length ? '' : styles.mainWithoutSidebar}`}>
+          {state.categories.length > 0 ? (
+            <CatalogSidebar
+              categories={state.categories}
+              searchParams={currentSearchParams}
+              currentQuery={currentQuery}
+              currentCategorySlug={currentCategorySlug}
+              currentIsAdult={currentIsAdult}
+              currentMinPrice={currentMinPrice}
+              currentMaxPrice={currentMaxPrice}
+            />
+          ) : null}
           <div className={styles.content}>
-            <CatalogStateMessage
-              icon="!"
-              title={t('shop.weCouldnTLoadTheCatalog')}
-              text={t('shop.weCouldnTLoadTheCategoriesPlease')}
-              href="/catalog"
-              action={t('shop.reloadCatalog')}
+            <CatalogLoadError
+              kind={state.failure}
+              retrying={state.kind === 'loading'}
+              onRetry={retryCatalog}
             />
           </div>
         </div>
@@ -603,51 +634,6 @@ export default function CatalogPageClient() {
               text={t('shop.thisCategoryMayNoLongerExistOr')}
               href="/catalog"
               action={t('shop.backToCatalog')}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (state.kind === 'products-error') {
-    return (
-      <div className={styles.page}>
-        <header className={styles.pageHeader}>
-          <div className={styles.pageHeaderInner}>
-            <nav className={styles.breadcrumb} aria-label={t('content.breadcrumbs')}>
-              <Link href="/">{t('account.home')}</Link>
-              <span className={styles.breadcrumbSep}>›</span>
-              <span className={styles.breadcrumbCurrent}>{t('account.catalog')}</span>
-            </nav>
-
-            <div className={styles.pageHeaderTop}>
-              <div className={styles.pageTitleGroup}>
-                <h1 className={styles.pageTitle}>{pageTitle}</h1>
-                <LaceDivider />
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <div className={styles.main}>
-          <CatalogSidebar
-            categories={state.categories}
-            searchParams={normalizedSearchParams as SearchParamsMap}
-            currentQuery={currentQuery}
-            currentCategorySlug={currentCategorySlug}
-            currentIsAdult={currentIsAdult}
-            currentMinPrice={currentMinPrice}
-            currentMaxPrice={currentMaxPrice}
-          />
-
-          <div className={styles.content}>
-            <CatalogStateMessage
-              icon="!"
-              title={t('shop.weCouldnTLoadProducts')}
-              text={t('shop.somethingWentWrongWhileLoadingTheCatalog')}
-              href="/catalog"
-              action={t('shop.resetFilters')}
             />
           </div>
         </div>

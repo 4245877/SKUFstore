@@ -944,3 +944,8 @@
     height: var(--hit-min);
   }
 }
+
+/* A failed category request has no sidebar; let the message use the full row. */
+.main.mainWithoutSidebar {
+  grid-template-columns: minmax(0, 1fr);
+}

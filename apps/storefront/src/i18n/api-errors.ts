@@ -1,4 +1,5 @@
 import type { Translator, TranslationKey } from './translate.ts';
+import { ApiConnectionError } from '../lib/catalog-errors.ts';
 
 // API uses payload.error for its stable code. The transport retains message/details
 // for diagnostics; customer copy never depends on backend prose or language.
@@ -36,6 +37,6 @@ export function presentApiError(t: Translator, error: unknown): string {
   const status = (error as { status?: number } | null)?.status;
   if (status === 429) return t('errors.rateLimit');
   if (status === 401 || status === 403) return t('errors.signIn');
-  if (error instanceof TypeError) return t('errors.network');
+  if (error instanceof TypeError || error instanceof ApiConnectionError) return t('errors.network');
   return t('errors.generic');
 }
