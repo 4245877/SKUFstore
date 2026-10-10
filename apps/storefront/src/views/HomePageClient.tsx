@@ -477,7 +477,7 @@ export default function HomePageClient() {
 
           {failure.categories ? (
             failure.products ? (
-              <div className={s.sectionNotice} lang="uk">Категорії повернуться разом із каталогом. Дякую, що чекаєш.</div>
+              <div className={s.sectionNotice}>{t('catalog.failure.categoriesUnavailable')}</div>
             ) : (
               <CatalogLoadError kind={failure.categories} retrying={isLoading} onRetry={retryHomeData} />
             )

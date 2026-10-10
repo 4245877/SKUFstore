@@ -1,27 +1,28 @@
 .panel {
+  container-type: inline-size;
+  width: 100%;
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--surface);
+  border-block: 1px solid var(--border-soft);
+}
+
+.layout {
   display: grid;
-  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.35fr);
   align-items: center;
   gap: clamp(24px, 4vw, 48px);
-  width: 100%;
-  min-height: 420px;
-  padding: clamp(24px, 4vw, 48px);
-  background: linear-gradient(135deg, var(--surface), var(--lace));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xs);
 }
 
 .art {
   display: grid;
   place-items: center;
   min-width: 0;
-  background: radial-gradient(ellipse at center, var(--blush), transparent 70%);
+  background: radial-gradient(ellipse at center, var(--cream), transparent 72%);
 }
 
 .image {
   width: 100%;
-  max-width: 280px;
+  max-width: 264px;
   height: auto;
   aspect-ratio: 1;
   object-fit: contain;
@@ -32,8 +33,14 @@
   min-width: 0;
 }
 
+.textOnly { grid-template-columns: minmax(0, 1fr); }
+.textOnly .content { margin-inline: auto; }
+
 .eyebrow {
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.14em;
@@ -41,36 +48,42 @@
   color: var(--mauve);
 }
 
-.title {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 2.8vw, 34px);
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--ink);
-  text-wrap: balance;
+.eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  flex-shrink: 0;
+  background: var(--rose);
 }
 
-.lace {
-  display: block;
-  width: 120px;
-  height: 8px;
-  margin: 16px 0 24px;
-  color: var(--rose);
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.5vw, 32px);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  text-wrap: balance;
 }
 
 .message {
   display: grid;
   gap: 12px;
+  margin-top: 20px;
   font-size: 14px;
-  line-height: 1.75;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.lead {
+  font-size: 15px;
   color: var(--text-secondary);
 }
 
-.reassurance {
+.hint {
   margin-top: 16px;
-  font-size: 13px;
-  line-height: 1.75;
-  color: var(--mauve);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
 }
 
 .retry {
@@ -78,9 +91,9 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-width: 230px;
+  min-width: min(240px, 100%);
   max-width: 100%;
-  min-height: var(--btn-h-md);
+  min-height: var(--btn-h-lg);
   margin-top: 24px;
   padding: 12px 20px;
   border-radius: var(--btn-radius);
@@ -95,31 +108,38 @@
 
 .retry svg { flex-shrink: 0; }
 .retry:active:not(:disabled) { transform: var(--btn-press); }
-.retry:disabled { cursor: wait; }
-.spinning { animation: spin 1.2s linear infinite; }
-
-.status {
-  margin-top: 12px;
-  min-height: 3.2em;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-muted);
+.retry:disabled {
+  cursor: wait;
+  background: var(--charcoal);
 }
+.spinning { animation: spin 1.2s linear infinite; }
 
 @media (hover: hover) {
   .retry:hover:not(:disabled) { background: var(--btn-primary-hover-bg); }
 }
 
-@media (max-width: 600px) {
-  .panel {
+/* The error also appears beside a catalog sidebar; adapt to the available
+   space rather than assuming the viewport is the width of the component. */
+@container (max-width: 540px) {
+  .layout {
     grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    padding: 28px 20px;
+    gap: 20px;
     text-align: center;
   }
 
-  .image { max-width: 180px; }
+  .image { max-width: 148px; }
   .content { margin-inline: auto; }
-  .lace { margin-inline: auto; }
+  .eyebrow { justify-content: center; }
+  .eyebrow::before { width: 20px; }
   .retry { width: 100%; }
+}
+
+@media (max-width: 400px) {
+  .panel { padding: 24px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retry { transition: none; }
+  .retry:active:not(:disabled) { transform: none; }
+  .spinning { animation: none; }
 }

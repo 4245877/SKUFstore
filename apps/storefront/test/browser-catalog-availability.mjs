@@ -33,12 +33,17 @@ const products = Array.from({ length: 48 }, (_, i) => ({
   qualityScore: 9, category: { slug: 'figures', name: 'Фігурки' },
 }));
 const categories = [{ id: 'c', slug: 'figures', name: 'Фігурки', productCount: 48, children: [] }];
-const panelSelector = 'section[lang="uk"][aria-labelledby]';
+const panelSelector = 'section[lang][aria-labelledby]';
 
-async function scenario(name, initialMode, { width = 1440, url = '/catalog/', recover = false, repeat = false } = {}) {
-  const context = await browser.newContext({ viewport: { width, height: 1100 }, reducedMotion: 'reduce' });
+async function scenario(name, initialMode, { width = 1440, url = '/catalog/', recover = false, repeat = false, switchLanguage = false, reducedMotion = 'reduce' } = {}) {
+  const context = await browser.newContext({ viewport: { width, height: 1100 }, reducedMotion });
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
+  let locale = url.startsWith('/en/') ? 'en' : 'uk';
+  const labels = {
+    uk: { retry: 'Спробувати ще раз', retrying: 'Перевіряємо каталог…', cause: 'російських атак', server: 'Сервер відповів', rateLimit: 'забагато запитів' },
+    en: { retry: 'Try again', retrying: 'Checking the catalog…', cause: 'Russian attacks', server: 'The server responded', rateLimit: 'Too many requests' },
+  };
   const errors = [], calls = [], documents = [];
   let mode = initialMode, releaseRetry;
   const retryGate = new Promise(resolve => { releaseRetry = resolve; });
@@ -79,36 +84,71 @@ async function scenario(name, initialMode, { width = 1440, url = '/catalog/', re
       else await page.getByRole('heading', { name: 'Нічого не знайдено', exact: true }).waitFor();
       assert.equal(await panel.count(), 0, 'Successful/empty responses must never show the outage message');
     } else {
-      const retry = page.getByRole('button', { name: 'Спробувати ще раз', exact: true });
+      const retry = page.getByRole('button', { name: labels[locale].retry, exact: true });
       await retry.waitFor();
       assert.equal(await retry.isEnabled(), true);
+      assert.equal(await panel.getAttribute('lang'), locale);
+      if (locale === 'en') assert.ok(!/[\u0400-\u04FF]/u.test(await panel.textContent()), 'Every visible and accessible panel string must be English');
+      assert.ok((await retry.boundingBox()).height >= 44, 'Retry needs a comfortable touch target');
+      const idleButtonRect = await retry.boundingBox();
+      const status = panel.getByRole('status');
+      assert.equal(await status.getAttribute('aria-live'), 'polite');
+      assert.ok((await status.textContent()).trim().length > 0);
       const text = await panel.innerText();
       assert.ok(!text.includes('internal.invalid') && !text.includes('PRIVATE_ERROR'));
-      const thematic = ['disconnected', 'categories-down', 'interrupted', 'timeout', 502, 503, 504].includes(mode);
-      assert.equal(text.includes('російські атаки'), thematic);
-      if (mode === 500) assert.ok(text.includes('Сервер відповів'));
-      if (mode === 429) assert.ok(text.includes('забагато запитів'));
+      const thematic = ['disconnected', 'categories-down', 'interrupted', 'timeout', 408, 502, 503, 504].includes(mode);
+      assert.equal(text.includes(labels[locale].cause), thematic);
+      if (mode === 500) assert.ok(text.includes(labels[locale].server));
+      if (mode === 429) assert.ok(text.includes(labels[locale].rateLimit));
 
       const img = panel.locator('img');
-      await img.evaluate(image => image.decode());
-      assert.equal(await img.getAttribute('alt'), '');
-      const dimensions = await img.evaluate(image => ({ width: image.clientWidth, height: image.clientHeight, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, url: image.currentSrc }));
-      assert.equal(dimensions.naturalWidth, 1254);
-      assert.equal(dimensions.naturalHeight, 1254);
-      assert.ok(Math.abs(dimensions.width - dimensions.height) <= 1, 'Artwork must retain its square proportions');
-      assert.ok(dimensions.url.startsWith(base + '/_next/static/media/'), 'Artwork must be served by the frontend');
+      assert.equal(await img.count(), thematic ? 1 : 0, 'Connection artwork belongs only to connection failures');
+      if (thematic) {
+        await img.evaluate(image => image.decode());
+        assert.equal(await img.getAttribute('alt'), '');
+        const dimensions = await img.evaluate(image => ({ width: image.clientWidth, height: image.clientHeight, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, url: image.currentSrc }));
+        assert.equal(dimensions.naturalWidth, 1254);
+        assert.equal(dimensions.naturalHeight, 1254);
+        assert.ok(Math.abs(dimensions.width - dimensions.height) <= 1, 'Artwork must retain its square proportions');
+        assert.ok(dimensions.url.startsWith(base + '/_next/static/media/'), 'Artwork must be served by the frontend');
+        assert.ok(dimensions.width <= (width <= 430 ? 148 : 264), 'Artwork stays proportionate on small screens');
+      }
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'No horizontal overflow');
       if (initialMode === 'disconnected' && process.env.SMOKE_SCREENSHOTS) {
         fs.mkdirSync(process.env.SMOKE_SCREENSHOTS, { recursive: true });
-        await page.screenshot({ path: path.join(process.env.SMOKE_SCREENSHOTS, `${name}.png`), fullPage: true });
+        await page.evaluate(() => document.fonts.ready);
+        await panel.screenshot({ path: path.join(process.env.SMOKE_SCREENSHOTS, `${name}.png`) });
+        if (width === 1440 || width === 390) await page.screenshot({ path: path.join(process.env.SMOKE_SCREENSHOTS, `${name}-page.png`), fullPage: true });
       }
-      if (url === '/' && mode === 'categories-down') assert.ok(await page.locator('article').count() > 0, 'A category failure must leave successful product data visible');
-      if (url === '/' && mode === 'disconnected') assert.equal(await panel.count(), 1, 'Homepage should have one illustrated message');
+      if (['/', '/en/'].includes(url) && mode === 'categories-down') assert.ok(await page.locator('article').count() > 0, 'A category failure must leave successful product data visible');
+      if (['/', '/en/'].includes(url) && mode === 'disconnected') assert.equal(await panel.count(), 1, 'Homepage should have one illustrated message');
+
+      if (['/', '/en/'].includes(url) && mode === 'disconnected' && locale === 'en') {
+        const notice = page.getByText('Categories are also unavailable right now. Please try loading the catalog a little later.', { exact: true });
+        await notice.waitFor();
+        const categoriesSection = notice.locator('xpath=ancestor::section');
+        assert.ok(!/[\u0400-\u04FF]/u.test(await categoriesSection.innerText()), 'The secondary homepage notice must also be translated');
+      }
+
+      if (switchLanguage) {
+        const originalUrl = new URL(page.url());
+        for (const target of ['en', 'uk']) {
+          await page.locator(`header a[hreflang="${target}"]`).click();
+          await page.getByRole('button', { name: labels[target].retry, exact: true }).waitFor();
+          const expectedPath = target === 'en' ? '/en/catalog/' : '/catalog/';
+          assert.equal(new URL(page.url()).pathname, expectedPath);
+          assert.equal(new URL(page.url()).search, originalUrl.search);
+          assert.equal(new URL(page.url()).hash, originalUrl.hash);
+          assert.equal(await panel.getAttribute('lang'), target);
+          if (target === 'en') assert.ok(!/[\u0400-\u04FF]/u.test(await panel.textContent()));
+          locale = target;
+        }
+      }
 
       if (repeat) {
         const before = calls.length;
         await retry.click();
-        await page.getByRole('button', { name: 'Відновлюємо зв’язок…' }).waitFor({ state: 'hidden' });
+        await page.getByRole('button', { name: labels[locale].retrying }).waitFor({ state: 'hidden' });
         await retry.waitFor();
         assert.equal(calls.length, before + 1, 'A repeated outage uses one bounded request');
       }
@@ -125,8 +165,14 @@ async function scenario(name, initialMode, { width = 1440, url = '/catalog/', re
         assert.equal(await retry.evaluate(element => element === document.activeElement), true);
         await page.keyboard.press('Enter');
         await requestStarted;
-        const busy = page.getByRole('button', { name: 'Відновлюємо зв’язок…', exact: true });
+        const busy = page.getByRole('button', { name: labels[locale].retrying, exact: true });
         assert.equal(await busy.isDisabled(), true);
+        assert.equal(await busy.getAttribute('aria-busy'), 'true');
+        const busyButtonRect = await busy.boundingBox();
+        assert.ok(Math.abs(idleButtonRect.width - busyButtonRect.width) <= 1 && Math.abs(idleButtonRect.height - busyButtonRect.height) <= 1, 'Localized busy copy must not resize the retry button');
+        const motion = await busy.locator('svg').evaluate(icon => getComputedStyle(icon).animationName);
+        assert.equal(motion === 'none', reducedMotion === 'reduce', 'Only an active retry should animate, respecting reduced motion');
+        assert.ok((await status.textContent()).includes(locale === 'en' ? 'Checking' : 'Перевіряємо'));
         await busy.evaluate(button => { for (let i = 0; i < 8; i++) button.click(); });
         assert.equal(calls.filter(call => call.path.endsWith('/categories')).length, before + 1, 'Rapid clicks must not enqueue duplicate loads');
         assert.equal(await panel.getAttribute('data-availability-marker'), 'same-panel');
@@ -137,7 +183,7 @@ async function scenario(name, initialMode, { width = 1440, url = '/catalog/', re
         await page.locator('article').first().waitFor();
         assert.equal(await panel.count(), 0);
         assert.equal(page.url(), originalUrl, 'Recovery must preserve query, filters and page');
-        assert.equal(documents.length, 1, 'Recovery must not reload the document');
+        assert.equal(documents.length, switchLanguage ? 3 : 1, 'Recovery must not reload the document');
       }
     }
     assert.deepEqual(errors, []);
@@ -159,11 +205,18 @@ try {
   await scenario('narrow-outage', 'disconnected', { width: 320, recover: true });
   await scenario('interrupted-request', 'interrupted', { recover: true });
   await scenario('request-timeout', 'timeout', { recover: true });
-  for (const status of [500, 502, 503, 504, 429, 400, 403]) await scenario(`http-${status}`, status, { recover: true, width: status === 500 ? 390 : 1440 });
+  for (const status of [408, 500, 502, 503, 504, 429, 400, 403]) await scenario(`http-${status}`, status, { recover: true, width: status === 500 ? 390 : 1440 });
   await scenario('malformed-response', 'malformed', { recover: true });
   await scenario('home-outage', 'disconnected', { url: '/', width: 390, recover: true });
   await scenario('home-category-failure', 'categories-down', { url: '/', recover: true });
-  await scenario('english-route-ukrainian-message', 'disconnected', { url: '/en/catalog/', recover: true });
+  for (const width of [375, 430, 768, 1024]) await scenario(`uk-outage-${width}`, 'disconnected', { width, recover: true });
+  for (const width of [320, 375, 390, 430, 768, 1024, 1440]) await scenario(`en-outage-${width}`, 'disconnected', { width, url: '/en/catalog/', recover: true, repeat: width === 1440 });
+  for (const status of [408, 500, 502, 503, 504, 429, 400, 403]) await scenario(`en-http-${status}`, status, { url: '/en/catalog/', recover: true, width: 390 });
+  await scenario('en-home-outage', 'disconnected', { url: '/en/', width: 390, recover: true });
+  await scenario('en-home-category-failure', 'categories-down', { url: '/en/', recover: true });
+  await scenario('switch-language-while-offline', 'disconnected', { url: '/catalog/?q=Фігурка&categorySlug=figures&minPrice=1000&sort=price_desc&page=2#catalog', switchLanguage: true, recover: true });
+  await scenario('outage-with-motion', 'disconnected', { recover: true, reducedMotion: 'no-preference' });
+  await scenario('server-failure-beside-tablet-sidebar', 500, { width: 800, recover: true });
   const context = await browser.newContext();
   await context.route('**/api/**', route => route.abort());
   const page = await context.newPage();
