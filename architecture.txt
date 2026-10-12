@@ -1,138 +1,54 @@
-.
-├── apps
-│   └── storefront
-│       ├── Dockerfile
-│       ├── .env.local
-│       ├── next.config.ts
-│       ├── next-env.d.ts
-│       ├── package.json
-│       ├── postcss.config.js
-│       ├── src
-│       │   ├── app
-│       │   │   ├── (account)
-│       │   │   │   ├── layout.tsx
-│       │   │   │   └── profile
-│       │   │   │       ├── addresses
-│       │   │   │       │   ├── AddressesPage.module.css
-│       │   │   │       │   └── page.tsx
-│       │   │   │       ├── orders
-│       │   │   │       │   ├── details
-│       │   │   │       │   │   ├── OrderDetailsPageClient.tsx
-│       │   │   │       │   │   └── page.tsx
-│       │   │   │       │   ├── OrderDetailsPage.module.css
-│       │   │   │       │   ├── OrdersPage.module.css
-│       │   │   │       │   └── page.tsx
-│       │   │   │       ├── page.tsx
-│       │   │   │       ├── ProfilePage.module.css
-│       │   │   │       └── settings
-│       │   │   │           ├── page.tsx
-│       │   │   │           └── ProfileSettingsPage.module.css
-│       │   │   ├── (age-gate)
-│       │   │   │   └── verify
-│       │   │   │       ├── page.tsx
-│       │   │   │       ├── VerifyAgeClient.tsx
-│       │   │   │       └── Verify.module.css
-│       │   │   ├── (auth)
-│       │   │   │   ├── forgot-password
-│       │   │   │   │   └── page.tsx
-│       │   │   │   ├── login
-│       │   │   │   │   ├── LoginPageClient.tsx
-│       │   │   │   │   ├── LoginPage.module.css
-│       │   │   │   │   └── page.tsx
-│       │   │   │   └── register
-│       │   │   │       ├── page.tsx
-│       │   │   │       └── RegisterPage.module.css
-│       │   │   ├── (content)
-│       │   │   │   ├── contacts
-│       │   │   │   │   ├── ContactsPage.module.css
-│       │   │   │   │   └── page.tsx
-│       │   │   │   ├── delivery
-│       │   │   │   │   ├── DeliveryPage.module.css
-│       │   │   │   │   └── page.tsx
-│       │   │   │   ├── faq
-│       │   │   │   │   ├── FaqPage.module.css
-│       │   │   │   │   └── page.tsx
-│       │   │   │   ├── payment
-│       │   │   │   │   ├── page.tsx
-│       │   │   │   │   └── PaymentPage.module.css
-│       │   │   │   ├── privacy
-│       │   │   │   │   ├── page.tsx
-│       │   │   │   │   └── PrivacyPage.module.css
-│       │   │   │   ├── returns
-│       │   │   │   │   ├── page.tsx
-│       │   │   │   │   └── Returns.module.css
-│       │   │   │   ├── terms
-│       │   │   │   │   ├── page.tsx
-│       │   │   │   │   └── TermsPage.module.css
-│       │   │   │   └── user-data-deletion
-│       │   │   │       ├── page.tsx
-│       │   │   │       └── UserDataDeletionPage.module.css
-│       │   │   ├── globals.css
-│       │   │   ├── Home.module.css
-│       │   │   ├── HomePageClient.tsx
-│       │   │   ├── layout.tsx
-│       │   │   ├── not-found.tsx
-│       │   │   ├── page.tsx
-│       │   │   ├── robots.ts
-│       │   │   ├── (shop)
-│       │   │   │   ├── cart
-│       │   │   │   │   ├── CartPage.module.css
-│       │   │   │   │   └── page.tsx
-│       │   │   │   ├── catalog
-│       │   │   │   │   ├── Catalog.module.css
-│       │   │   │   │   ├── CatalogPageClient.tsx
-│       │   │   │   │   ├── catalog.utils.ts
-│       │   │   │   │   ├── _components
-│       │   │   │   │   │   ├── CatalogPagination.module.css
-│       │   │   │   │   │   ├── CatalogPagination.tsx
-│       │   │   │   │   │   ├── CatalogProductCard.tsx
-│       │   │   │   │   │   ├── CatalogSidebar.tsx
-│       │   │   │   │   │   └── HiddenQueryInputs.tsx
-│       │   │   │   │   └── page.tsx
-│       │   │   │   ├── checkout
-│       │   │   │   │   ├── CheckoutPage.module.css
-│       │   │   │   │   ├── failed
-│       │   │   │   │   │   └── page.tsx
-│       │   │   │   │   ├── page.tsx
-│       │   │   │   │   └── success
-│       │   │   │   │       ├── CheckoutSuccessPageClient.tsx
-│       │   │   │   │       ├── CheckoutSuccessPage.module.css
-│       │   │   │   │       └── page.tsx
-│       │   │   │   ├── favorites
-│       │   │   │   │   ├── FavoritesPage.module.css
-│       │   │   │   │   └── page.tsx
-│       │   │   │   └── product
-│       │   │   │       └── [slug]
-│       │   │   │           ├── page.tsx
-│       │   │   │           ├── ProductDetailsClient.tsx
-│       │   │   │           └── ProductDetails.module.css
-│       │   │   └── sitemap.ts
-│       │   ├── components
-│       │   │   ├── layout
-│       │   │   │   ├── Footer.module.css
-│       │   │   │   ├── Footer.tsx
-│       │   │   │   ├── Header.module.css
-│       │   │   │   └── Header.tsx
-│       │   │   └── product
-│       │   │       ├── ProductCard.module.css
-│       │   │       └── ProductCard.tsx
-│       │   └── lib
-│       │       ├── age-gate.ts
-│       │       ├── api.ts
-│       │       └── demo-store.ts
-│       ├── tailwind.config.ts
-│       └── tsconfig.json
-├── architecture.txt
-├── .github
-│   └── workflows
-│       └── deploy-storefront.yml
-├── .gitignore
-├── package.json
-├── packages
-│   └── shared-types
-│       ├── index.ts
-│       └── package.json
-├── pnpm-lock.yaml
-└── pnpm-workspace.yaml
+SKUFstore — карта проекта
 
-44 directories, 92 files
+package.json / pnpm-workspace.yaml / pnpm-lock.yaml
+  pnpm workspace; активный пакет apps/storefront. Node 22 используется в CI.
+
+apps/storefront/src/app/
+  Next.js маршруты: (uk) — украинские URL без префикса; (en)/en — английские URL.
+  sitemap.ts / robots.ts — публикация SEO-маршрутов.
+
+apps/storefront/src/views/
+  Общие страницы магазина, профиля, авторизации и справочных разделов.
+  Локализованные маршруты передают locale в эти страницы.
+
+apps/storefront/src/components/
+  Общие компоненты, Header/Footer, доступность каталога и аналитика.
+
+apps/storefront/src/i18n/
+  UI-словари UK/EN, правила локализованных ссылок и публикации переводов товара.
+  DE зарезервирован; немецкие маршруты не опубликованы.
+
+apps/storefront/src/lib/
+  API-клиент SKUFnya, снимок каталога для статического экспорта, SEO,
+  хранение корзины/избранного и черновика checkout, серверные котировки.
+  demo-store.ts используется действующими страницами и тестами.
+
+apps/storefront/scripts/catalog-freshness.mjs
+  Сверка публичного API и опубликованных Pages; вызывается GitHub Actions.
+
+apps/storefront/test/
+  Unit-тесты и браузерные регрессии. Имена stage1/stage2/stage2b обозначают
+  происхождение сценариев; verify-stage1-export, browser-stage2 и синтетическая
+  stage2b-сборка остаются частью CI.
+
+apps/storefront/next.config.ts / Dockerfile
+  DEPLOY_TARGET=pages — статический export для GitHub Pages.
+  DEPLOY_TARGET=server — standalone-вариант; его актуальность требует проверки
+  перед удалением. Google Fonts загружаются на этапе сборки через next/font.
+
+.github/workflows/deploy-storefront.yml
+  Unit-тесты, typecheck, fixture-сборка, production-сборка, проверки экспорта,
+  Pages deploy и проверка актуальности каталога; расписание запускает reconcile.
+
+packages/shared-types/
+  Историческая копия DTO; сейчас не входит в workspace и не импортируется,
+  но package.json явно копируется Dockerfile. Сохранена до проверки server build.
+
+docs/
+  Отчёты реализации i18n и доступности каталога, инструкции воспроизведения
+  проверок и связанные доказательства/скриншоты. Датированные baseline и
+  production-сведения описывают момент проверки, а не текущее окружение.
+
+Не версионируются: node_modules/, .next/, out/, *.tsbuildinfo, .env*.
+Файлы .env, production, пользовательские данные и резервные копии не являются
+артефактами очистки исходников.
