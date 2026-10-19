@@ -1,3 +1,5 @@
+import { readLiveMerchantData } from './catalog-source';
+import { buildMerchantSourceState } from './merchant-feed';
 import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
@@ -6,35 +8,15 @@ import path from 'node:path';
 import {
   buildApiUrl,
   normalizeCatalogProductDetail,
-  normalizeResinColors,
   type CatalogProductDetail,
   type CatalogResinColor,
 } from './api';
 import { assertCatalogPublicationStable, validateCatalogSnapshot } from './snapshot-integrity';
 import { collectSnapshotOnce, snapshotCollectionPaths, writeJsonAtomically } from './snapshot-collection';
 
-/**
- * Снимок каталога для статической сборки витрины.
- *
- * Раньше каждая из полутора сотен страниц товара ходила за своими данными сама.
- * Это упиралось в лимит API (60 req/min) изнутри 60-секундного окна генерации
- * страницы, и сборка падала то на одном товаре, то на другом. Теперь каталог
- * целиком собирается один раз в `generateStaticParams`, проверяется на
- * целостность и кладётся на диск, а рендер страниц в сеть не ходит вовсе.
- *
- * Собирается он из тех эндпоинтов, которые у публичного API действительно есть:
- * `GET /api/catalog/products?page&limit` даёт список опубликованных товаров
- * (страницами по 100), `GET /api/catalog/products/{slug}` — карточку с
- * описанием, изображениями и вариантами. Backend также имеет bulk export,
- * но существующая Stage 2 коллекция сохраняет paced listing/detail pipeline.
- * Начальный и
- * заключительный listing проверяют неизменность product identity и EN version
- * за время той же коллекции; отдельной translation pipeline нет.
- *
- * Главное правило этого модуля: **частичный каталог — не результат**. Если
- * снимок не приехал или в нём чего-то не хватает, сборка обязана упасть. Магазин,
- * из которого молча пропал товар, хуже, чем деплой, который не состоялся: на
- * GitHub Pages в этом случае просто остаётся предыдущая рабочая версия.
+/** One validated bulk export + colors, confirmed by a second read before atomic publication.
+ * Product pages, JSON-LD, sitemap and Merchant XML read this exact build-scoped file.
+ * A failed or changing API stops the build; verified zero totals allow intentional removal.
  */
 
 const SNAPSHOT_PATH = path.join(
@@ -51,17 +33,7 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_ATTEMPTS = 3;
 const MAX_BACKOFF_MS = 5_000;
 
-// Больше API не принимает: `limit=200` отвечает 400 VALIDATION_ERROR.
-const LIST_PAGE_SIZE = 100;
-
-/**
- * Публичный API отдаёт 60 запросов в минуту на IP (`x-ratelimit-limit: 60`,
- * окно фиксированное — `x-ratelimit-reset` считает секунды до его сброса).
- * Карточек полторы сотни, так что ровный шаг чуть больше секунды — это ~54
- * запроса в минуту, с запасом под диагностический шаг workflow, который тратит
- * пару запросов из того же окна. Догонять лимит вплотную смысла нет: 429 стоит
- * дороже, чем эти лишние секунды.
- */
+// Six bulk/check requests share the public rate-limit budget with other build reads.
 const MIN_REQUEST_INTERVAL_MS = 1_100;
 
 // Ниже этого остатка ждём сброса окна, а не пытаемся угадать шаг.
@@ -71,6 +43,7 @@ type SnapshotFile = {
   buildId: string;
   generatedAt: string;
   count: number;
+  emptyConfirmed?: boolean;
   items: Array<Record<string, any>>;
   resinColors: CatalogResinColor[] | null;
 };
@@ -294,107 +267,6 @@ async function fetchJson<T>(apiPath: string, options: { quiet?: boolean } = {}):
 /* Сбор каталога                                                              */
 /* -------------------------------------------------------------------------- */
 
-type CatalogListResponse = {
-  items?: Array<Record<string, any>>;
-  meta?: { page?: number; total?: number; pageCount?: number };
-};
-
-/**
- * Список опубликованных товаров — источник истины о том, что вообще должно
- * оказаться на витрине. Страницами по 100, то есть на текущий каталог это два
- * запроса.
- */
-async function fetchPublishedProducts(): Promise<Array<Record<string, any>>> {
-  const slugs: string[] = [];
-  const products: Array<Record<string, any>> = [];
-  let page = 1;
-  let pageCount = 1;
-  let total: number | null = null;
-
-  do {
-    const response = await fetchJson<CatalogListResponse>(
-      `/api/catalog/products?page=${page}&limit=${LIST_PAGE_SIZE}`,
-    );
-    const items = Array.isArray(response.items) ? response.items : [];
-
-    for (const item of items) {
-      const slug = typeof item?.slug === 'string' ? item.slug.trim() : '';
-
-      if (!slug) {
-        throw new Error(
-          `Catalog page ${page} contains a product without a slug (id=${item?.id ?? 'unknown'}). ` +
-            `Its page could not be exported, so the build stops here.`,
-        );
-      }
-
-      slugs.push(slug);
-      products.push(item);
-    }
-
-    const reportedPageCount = Number(response.meta?.pageCount);
-    const reportedTotal = Number(response.meta?.total);
-
-    pageCount = Number.isFinite(reportedPageCount) ? Math.max(1, reportedPageCount) : 1;
-    total = Number.isFinite(reportedTotal) ? reportedTotal : total;
-
-    // Пустая страница внутри объявленного диапазона — признак того, что каталог
-    // поехал под нами (или API соврал про pageCount). Тихо обрезать список
-    // товаров по такому поводу нельзя.
-    if (items.length === 0 && page <= pageCount) {
-      throw new Error(
-        `Catalog page ${page} of ${pageCount} came back empty after ${slugs.length} product(s). ` +
-          `Refusing to build the storefront from a truncated catalog.`,
-      );
-    }
-
-    page += 1;
-  } while (page <= pageCount);
-
-  if (total !== null && slugs.length !== total) {
-    throw new Error(
-      `Catalog listing announced ${total} published product(s) but only ${slugs.length} were listed. ` +
-        `Refusing to build the storefront from a truncated catalog.`,
-    );
-  }
-
-  assertCatalogPublicationStable(products);
-  return products;
-}
-
-/**
- * Карточки товаров. Массовой выгрузки у API нет, поэтому берём их по одной —
- * зато здесь, до экспорта, где спешить некуда: шаг задан бюджетом запросов, а
- * не таймаутом рендера страницы.
- */
-async function fetchProductDetails(listing: Array<Record<string, any>>): Promise<Array<Record<string, any>>> {
-  const items: Array<Record<string, any>> = [];
-
-  for (const [index, listed] of listing.entries()) {
-    const slug = String(listed.slug);
-    const item = await fetchJson<Record<string, any>>(
-      `/api/catalog/products/${encodeURIComponent(slug)}`,
-      { quiet: true },
-    );
-
-    // Расхождение здесь означает, что список и карточка говорят о разных
-    // товарах, — страница ушла бы на витрину под чужим адресом.
-    if (String(item?.slug ?? '') !== slug) {
-      throw new Error(
-        `Requested product "${slug}" but the API answered with "${item?.slug ?? 'nothing'}".`,
-      );
-    }
-    assertCatalogPublicationStable([listed], [item]);
-
-    items.push(item);
-
-    if ((index + 1) % 25 === 0 || index + 1 === listing.length) {
-      log(`products ${index + 1}/${listing.length}`);
-    }
-  }
-
-  return items;
-}
-
 /* -------------------------------------------------------------------------- */
 /* Загрузка и чтение                                                          */
 /* -------------------------------------------------------------------------- */
@@ -409,46 +281,26 @@ async function fetchProductDetails(listing: Array<Record<string, any>>): Promise
 async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: number }> {
   const startedAt = Date.now();
 
-  const listing = await fetchPublishedProducts();
-  const listedSlugs = listing.map(product => String(product.slug));
-
-  log(`catalog listing: ${listedSlugs.length} published product(s)`);
-
+  const api = new URL(resolveApiUrl('/api/catalog/products/export')).origin;
+  const fetchResponse = async (url: string) => Response.json(await fetchJson<Record<string, any>>(
+    new URL(url).pathname + new URL(url).search,
+  ));
+  const first = await readLiveMerchantData(api, fetchResponse);
+  const after = await readLiveMerchantData(api, fetchResponse);
+  assertCatalogPublicationStable(first.rawProducts, after.rawProducts);
+  if (buildMerchantSourceState(first.products, first.colors).fingerprint !==
+      buildMerchantSourceState(after.products, after.colors).fingerprint) {
+    throw new Error('Catalog prices, options, images or colors changed during collection; retry the build');
+  }
+  const resinColors = first.colors;
   const payload: SnapshotFile = {
-    buildId: process.env.SKUF_CATALOG_BUILD_ID ?? '',
-    generatedAt: new Date().toISOString(),
-    count: listedSlugs.length,
-    items: await fetchProductDetails(listing),
-    resinColors: null,
+    buildId: process.env.SKUF_CATALOG_BUILD_ID ?? '', generatedAt: new Date().toISOString(),
+    count: first.rawProducts.length, items: first.rawProducts, resinColors,
+    emptyConfirmed: first.rawProducts.length === 0,
   };
-
   const issues = validateCatalogSnapshot(payload);
-
-  if (issues.length > 0) {
-    throw new Error(
-      `Catalog snapshot failed validation (${issues.length} issue(s)): ` +
-        `${issues.slice(0, 10).join('; ')}. Refusing to build the storefront from it.`,
-    );
-  }
-
-  // Склад смолы — единственные данные, которые витрина имеет право получить
-  // позже: страница всё равно перезапрашивает наличие из браузера. Поэтому его
-  // отсутствие не повод останавливать сборку.
-  let resinColors: CatalogResinColor[] | null = null;
-
-  try {
-    resinColors = normalizeResinColors(
-      await fetchJson<Record<string, any>>('/api/catalog/resin-colors'),
-    );
-  } catch (error) {
-    log(`resin colors unavailable at build time: ${(error as Error).message}`);
-  }
-
-  const file: SnapshotFile = { ...payload, resinColors };
-
-  // Publication/readiness may change independently of this several-minute
-  // build. Fail before any atomic snapshot write if the live state drifted.
-  assertCatalogPublicationStable(listing, payload.items, await fetchPublishedProducts());
+  if (issues.length) throw new Error(`Catalog snapshot failed validation: ${issues.join('; ')}`);
+  const file = payload;
 
   fs.mkdirSync(path.dirname(SNAPSHOT_PATH), { recursive: true });
   const paths = snapshotCollectionPaths(path.dirname(SNAPSHOT_PATH), file.buildId);
@@ -466,10 +318,7 @@ async function collectCatalogSnapshot(): Promise<{ slugs: string[]; count: numbe
   return { slugs, count: slugs.length };
 }
 
-// Сбор каталога стоит полутора сотен запросов, размазанных по бюджету API, —
-// повторить его внутри одного процесса значит удвоить время сборки на ровном
-// месте. Next вправе вызвать `generateStaticParams` не единожды, поэтому первый
-// вызов запоминаем и отдаём всем последующим.
+// Next may call generateStaticParams more than once; collect exactly once per build.
 let collecting: Promise<{ slugs: string[]; count: number }> | null = null;
 
 export function loadCatalogSnapshot(): Promise<{ slugs: string[]; count: number }> {

@@ -99,3 +99,8 @@ it('snapshot permits source-only UK products and validates complete claimed-read
     { ...ready, localization: { en: { ready: false, version: null } } },
   ]) assert.ok(validateCatalogSnapshot(snapshot([product(invalid)])).length, JSON.stringify(invalid));
 });
+
+it('allows independently confirmed empty publication, including removal of the last public product', () => {
+  assert.deepEqual(validateCatalogSnapshot({ count: 0, items: [], emptyConfirmed: true }), []);
+  assert.ok(validateCatalogSnapshot({ count: 1, items: [], emptyConfirmed: true }).length);
+});

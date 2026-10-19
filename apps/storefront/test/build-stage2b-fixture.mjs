@@ -35,11 +35,17 @@ function run(args, extra = {}) {
 let site;
 try {
   await run([path.join(app, 'node_modules/next/dist/bin/next'), 'build']);
+  await run(['scripts/finalize-export.mjs']);
   const collected = [...requests];
   assert.equal(collected.filter(url => url.startsWith('/api/catalog/products?')).length, 2, 'Expected initial and final listings in one catalog collection');
-  for (const product of products) assert.equal(collected.filter(url => url === `/api/catalog/products/${product.slug}`).length, 1, 'Expected one detail per product');
-  assert.equal(collected.filter(url => url === '/api/catalog/resin-colors').length, 1, 'Expected one resin-color collection');
+  assert.equal(collected.filter(url => url === '/api/catalog/products/export').length, 2, 'Expected two stable bulk snapshots');
+  for (const product of products) assert.equal(collected.filter(url => url === `/api/catalog/products/${product.slug}`).length, 0, 'Product pages must not fetch separate details');
+  assert.equal(collected.filter(url => url === '/api/catalog/resin-colors').length, 2, 'Expected two stable resin-color reads');
   await run(['--experimental-strip-types', 'test/verify-stage1-export.mjs']);
+  await new Promise((resolve, reject) => {
+    const child = spawn('python3', ['scripts/validate-merchant-export.py', 'out'], { cwd: app, stdio: 'inherit' });
+    child.on('exit', code => code === 0 ? resolve() : reject(new Error('Independent XML validation failed')));
+  });
   const root = path.join(app, 'out');
   site = http.createServer((request, response) => {
     let pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
@@ -56,11 +62,11 @@ try {
   const fixtureSite = `http://127.0.0.1:${site.address().port}`;
   const freshness = await verifyFreshness({ site: 'https://www.skufnya.com', api: fixtureApi }, async url => url.startsWith('https://www.skufnya.com') ? fetch(url.replace('https://www.skufnya.com', fixtureSite)) : fetch(url));
   assert.equal(freshness.fresh, true, JSON.stringify(freshness));
-  await run(['--experimental-strip-types', 'test/browser-stage2b.mjs'], { SMOKE_BASE: fixtureSite, SMOKE_OUTPUT: path.join(work, 'browser.json') });
+  if (products.length) await run(['--experimental-strip-types', 'test/browser-stage2b.mjs'], { SMOKE_BASE: fixtureSite, SMOKE_OUTPUT: path.join(work, 'browser.json') });
   const report = { passed: 1, failed: 0, skipped: 0, productionWrites: 0, productionFetches: 0, workspace: app,
     catalogBuildId: JSON.parse(fs.readFileSync(path.join(app, '.next/cache/skufnya-build/catalog-snapshot.json'))).buildId,
-    fixtureProducts: products.length, fixtureEnglishReadyProducts: 1, collectionRequests: collected, freshness,
-    browser: JSON.parse(fs.readFileSync(path.join(work, 'browser.json'))) };
+    fixtureProducts: products.length, fixtureEnglishReadyProducts: products.length ? 1 : 0, collectionRequests: collected, freshness,
+    browser: products.length ? JSON.parse(fs.readFileSync(path.join(work, 'browser.json'))) : null };
   fs.writeFileSync(path.join(work, 'verification.json'), JSON.stringify(report, null, 2));
   if (process.env.STAGE2B_FIXTURE_OUTPUT) fs.writeFileSync(process.env.STAGE2B_FIXTURE_OUTPUT, JSON.stringify(report, null, 2));
   console.log(JSON.stringify({ passed: 1, failed: 0, skipped: 0, evidence: path.join(work, 'verification.json') }));

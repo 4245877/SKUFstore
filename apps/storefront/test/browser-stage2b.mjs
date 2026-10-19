@@ -10,6 +10,7 @@ for (const browserLocale of ['uk-UA', 'en-US']) {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE, args: ['--no-sandbox'] });
   const context = await browser.newContext({ locale: browserLocale, viewport: { width: 1440, height: 1000 } });
   let accountFavorites = false;
+  let hideColors = false;
   const errors = [], unexpectedConsole = [], apiCalls = [], quoteCalls = [], checks = [];
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
@@ -18,6 +19,7 @@ for (const browserLocale of ['uk-UA', 'en-US']) {
     if (request.resourceType() === 'image') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' });
     assert.equal(url.hostname, 'api.skufnya.com', 'Unexpected external request in synthetic browser');
     apiCalls.push({ path: url.pathname, query: Object.fromEntries(url.searchParams), method: request.method() });
+    if (url.pathname === '/api/catalog/resin-colors' && hideColors) return json({ items: [] });
     if (url.pathname.includes('/analytics')) return json({ ok: true });
     if (url.pathname === '/api/auth/me') return json({ user: null });
     if (url.pathname === '/api/account/favorites') return accountFavorites ? json({ items: products.slice(0, 2).map(p => ({ ...p, productId: p.id, createdAt: '2026-10-03T00:00:00Z' })) }) : json({ error: 'UNAUTHORIZED' }, 401);
@@ -80,7 +82,8 @@ for (const browserLocale of ['uk-UA', 'en-US']) {
       assert.equal(seo.alternates.length, product === ready ? 2 : 0);
       assert.equal(seo.imageAlt, enReady ? translation.imageAlt : 'Вихідний image alt');
       assert.equal(seo.ogTitle, name); assert.equal(seo.twitterTitle, name); assert.equal(seo.product.name, name);
-      assert.equal(seo.product.offers.price, product.priceFrom); assert.equal(seo.product.offers.priceCurrency, 'UAH'); assert.equal(seo.product.sku, product.sku);
+      const selectedVariant = product.variants.find(v => v.isDefault) ?? product.variants[0];
+      assert.equal(seo.product.offers.price, selectedVariant.price + resinColors[0].priceDelta); assert.equal(seo.product.offers.priceCurrency, 'UAH'); assert.equal(seo.product.sku, product.sku);
       if (enReady) { assert.equal(seo.title, translation.metaTitle + ' | SKUFnya'); assert.equal(seo.description, translation.metaDescription); assert.equal(seo.product.category, translation.categoryName); }
       checks.push(`${locale}/${product.slug}: visible/static content, SEO, language, JSON-LD, indexability`);
     }
@@ -114,6 +117,12 @@ for (const browserLocale of ['uk-UA', 'en-US']) {
     await visit('/en/cart/'); assert.ok(quoteCalls.length); assert.equal(quoteCalls.at(-1).items[0].variantId, ready.variants[0].id);
     assert.equal(await page.evaluate(() => localStorage.getItem('skufnya:cart')), cartStorage);
     checks.push('Source cart snapshot remains compatible with authoritative quote and UAH');
+    hideColors = true;
+    await visit('/en/product/editorial-ready/');
+    const visiblePrice = await page.locator('main [class*="priceMain"]').first().textContent();
+    assert.equal(Number(visiblePrice.replace(/[^\d,.]/g, '').replace(',', '.')), ready.variants[0].price + resinColors[0].priceDelta);
+    assert.equal(await page.getByRole('button', { name: 'Add to cart', exact: true }).isDisabled(), true);
+    checks.push('Hidden initial color preserves advertised price and blocks ordering until explicit selection');
     assert.deepEqual(errors, []); assert.deepEqual(unexpectedConsole, []);
     results.push({ browserLocale, passed: true, checks, pageErrors: errors, unexpectedConsole, quoteCalls });
   } catch (error) {

@@ -35,6 +35,7 @@ function ready(overrides: Record<string, any> = {}): any {
   return source({ translations: [{ ...translation, ...overrides }], localization: { en: { ready: true, version } } });
 }
 const media = (path?: string | null) => path ? `https://api.skufnya.com${path}` : null;
+const colors: any[] = [{ id: 'ivory', slug: 'ivory', name: 'Айворі', priceDelta: 0, isInStock: true }];
 
 describe('localized catalog publication policy', () => {
   it('UK source does not depend on EN records, including the legacy API', () => {
@@ -145,7 +146,7 @@ describe('translated SEO presentation', () => {
     assert.equal(meta.description, translation.metaDescription);
     assert.equal(meta.image.alt, translation.title);
     assert.equal(meta.canonicalUrl, 'https://www.skufnya.com/en/product/stable-slug/');
-    const enLd = buildProductJsonLd(en, media, 'en'), ukLd = buildProductJsonLd(product, media, 'uk');
+    const enLd = buildProductJsonLd(en, media, 'en', colors), ukLd = buildProductJsonLd(product, media, 'uk', colors);
     assert.equal(enLd.name, translation.title); assert.equal(enLd.description, translation.description);
     assert.equal(enLd.category, translation.categoryName); assert.equal(enLd.sku, ukLd.sku);
     for (const key of ['price', 'priceCurrency', 'availability', 'hasMerchantReturnPolicy']) {

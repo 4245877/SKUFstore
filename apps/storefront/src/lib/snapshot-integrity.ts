@@ -40,7 +40,7 @@ export function validateCatalogSnapshot(payload: unknown, expectedBuildId?: stri
     return ['snapshot is not an object'];
   }
 
-  const snapshot = payload as { buildId?: unknown; count?: unknown; items?: unknown };
+  const snapshot = payload as { buildId?: unknown; count?: unknown; items?: unknown; emptyConfirmed?: unknown };
 
   if (expectedBuildId !== undefined && snapshot.buildId !== expectedBuildId) {
     issues.push('snapshot belongs to a different build');
@@ -52,9 +52,8 @@ export function validateCatalogSnapshot(payload: unknown, expectedBuildId?: stri
 
   const items = snapshot.items as Array<Record<string, any>>;
 
-  if (items.length === 0) {
-    // Пустой каталог почти наверняка означает сломанный API, а не магазин без
-    // товаров. Публиковать витрину без единого товара молча нельзя.
+  if (items.length === 0 && snapshot.emptyConfirmed !== true) {
+    // Only the collector can confirm zero through independent successful API reads.
     issues.push('snapshot contains no products');
   }
 

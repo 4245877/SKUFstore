@@ -9,6 +9,7 @@ import {
   pickDefaultColorSlug,
   reconcileSelectedColorSlug,
   resolveSelectedColor,
+  refreshColorStock,
 } from '../src/lib/resin-colors.ts';
 
 type ResinColor = (typeof FALLBACK_RESIN_COLORS)[number];
@@ -83,7 +84,7 @@ describe('обновление склада в браузере', () => {
     );
   });
 
-  it('пересчитывает нетронутый выбор со сборки по свежему складу', () => {
+  it('сохраняет первоначальную конфигурацию при обновлении склада', () => {
     // Страница собрана, когда весь склад был на месте, и подставила ivory.
     // После переключения в админке выбранным должен стать цвет в наличии.
     const colors = [
@@ -93,13 +94,13 @@ describe('обновление склада в браузере', () => {
 
     assert.equal(
       reconcileSelectedColorSlug(colors, 'ivory', { userPicked: false }),
-      'graphite',
+      'ivory',
     );
   });
 
   it('пустой каталог не заменяет явный выбор покупателя', () => {
     assert.equal(reconcileSelectedColorSlug([], 'ivory', { userPicked: true }), 'ivory');
-    assert.equal(reconcileSelectedColorSlug([], 'ivory', { userPicked: false }), '');
+    assert.equal(reconcileSelectedColorSlug([], 'ivory', { userPicked: false }), 'ivory');
     assert.equal(resolveSelectedColor([], 'ivory'), null);
   });
 });
@@ -143,4 +144,10 @@ describe('рамка светлого свотча', () => {
     assert.equal(isLightSwatch(''), false);
     assert.equal(isLightSwatch('не цвет'), false);
   });
+});
+
+it('stock refresh preserves initial prices and removes hidden colors without adding new configurations', () => {
+  const old = [color({ slug: 'ivory', priceDelta: 100 }), color({ slug: 'black' })];
+  const live = [color({ slug: 'ivory', priceDelta: 900, isInStock: false }), color({ slug: 'new' })];
+  assert.deepEqual(refreshColorStock(old, live), [{ ...old[0], isInStock: false }]);
 });

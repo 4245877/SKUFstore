@@ -1,7 +1,7 @@
 import { buildLocalizedPath } from '../i18n/paths.ts';
 import { getTranslator } from '../i18n/translate.ts';
 import { DEFAULT_LOCALE, type Locale } from '../i18n/locales.ts';
-import { isEnglishProductReady } from '../i18n/catalog-policy.ts';
+import { getSourceProductPresentation, isEnglishProductReady } from '../i18n/catalog-policy.ts';
 
 /**
  * Метаданные страницы товара для поисковиков и превью ссылок.
@@ -14,7 +14,9 @@ import { isEnglishProductReady } from '../i18n/catalog-policy.ts';
  * каталога. Тогда превью не может разойтись с тем, что видит покупатель.
  */
 
-import type { CatalogProductDetail } from './api';
+import type { CatalogProductDetail, CatalogResinColor } from './api';
+import { merchantSettings, verifiedOfferImages } from './merchant-settings.ts';
+import { buildProductGalleryImages, resolveDefaultProductOffer } from './product-offer.ts';
 
 /**
  * Адрес медиа-хранилища приходит параметром, а не импортом из `api.ts`.
@@ -60,6 +62,8 @@ export function toPlainText(value: string | null | undefined): string {
   if (!value) return '';
 
   return value
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<!--([\s\S]*?)-->/g, ' ')
     .replace(/<[^>]*>/g, ' ')
     .replace(/&#(\d+);/g, (match, code: string) => {
       const codePoint = Number(code);
@@ -208,20 +212,6 @@ export function buildProductPageMeta(
   };
 }
 
-function getSchemaAvailability(product: CatalogProductDetail): string {
-  // Витрина принимает заказ независимо от остатка — фигурки печатаются под
-  // заказ, и кнопка «в кошик» активна всегда. Поэтому здесь говорит `saleType`,
-  // а не `stockQty`: расходиться со страницей разметка не должна.
-  switch (product.saleType) {
-    case 'PREORDER':
-      return 'https://schema.org/PreOrder';
-    case 'BACKORDER':
-      return 'https://schema.org/BackOrder';
-    default:
-      return 'https://schema.org/InStock';
-  }
-}
-
 /**
  * Product-разметка для поисковиков: цена, наличие и картинка в виде данных, а
  * не вёрстки. Open Graph её не заменяет — он про превью ссылки, эта про
@@ -231,14 +221,18 @@ export function buildProductJsonLd(
   product: CatalogProductDetail,
   resolveImageUrl: MediaUrlResolver,
   locale: Locale = DEFAULT_LOCALE,
+  colors?: CatalogResinColor[] | null,
 ): Record<string, unknown> {
   const meta = buildProductPageMeta(product, resolveImageUrl, locale);
+  const commerceProduct = getSourceProductPresentation(product);
+  const { offer } = resolveDefaultProductOffer(commerceProduct, colors);
 
-  const images = product.isAdult
-    ? [meta.image.url]
-    : product.images
+  const images = commerceProduct.isAdult
+    ? []
+    : (offer ? [...verifiedOfferImages(commerceProduct, offer.variant, offer.color), ...buildProductGalleryImages(commerceProduct.images, offer.variant, offer.finish, offer.color)] : commerceProduct.images)
         .map((image) => resolveImageUrl(image.url))
-        .filter((url): url is string => Boolean(url) && /^https?:\/\//i.test(url as string));
+        .filter((url): url is string => Boolean(url) && /^https?:\/\//i.test(url as string))
+        .filter((url, index, all) => all.indexOf(url) === index);
 
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -246,12 +240,12 @@ export function buildProductJsonLd(
     name: meta.socialTitle,
     description: truncateText(firstNonEmpty(product.description, product.shortDescription) || meta.description, DESCRIPTION_LIMIT),
     url: meta.canonicalUrl,
-    image: images.length > 0 ? images : [meta.image.url],
+    ...(images.length > 0 ? { image: images } : meta.usesProductPhoto ? { image: [meta.image.url] } : {}),
   };
 
   if (product.sku) jsonLd.sku = product.sku;
 
-  const brandName = firstNonEmpty(product.brand?.name, product.franchise?.name);
+  const brandName = firstNonEmpty(merchantSettings(product).manufacturerBrand);
 
   if (brandName) {
     jsonLd.brand = { '@type': 'Brand', name: brandName };
@@ -261,18 +255,18 @@ export function buildProductJsonLd(
     jsonLd.category = product.category.name;
   }
 
-  if (product.priceFrom > 0 && product.currency) {
+  if (offer && !product.isAdult) {
     jsonLd.offers = {
       '@type': 'Offer',
-      price: product.priceFrom,
-      priceCurrency: product.currency,
-      availability: getSchemaAvailability(product),
+      price: Number(offer.price.toFixed(2)),
+      priceCurrency: offer.currency,
+      availability: offer.schemaAvailability,
       url: meta.canonicalUrl,
-      // Фигурки печатаются под конкретный заказ, поэтому товар надлежащего
-      // качества обмену и возврату не подлежит — п. 3 ч. 5 ст. 13 ЗУ «Про
-      // захист прав споживачів». Merchant Center сверяет политику возврата в
-      // фиде с той, что видна на странице, так что разметка обязана повторять
-      // страницу /returns, а не молчать.
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@type': 'Organization', name: 'SKUFnya' },
+      ...(offer.availabilityDate ? { availabilityStarts: offer.availabilityDate } : {}),
+      // Reflect the published /returns policy; its legal applicability is
+      // a separate business decision, not established by structured data.
       hasMerchantReturnPolicy: {
         '@type': 'MerchantReturnPolicy',
         applicableCountry: 'UA',

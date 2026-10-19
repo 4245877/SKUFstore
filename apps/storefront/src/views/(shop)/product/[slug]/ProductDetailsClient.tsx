@@ -1,5 +1,8 @@
 'use client';
 
+import { configurationPrice, defaultProductColorSlug, verifiedOfferImages } from '../../../../lib/merchant-settings';
+import { refreshColorStock } from '../../../../lib/resin-colors';
+
 import { formatDayCount } from '../../../../i18n/presentation';
 import { useI18n } from '../../../../i18n/client';
 import { getSourceProductPresentation } from '../../../../i18n/catalog-policy';
@@ -31,6 +34,7 @@ import {
   resolveSelectedColor,
 } from '../../../../lib/resin-colors';
 import { cartLineKey } from '../../../../lib/cart-lines';
+import { buildProductGalleryImages as buildGalleryImages, pickDefaultProductVariant, getProductAvailabilityDate } from '../../../../lib/product-offer';
 import { buildAgeVerifyPath, isAgeVerifiedClient } from '../../../../lib/age-gate';
 import { IconBag, IconBow, IconHeart, IconShare } from '../../../../components/icons';
 import styles from './ProductDetails.module.css';
@@ -59,29 +63,6 @@ const FINISHES = (t: Translator): {
     disabledNote: t('shop.temporarilyUnavailable'),
   },
 ]);
-
-const FINISH_IMAGE_KEYWORDS: Record<FinishType, string[]> = {
-  MONO: ['mono', 'monochrome', 'моно', 'monochrom'],
-  PAINTED: ['painted', 'painting', 'paint', 'art', 'розпис', 'худож'],
-};
-
-// Slug и название цвета сами по себе — уже неплохие ключи для фото, но файлы
-// вроде «cream_front.webp» ловятся только дополнительными написаниями.
-const COLOR_IMAGE_KEYWORD_ALIASES: Record<string, string[]> = {
-  ivory: ['ivori', 'cream', 'creme', 'молоч'],
-  graphite: ['grafit', 'charcoal'],
-  black: ['chorniy', 'chornyi'],
-  pearl: ['перламутр', 'перламутров', 'perl'],
-};
-
-function getColorImageKeywords(color: CatalogResinColor | null) {
-  if (!color) return [];
-
-  const slug = color.slug.toLowerCase();
-
-  return [slug, color.name.trim().toLowerCase(), ...(COLOR_IMAGE_KEYWORD_ALIASES[slug] ?? [])]
-    .filter(Boolean);
-}
 
 function formatMoney(value: number, currency: string) {
   return new Intl.NumberFormat('uk-UA', {
@@ -199,75 +180,8 @@ function getVariantCoverImage(variant: Variant): ProductImage | null {
   return variant.images.find((img) => img.isCover) ?? variant.images[0] ?? null;
 }
 
-function getImageMatchText(image: ProductImage) {
-  return `${image.alt ?? ''} ${image.storageKey ?? ''} ${image.url ?? ''}`.toLowerCase();
-}
-
-function includesAny(text: string, keywords: string[]) {
-  return keywords.some((keyword) => text.includes(keyword));
-}
-
 function isFinishDisabled(t: Translator, value: FinishType) {
   return Boolean(FINISHES(t).find((item) => item.code === value)?.isDisabled);
-}
-
-function buildGalleryImages(
-  productImages: ProductImage[],
-  variant: Variant | null,
-  finish: FinishType,
-  color: CatalogResinColor | null,
-): ProductImage[] {
-  const merged = [...(variant?.images ?? []), ...productImages];
-  const seen = new Set<string>();
-
-  const deduped = merged.filter((image) => {
-    const key = image.storageKey || image.url || image.id;
-
-    if (seen.has(key)) return false;
-
-    seen.add(key);
-    return true;
-  });
-
-  const ranked = deduped.map((image, index) => {
-    const searchText = getImageMatchText(image);
-    const finishMatched = includesAny(searchText, FINISH_IMAGE_KEYWORDS[finish]);
-    const colorMatched =
-      finish === 'MONO' && includesAny(searchText, getColorImageKeywords(color));
-
-    return {
-      image,
-      index,
-      finishMatched,
-      colorMatched,
-      isCover: Boolean(image.isCover),
-    };
-  });
-
-  const hasFinishMatches = ranked.some((item) => item.finishMatched);
-  const hasColorMatches = finish === 'MONO' && ranked.some((item) => item.colorMatched);
-
-  if (!hasFinishMatches && !hasColorMatches) {
-    return deduped;
-  }
-
-  return ranked
-    .sort((a, b) => {
-      if (hasColorMatches && a.colorMatched !== b.colorMatched) {
-        return Number(b.colorMatched) - Number(a.colorMatched);
-      }
-
-      if (hasFinishMatches && a.finishMatched !== b.finishMatched) {
-        return Number(b.finishMatched) - Number(a.finishMatched);
-      }
-
-      if (a.isCover !== b.isCover) {
-        return Number(b.isCover) - Number(a.isCover);
-      }
-
-      return a.index - b.index;
-    })
-    .map((item) => item.image);
 }
 
 function Gallery({
@@ -860,6 +774,7 @@ function ProductInfo({
   onSelectFinish,
   resinColors,
   selectedColor,
+  selectedColorPriceDelta,
   onSelectColor,
   isAgeVerified,
   verifyHref,
@@ -871,6 +786,7 @@ function ProductInfo({
   onSelectFinish: (value: FinishType) => void;
   resinColors: CatalogResinColor[];
   selectedColor: CatalogResinColor | null;
+  selectedColorPriceDelta: number;
   onSelectColor: (slug: string) => void;
   isAgeVerified: boolean;
   verifyHref: string;
@@ -891,11 +807,12 @@ function ProductInfo({
   const finishOption = FINISHES(t).find((item) => item.code === selectedFinish) ?? FINISHES(t)[0];
 
   const finalPrice =
-    basePrice +
-    finishOption.priceDelta +
-    (selectedFinish === 'MONO' ? selectedColor?.priceDelta ?? 0 : 0);
+    configurationPrice(basePrice, finishOption.priceDelta +
+      (selectedFinish === 'MONO' ? selectedColorPriceDelta : 0));
 
   const estimatedShippingLabel = t('shop.withinValue', { value1: formatDayCount(t, locale, finishOption.leadTimeDays) });
+  const dispatchDate = selectedVariant && ['PREORDER', 'BACKORDER'].includes(product.saleType)
+    ? getProductAvailabilityDate(product, selectedVariant) : undefined;
   const maxQty = 99;
 
   useEffect(() => {
@@ -1076,7 +993,9 @@ function ProductInfo({
       </div>
 
       <p className={styles.shippingNote}>
-        {t('shop.estimatedDispatch_1105')} {estimatedShippingLabel}
+        {t('shop.estimatedDispatch_1105')} {dispatchDate
+          ? <time dateTime={dispatchDate}>{formatDate(dispatchDate, locale)}</time>
+          : estimatedShippingLabel}
       </p>
 
       {selectedMeta ? (
@@ -1170,21 +1089,18 @@ export default function ProductDetailsClient({
   const { locale, t, path } = useI18n();
 
   const defaultVariant =
-    product.variants.find((v) => v.isDefault) ?? product.variants[0] ?? null;
+    pickDefaultProductVariant(product);
 
-  const buildResinColors = initialResinColors?.length
-    ? initialResinColors
-    : FALLBACK_RESIN_COLORS;
+  const buildResinColors = initialResinColors ?? FALLBACK_RESIN_COLORS;
 
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(defaultVariant);
   const [selectedFinish, setSelectedFinish] = useState<FinishType>('MONO');
   const [resinColors, setResinColors] = useState<CatalogResinColor[]>(buildResinColors);
   const [selectedColorSlug, setSelectedColorSlug] = useState(() =>
-    pickDefaultColorSlug(buildResinColors),
+    defaultProductColorSlug(product, buildResinColors),
   );
 
-  // Отличает выбор покупателя от значения, подставленного на сборке: только
-  // первое переживает приезд свежего склада (см. reconcileSelectedColorSlug).
+  // Preserve both the build default and an explicit buyer selection on stock refresh.
   const userPickedColorRef = useRef(false);
 
   function handleSelectColor(slug: string) {
@@ -1212,7 +1128,7 @@ export default function ProductDetailsClient({
         // Ответ применяем целиком, даже пустой: пустой список означает, что в
         // админке скрыли все цвета, а не что запрос не удался. Иначе витрина
         // навсегда осталась бы на наборе со сборки.
-        setResinColors(colors);
+        setResinColors(current => refreshColorStock(current, colors));
         setSelectedColorSlug((current) =>
           reconcileSelectedColorSlug(colors, current, {
             userPicked: userPickedColorRef.current,
@@ -1235,6 +1151,8 @@ export default function ProductDetailsClient({
     () => resolveSelectedColor(resinColors, selectedColorSlug),
     [resinColors, selectedColorSlug],
   );
+
+  const displayColor = selectedColor ?? resolveSelectedColor(buildResinColors, selectedColorSlug);
 
   const verifyHref = useMemo(
     () => buildAgeVerifyPath(`/product/${product.slug}`),
@@ -1259,13 +1177,16 @@ export default function ProductDetailsClient({
   }, [product.isAdult, router, verifyHref]);
 
   const galleryImages = useMemo(() => {
-    return buildGalleryImages(
+    const verified = selectedVariant && displayColor && selectedFinish === 'MONO'
+      ? verifiedOfferImages(product, selectedVariant, displayColor) : [];
+    const gallery = buildGalleryImages(
       product.images,
       selectedVariant,
       selectedFinish,
-      selectedColor,
+      displayColor,
     );
-  }, [product.images, selectedVariant, selectedFinish, selectedColor]);
+    return [...verified, ...gallery.filter(image => !verified.some(first => first.url === image.url))];
+  }, [product.images, selectedVariant, selectedFinish, displayColor]);
 
   const finishOption =
     FINISHES(t).find((item) => item.code === selectedFinish) ?? FINISHES(t)[0];
@@ -1293,6 +1214,7 @@ export default function ProductDetailsClient({
             }}
             resinColors={resinColors}
             selectedColor={selectedColor}
+            selectedColorPriceDelta={displayColor?.priceDelta ?? 0}
             onSelectColor={handleSelectColor}
             isAgeVerified={isAgeVerified}
             verifyHref={verifyHref}

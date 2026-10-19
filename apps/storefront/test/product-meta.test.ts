@@ -21,6 +21,8 @@ const MEDIA_BASE = 'https://api.skufnya.com';
 const resolveImageUrl = (path?: string | null) =>
   path ? (/^https?:\/\//i.test(path) ? path : `${MEDIA_BASE}${path}`) : null;
 
+const colors: any[] = [{ id: 'ivory', slug: 'ivory', name: 'Айворі', priceDelta: 0, isInStock: true }];
+
 function product(overrides: Record<string, any> = {}): any {
   return {
     id: 'p1',
@@ -42,7 +44,7 @@ function product(overrides: Record<string, any> = {}): any {
     coverImage: null,
     ogImage: null,
     images: [],
-    variants: [],
+    variants: [{ id: 'v1', name: 'Default', price: 3130, currency: 'UAH', isDefault: true, isActive: true, images: [] }],
     attributes: null,
     ...overrides,
   };
@@ -224,6 +226,7 @@ describe('Product-разметка', () => {
         images: [image({ isCover: true }), image({ id: 'i2', url: '/uploads/catalog/large/2.webp' })],
       }),
       resolveImageUrl,
+      'uk', colors,
     ) as any;
 
     assert.equal(jsonLd['@type'], 'Product');
@@ -239,6 +242,8 @@ describe('Product-разметка', () => {
       priceCurrency: 'UAH',
       availability: 'https://schema.org/InStock',
       url: 'https://www.skufnya.com/product/aoi-todo-jujutsu-kaisen/',
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@type': 'Organization', name: 'SKUFnya' },
       hasMerchantReturnPolicy: {
         '@type': 'MerchantReturnPolicy',
         applicableCountry: 'UA',
@@ -248,7 +253,7 @@ describe('Product-разметка', () => {
   });
 
   it('политика возврата размечена запретом, как на странице условий', () => {
-    const jsonLd = buildProductJsonLd(product(), resolveImageUrl) as any;
+    const jsonLd = buildProductJsonLd(product(), resolveImageUrl, 'uk', colors) as any;
 
     // Merchant Center сверяет фид с витриной: если разметка пообещает возврат,
     // которого страница /returns не даёт, объявления снимут за расхождение.
@@ -261,8 +266,9 @@ describe('Product-разметка', () => {
 
   it('предзаказ размечается предзаказом, а не наличием', () => {
     const jsonLd = buildProductJsonLd(
-      product({ saleType: 'PREORDER' }),
+      product({ saleType: 'PREORDER', availabilityDate: '2026-12-01T10:00:00+02:00' }),
       resolveImageUrl,
+      'uk', colors,
     ) as any;
 
     assert.equal(jsonLd.offers.availability, 'https://schema.org/PreOrder');
@@ -270,11 +276,29 @@ describe('Product-разметка', () => {
 
   it('товар без цены остаётся без предложения, а не с нулевым', () => {
     const jsonLd = buildProductJsonLd(
-      product({ priceFrom: 0 }),
+      product({ priceFrom: 0, variants: [] }),
       resolveImageUrl,
+      'uk', colors,
     ) as any;
 
     assert.equal(jsonLd.offers, undefined);
+  });
+
+  it('uses the selected variant and color surcharge instead of another variant minimum', () => {
+    const jsonLd = buildProductJsonLd(product({ priceFrom: 520, variants: [
+      { id: 'bust', price: 520, currency: 'UAH', isDefault: false, images: [] },
+      { id: 'figure', price: 9250, currency: 'UAH', isDefault: true, images: [] },
+    ] }), resolveImageUrl, 'uk', [{ ...colors[0], priceDelta: 100 }]) as any;
+    assert.equal(jsonLd.offers.price, 9350);
+  });
+
+  it('omits offers without verified colors or preorder dates and never uses a logo as a product photo', () => {
+    assert.equal(buildProductJsonLd(product(), resolveImageUrl).offers, undefined);
+    assert.equal(buildProductJsonLd(product({ saleType: 'PREORDER' }), resolveImageUrl, 'uk', colors).offers, undefined);
+    const adult = buildProductJsonLd(product({ isAdult: true }), resolveImageUrl, 'uk', colors);
+    assert.equal(adult.offers, undefined);
+    assert.equal(adult.image, undefined);
+    assert.equal(buildProductJsonLd(product(), resolveImageUrl, 'uk', colors).image, undefined);
   });
 
   it('закрывающий тег в данных не может выйти из script', () => {

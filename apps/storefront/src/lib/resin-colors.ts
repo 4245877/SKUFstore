@@ -60,23 +60,19 @@ export function pickDefaultColorSlug(colors: CatalogResinColor[]) {
   return preferred?.slug ?? '';
 }
 
-/**
- * Что делать с выбранным цветом, когда из API приехал свежий склад.
- *
- * Выбор покупателя переживает обновление. Если цвет скрыли или удалили,
- * сохраняем slug, но запрещаем покупку до нового явного выбора. А вот значение со сборки — не выбор, а догадка о том,
- * что было на складе на момент пересборки витрины: его пересчитываем заново,
- * иначе цвет, который тем временем отметили как отсутствующий, так и остался
- * бы выбранным вместо того, что есть в наличии.
- */
+/** A stock refresh must never silently select a differently priced configuration. */
 export function reconcileSelectedColorSlug(
-  colors: CatalogResinColor[],
-  currentSlug: string,
-  { userPicked }: { userPicked: boolean },
+  _colors: CatalogResinColor[], currentSlug: string, _options: { userPicked: boolean },
 ) {
-  if (!userPicked) return pickDefaultColorSlug(colors);
-
   return currentSlug;
+}
+
+/** Keep build-time commercial data; refresh availability and remove hidden colors only. */
+export function refreshColorStock(snapshot: CatalogResinColor[], live: CatalogResinColor[]): CatalogResinColor[] {
+  return snapshot.flatMap(color => {
+    const current = live.find(item => item.slug === color.slug);
+    return current ? [{ ...color, isInStock: current.isInStock }] : [];
+  });
 }
 
 /**

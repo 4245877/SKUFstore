@@ -28,6 +28,13 @@ function product(slug, title, priceFrom, ready) {
 export const products = [product('editorial-ready', 'Вихідний редакційний товар', 1000, true), product('source-only', 'Товар без перекладу', 1200, false), product('legacy-source', 'Історичний товар', 900, false)];
 delete products[2].translations; delete products[2].localization;
 export const resinColors = [{ id: 'fixture-color', slug: 'fixture-black', name: 'Чорний', hexColor: '#111111', priceDelta: 200, isInStock: true, isActive: true, sortOrder: 0 }];
+// Explicitly reviewed synthetic images exercise a nonempty static XML export.
+for (const product of products) {
+  product.images[0].storageKey = `catalog/${product.slug}.webp`;
+  product.attributes = { merchant: { defaultColorSlug: 'fixture-black', imageVariantId: product.variants[0].id,
+    imageStorageKey: product.images[0].storageKey, identifierPolicy: 'NONE', manufacturerBrand: 'SKUFnya' } };
+}
+if (process.env.MERCHANT_FIXTURE_EMPTY === '1') products.splice(0);
 export function fixtureResponse(url) {
   const path = url.pathname;
   if (path === '/api/catalog/resin-colors') return { items: resinColors };

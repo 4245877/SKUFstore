@@ -10,10 +10,14 @@ import { buildLocalizedPath } from '../src/i18n/paths.ts';
 import { SITE_URL } from '../src/i18n/metadata.ts';
 import { isEnglishProductReady, getProductLocalizationVersion, resolveProductPresentation } from '../src/i18n/catalog-policy.ts';
 import { validateCatalogSnapshot } from '../src/lib/snapshot-integrity.ts';
+import { resolveDefaultProductOffer } from '../src/lib/product-offer.ts';
+import { buildMerchantFeed, buildMerchantSourceState } from '../src/lib/merchant-feed.ts';
+import { normalizeCatalogProductDetail } from '../src/lib/api.ts';
 
 const root = path.resolve(process.env.EXPORT_ROOT || 'out');
 const snapshot = JSON.parse(fs.readFileSync('.next/cache/skufnya-build/catalog-snapshot.json', 'utf8'));
 assert.deepEqual(validateCatalogSnapshot(snapshot), [], 'Invalid catalog/translation snapshot');
+for (const prefix of ['product', 'en/product']) assert.equal(fs.existsSync(path.join(root, prefix, '_skuf-empty-catalog')), false, 'Internal empty catalog route reached export');
 const enReadySlugs = snapshot.items.filter(isEnglishProductReady).map(item => item.slug);
 assert.match(snapshot.buildId, /^[a-zA-Z0-9-]+$/, 'Missing current catalog build ID');
 const compiledBuildId = JSON.parse(fs.readFileSync('.next/required-server-files.json', 'utf8')).config.env.SKUF_CATALOG_BUILD_ID;
@@ -159,7 +163,7 @@ for (const product of snapshot.items) {
       ['property', 'og:description', meta.description], ['name', 'twitter:title', meta.socialTitle], ['name', 'twitter:description', meta.description],
     ]) assert.equal(decodeHtml(metaContent(html, attribute, key) || ''), expected, `Wrong ${key}: ${locale}/${product.slug}`);
     assert.equal(decodeHtml(html.match(/<title>(.*?)<\/title>/s)?.[1] || ''), `${meta.documentTitle} | SKUFnya`, `Wrong SEO title: ${locale}/${product.slug}`);
-    const actualLd = productJsonLd(html), expectedLd = buildProductJsonLd(presentation, imageResolver, locale);
+    const actualLd = productJsonLd(html), expectedLd = buildProductJsonLd(presentation, imageResolver, locale, snapshot.resinColors);
     // Media origin is a build setting; the identity, presentation and offers must match exactly.
     for (const key of ['name', 'description', 'sku', 'brand', 'category', 'url', 'offers']) assert.deepEqual(actualLd[key], expectedLd[key], `Wrong JSON-LD ${key}: ${locale}/${product.slug}`);
   }
@@ -170,9 +174,15 @@ for (const product of snapshot.items) {
   if (!ready) for (const key of ['name', 'description', 'brand', 'category']) assert.deepEqual(enData[key], ukData[key], `Changed fallback catalog data ${key}: ${product.slug}`);
   for (const key of ['price', 'priceCurrency', 'availability', 'hasMerchantReturnPolicy']) assert.deepEqual(enData.offers?.[key], ukData.offers?.[key], `Locale changed offer ${key}: ${product.slug}`);
   assert.equal(enData.url, buildProductUrl(product.slug, 'en'));
-  assert.equal(enData.offers?.price, product.priceFrom);
-  assert.equal(enData.offers?.priceCurrency, product.currency);
+  const { offer } = resolveDefaultProductOffer(product, snapshot.resinColors);
+  assert.equal(enData.offers?.price, product.isAdult ? undefined : offer?.price);
+  assert.equal(enData.offers?.priceCurrency, product.isAdult ? undefined : offer?.currency);
 }
+const merchantProducts = snapshot.items.map(normalizeCatalogProductDetail);
+const merchantFeed = buildMerchantFeed(merchantProducts, snapshot.resinColors, imageResolver);
+assert.equal(fs.readFileSync(path.join(root, 'google-merchant.xml'), 'utf8'), merchantFeed.xml, 'Feed differs from the product-page snapshot');
+assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, 'google-merchant-state.json'), 'utf8')),
+  buildMerchantSourceState(merchantProducts, snapshot.resinColors), 'Merchant freshness state differs from export');
 if (process.env.EXPORT_BASELINE) {
   assert.deepEqual(files.map((f) => path.relative(root, f)), htmlFiles(process.env.EXPORT_BASELINE).map((f) => path.relative(process.env.EXPORT_BASELINE, f)));
   assert.equal(sitemap, fs.readFileSync(path.join(process.env.EXPORT_BASELINE, 'sitemap.xml'), 'utf8'));

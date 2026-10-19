@@ -14,6 +14,7 @@ import {
 } from '../../../../lib/api';
 import {
   getSnapshotProduct,
+  getSnapshotProductSlugs,
   getSnapshotResinColors,
   loadCatalogSnapshot,
 } from '../../../../lib/build-snapshot';
@@ -29,6 +30,10 @@ const isPagesBuild = process.env.DEPLOY_TARGET === 'pages';
 
 export const dynamicParams = false;
 
+// Next 15.0 rejects an empty generateStaticParams with output: export. This
+// internal route renders notFound, never a product, and is absent from sitemap/XML.
+const EMPTY_CATALOG_STATIC_SLUG = '_skuf-empty-catalog';
+
 /**
  * Здесь собирается структура статического экспорта — и здесь же происходит
  * единственный поход в API за каталогом.
@@ -43,13 +48,9 @@ export const dynamicParams = false;
  * каждого из них или сборка упадёт. Тихо потерять товар нельзя.
  */
 export async function productStaticParams(): Promise<Array<{ slug: string }>> {
-  if (!isPagesBuild) {
-    return [];
-  }
-
   const snapshot = await loadCatalogSnapshot();
 
-  return snapshot.slugs.map((slug) => ({ slug }));
+  return (snapshot.slugs.length ? snapshot.slugs : [EMPTY_CATALOG_STATIC_SLUG]).map((slug) => ({ slug }));
 }
 
 /**
@@ -103,6 +104,7 @@ export async function productMetadata({
   locale: PublishedLocale;
 }): Promise<Metadata> {
   const { slug } = await params;
+  if (isPagesBuild && slug === EMPTY_CATALOG_STATIC_SLUG && !getSnapshotProductSlugs().length) notFound();
 
   let product: CatalogProductDetail;
 
@@ -159,6 +161,7 @@ export async function ProductPage({
   locale: PublishedLocale;
 }) {
   const { slug } = await params;
+  if (isPagesBuild && slug === EMPTY_CATALOG_STATIC_SLUG && !getSnapshotProductSlugs().length) notFound();
 
   try {
     const product = resolveProductPresentation(await loadProduct(slug), locale);
@@ -167,6 +170,8 @@ export async function ProductPage({
       notFound();
     }
 
+    const resinColors = await loadResinColors();
+
     return (
       <>
         {/* Product-разметка для расширенного сниппета в выдаче. JSON-LD — это
@@ -174,12 +179,12 @@ export async function ProductPage({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: serializeJsonLd(buildProductJsonLd(product, resolveMediaUrl, locale)),
+            __html: serializeJsonLd(buildProductJsonLd(product, resolveMediaUrl, locale, resinColors)),
           }}
         />
         <ProductDetailsClient
           product={product}
-          initialResinColors={await loadResinColors()}
+          initialResinColors={resinColors}
         />
       </>
     );

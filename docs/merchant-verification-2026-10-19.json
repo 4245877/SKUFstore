@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-19",
+  "node": "22.23.3",
+  "productionDeployed": false,
+  "merchantCenterConfigured": false,
+  "workingDatabaseMigrated": false,
+  "newPrismaMigrations": false,
+  "storefrontTests": {
+    "tests": 181,
+    "pass": 181,
+    "fail": 0
+  },
+  "apiTests": {
+    "tests": 189,
+    "pass": 189,
+    "fail": 0
+  },
+  "apiUnitTests": {
+    "tests": 49,
+    "pass": 49,
+    "fail": 0
+  },
+  "realCatalog": {
+    "productCount": 170,
+    "activeVariantCount": 233,
+    "includedCount": 0,
+    "excludedCount": 170,
+    "reasons": {
+      "adult_content_review_required": 18,
+      "unverified_configuration_image": 148,
+      "missing_availability_date": 4
+    }
+  },
+  "productionStaticExport": {
+    "ukProductPages": 170,
+    "enProductRoutes": 170,
+    "xmlValid": true,
+    "artifactDirectory": "/home/hpelitdesk/apps/SKUFstore/node_modules/.cache/skuf-merchant-verification/production/out"
+  },
+  "synthetic": {
+    "products": 3,
+    "browserPass": 2,
+    "browserFail": 0,
+    "xmlItems": 3
+  },
+  "empty": {
+    "products": 0,
+    "passed": 1,
+    "xmlItems": 0
+  },
+  "initialHtmlPrices": {
+    "checked": 164,
+    "mismatches": 0
+  },
+  "problemProductBrowserChecks": {
+    "passed": 5,
+    "productionWrites": 0,
+    "rows": [
+      {
+        "slug": "johnny-joestar",
+        "variantId": "cmugtzms40016mm29a5skzbwm",
+        "color": "ivory",
+        "jsonLdPrice": 5200,
+        "hydratedPrice": 5200,
+        "stockRefreshChangedPrice": false
+      },
+      {
+        "slug": "cha-hae-in-solo-leveling",
+        "variantId": "cmpcexxg9005jmx2muyzwie46",
+        "color": "ivory",
+        "jsonLdPrice": 9250,
+        "hydratedPrice": 9250,
+        "stockRefreshChangedPrice": false
+      },
+      {
+        "slug": "goblin-slayer-orcbolg-figure-statue-various-sizes",
+        "variantId": "cmomrkwot003go228bbjdjbvb",
+        "color": "ivory",
+        "jsonLdPrice": 26240,
+        "hydratedPrice": 26240,
+        "stockRefreshChangedPrice": false
+      },
+      {
+        "slug": "hornet-hollow-knight",
+        "variantId": "cmo2noqrp0008pu28p3ukeps1",
+        "color": "ivory",
+        "jsonLdPrice": 9370,
+        "hydratedPrice": 9370,
+        "stockRefreshChangedPrice": false
+      },
+      {
+        "slug": "yennefer-witcher",
+        "variantId": "cmoegfrah003doz28ejr07enl",
+        "color": "ivory",
+        "jsonLdPrice": 7390,
+        "hydratedPrice": 7390,
+        "stockRefreshChangedPrice": false
+      }
+    ]
+  },
+  "catalogBrowser": {
+    "passed": 40,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checkoutBrowser": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "productionWrites": 0
+  },
+  "publicImages": {
+    "checked": 170,
+    "errors": 0,
+    "under500": 0
+  },
+  "publishedFreshness": {
+    "checkedAt": "2026-10-19T13:09:52.796Z",
+    "liveProducts": 170,
+    "publishedProducts": null,
+    "liveFingerprint": "8ca4d28873bc6d9648de14a7d4b8271eabe601dfecd37cdea23519a0147bc1d3",
+    "publishedFingerprint": null,
+    "publishedStateMissing": true,
+    "publishedXmlMissing": true,
+    "xmlMatches": false,
+    "fresh": false
+  },
+  "standaloneLint": "Not configured: next lint prompts to initialize ESLint",
+  "evidenceDirectory": "/home/hpelitdesk/apps/SKUFstore/node_modules/.cache/skuf-merchant-verification"
+}
