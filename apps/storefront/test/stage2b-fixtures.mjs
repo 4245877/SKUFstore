@@ -14,13 +14,14 @@ function product(slug, title, priceFrom, ready) {
     description: 'Вихідний повний опис товару.', metaTitle: 'Вихідний SEO заголовок', metaDescription: 'Вихідний SEO опис.',
     isAdult: false, saleType: 'IN_STOCK', ageRating: 'ALL', priceFrom, currency: 'UAH', stockQty: 3,
     productType: 'FIGURE', series: null, material: 'Смола', countryOfOrigin: 'Україна', attributes: null,
+    modelFiles: [{ url: 'http://192.168.0.141/fixture-production-only.stl' }], donariumJobId: 'fixture-production-job',
     qualityScore: 10, showOnHome: true,
     category: { id: 'fixture-category', slug: 'fixture-category', name: 'Вихідна категорія' }, brand: null, franchise: null, character: null,
     coverImage: { url: `/uploads/stage2b/${slug}.webp`, alt: 'Вихідний image alt' }, ogImage: { url: `/uploads/stage2b/${slug}.jpg`, alt: 'Вихідний image alt' },
     images: [{ id: `${id}-image`, url: `/uploads/stage2b/${slug}.webp`, alt: 'Вихідний image alt', isCover: true, storageKey: null }],
     pricing: { priceFrom, priceTo: priceFrom + 200, activeVariantCount: 2, hasPriceRange: true },
     variants: [0, 1].map(i => ({ id: `${id}-variant-${i}`, name: `Variant ${i}`, optionKey: `option-${i}`, sku: `SKU-${slug}-${i}`,
-      price: priceFrom + i * 200, currency: 'UAH', sizeLabel: 'M', stockQty: 3, reservedQty: 0, resinGrams: 100,
+      price: priceFrom + i * 200, currency: 'UAH', sizeLabel: 'M', stockQty: 3, reservedQty: 0, resinGrams: 100, leadTimeDays: null, pricingSnapshot: { internal: true },
       isDefault: i === 0, isActive: true, images: [], attributes: null })),
     translations: ready ? [translation] : [], localization: { en: { ready, version: ready ? translationVersion : null } },
   };
@@ -31,7 +32,7 @@ export const resinColors = [{ id: 'fixture-color', slug: 'fixture-black', name: 
 // Explicitly reviewed synthetic images exercise a nonempty static XML export.
 for (const product of products) {
   product.images[0].storageKey = `catalog/${product.slug}.webp`;
-  product.attributes = { merchant: { defaultColorSlug: 'fixture-black', imageVariantId: product.variants[0].id,
+  product.attributes = { slicer: 'fixture-production-slicer', modelPath: '/private/fixture-production-only.3mf', merchant: { defaultColorSlug: 'fixture-black', imageVariantId: product.variants[0].id,
     imageStorageKey: product.images[0].storageKey, identifierPolicy: 'NONE', manufacturerBrand: 'SKUFnya' } };
 }
 if (process.env.MERCHANT_FIXTURE_EMPTY === '1') products.splice(0);

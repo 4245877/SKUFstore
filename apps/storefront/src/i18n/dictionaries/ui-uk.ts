@@ -914,6 +914,8 @@ export const uiUk = {
   "shop.showPhotoValue": "Показати фото {value1}",
   "shop.figureVariant": "Варіант фігурки",
   "shop.finish": "Виконання",
+  "shop.dispatchTimeUnconfirmed": 'Уточнимо перед оплатою',
+  "shop.dispatchTimeOnProduct": 'Термін зазначено в картці товару',
   "shop.dispatchTimeValue": "Термін відправлення: {value1}",
   "shop.unavailable": "Недоступно",
   "shop.noExtraCharge": "Без доплати",

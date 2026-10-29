@@ -43,7 +43,7 @@ export type ProductVariantDto = {
   sizeLabel: string | null;
   outfitLabel: string | null;
   faceLabel: string | null;
-  resinGrams: number | null;
+  leadTimeDays?: number | null;
   price: number;
   currency: CurrencyCode | string;
   stockQty: number;

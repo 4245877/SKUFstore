@@ -13,3 +13,15 @@ apps/storefront/out/
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Local backup data and manufacturing assets are never storefront source.
+*.dump
+*.backup
+*.bak
+*.tar
+*.tar.gz
+*.zip
+*.stl
+*.STL
+*.3mf
+*.3MF

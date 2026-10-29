@@ -47,6 +47,13 @@ try {
     child.on('exit', code => code === 0 ? resolve() : reject(new Error('Independent XML validation failed')));
   });
   const root = path.join(app, 'out');
+  // Inspect the actual public artifact, including HTML/RSC and JavaScript.
+  const artifactFiles = fs.readdirSync(root, { recursive: true }).filter(file => /\.(html|js|json|txt|xml)$/.test(file) && fs.statSync(path.join(root, file)).isFile());
+  for (const file of artifactFiles) {
+    assert.doesNotMatch(fs.readFileSync(path.join(root, file), 'utf8'),
+      /192\.168\.0\.141|fixture-production-only|fixture-production-job|fixture-production-slicer|resinGrams|pricingSnapshot|modelFiles|donariumJobId/,
+      `Manufacturing data in public artifact: ${file}`);
+  }
   site = http.createServer((request, response) => {
     let pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
     let file = path.resolve(root, '.' + pathname);

@@ -17,8 +17,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   freshness:
@@ -28,8 +26,10 @@ jobs:
     outputs:
       needs_build: ${{ steps.catalog.outputs.needs_build == 'true' || steps.merchant.outputs.needs_build == 'true' }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
       - name: Check live catalog against published pages
@@ -40,6 +40,9 @@ jobs:
         run: node --experimental-strip-types apps/storefront/scripts/merchant-freshness.mjs --reconcile
 
   build:
+    permissions:
+      contents: read
+      pages: read
     needs: freshness
     if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.freshness.outputs.needs_build == 'true') }}
     runs-on: ubuntu-latest
@@ -57,18 +60,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Setup Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
           run_install: false
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           cache: "pnpm"
@@ -103,6 +108,9 @@ jobs:
             --output /dev/null \
             --write-out 'status=%{http_code} total=%{time_total}s size=%{size_download}B\n' \
             "https://api.skufnya.com/api/catalog/products?page=1&limit=100" || true
+
+      - name: Noninteractive lint
+        run: pnpm lint
 
       - name: Storefront regression tests
         run: pnpm --filter storefront test
@@ -159,7 +167,7 @@ jobs:
           python3 -m http.server 54332 --bind 127.0.0.1 --directory out > /tmp/storefront-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
-          for attempt in $(seq 1 30); do
+          for _attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:54332/catalog/ > /dev/null; then break; fi
             sleep 1
           done
@@ -167,13 +175,17 @@ jobs:
           SMOKE_BASE=http://127.0.0.1:54332 node test/browser-stage2.mjs
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: ./apps/storefront/out
 
   deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     needs: build
-    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    if: ${{ github.ref == 'refs/heads/main' && !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     # Deployments are serialised, but an in-flight one is never cancelled.
@@ -185,13 +197,15 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
         with:
           timeout: 900000
           error_count: 20

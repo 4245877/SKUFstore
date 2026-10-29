@@ -1,3 +1,4 @@
+import { readPrivateSession, writePrivateSession, clearPrivateOrderData } from './private-session.ts';
 import { normalizeCart, type CartItem } from './cart-lines.ts';
 export type { CartItem } from './cart-lines.ts';
 
@@ -165,7 +166,7 @@ const DEMO_ORDERS: StoreOrder[] = [
 function readStoredUserOrders(): StoreOrder[] {
   if (!hasWindow()) return [];
 
-  return safeParse<StoreOrder[]>(window.localStorage.getItem(ORDERS_KEY), []);
+  return readPrivateSession<StoreOrder[]>(ORDERS_KEY) ?? [];
 }
 
 export function formatPrice(value: number, currency = 'UAH') {
@@ -212,6 +213,7 @@ export function getStatusLabel(status: string) {
 
 export function readCart(): CartItem[] {
   if (!hasWindow()) return [];
+  clearPrivateOrderData(false);
 
   const raw = window.localStorage.getItem(CART_KEY);
   const items = normalizeCart(safeParse<unknown>(raw, []));
@@ -311,21 +313,18 @@ export function readOrderById(id: string) {
 export function readLastOrder(): StoreOrder | null {
   if (!hasWindow()) return null;
 
-  return safeParse<StoreOrder | null>(
-    window.localStorage.getItem(LAST_ORDER_KEY),
-    null,
-  );
+  return readPrivateSession<StoreOrder>(LAST_ORDER_KEY);
 }
 
 export function writeLastOrder(order: StoreOrder | null) {
   if (!hasWindow()) return;
 
   if (order) {
-    window.localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+    writePrivateSession(LAST_ORDER_KEY, order);
     return;
   }
 
-  window.localStorage.removeItem(LAST_ORDER_KEY);
+  window.sessionStorage.removeItem(LAST_ORDER_KEY);
 }
 
 function emitFavoritesChanged() {

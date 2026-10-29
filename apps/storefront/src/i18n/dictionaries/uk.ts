@@ -1,6 +1,9 @@
 import { uiUk } from './ui-uk.ts';
 /** Complete contract for migrated UI. Existing copy is intentionally preserved, including legacy Russian SEO. */
 export const uk = {
+  "auth.accountLinkRequiresSignIn": "Для цього email уже є акаунт. Увійдіть звичним способом: автоматичне об’єднання акаунтів вимкнено.",
+  "account.emailChangeVerificationRequired": "Зміна email потребує підтвердження нової адреси.",
+
   "catalog.sourceNotice": "Назви й описи товарів наведено мовою каталогу.",
   "catalog.deliveryNotice": "Доставка лише в межах України. Ціни у гривнях (UAH).",
   "catalog.failure.eyebrow": "Тимчасова пауза",

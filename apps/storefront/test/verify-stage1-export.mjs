@@ -103,7 +103,7 @@ for (const file of files) {
       assert.ok(metaContent(html, attribute, key)?.trim(), `Missing ${key}: ${relative}`);
     }
   }
-  assert.doesNotMatch(html, /https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?=[:/\"])/i, `Development host URL: ${relative}`);
+  assert.doesNotMatch(html, /https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?=[:/"])/i, `Development host URL: ${relative}`);
   assert.doesNotMatch(html, /<a\b[^>]*href="\/(?:en\/)?(?:_[^/"]*|api|uploads)(?:\/|")/, `Internal route in navigation: ${relative}`);
   if (relative.startsWith('404')) {
     for (const [, href] of html.matchAll(/<a[^>]*hrefLang="en"[^>]*href="([^"]*)"/g)) {

@@ -40,6 +40,8 @@ const STRENGTH_LABELS = (t: Translator): Record<StrengthLevel, string> => ({
 
 function getOAuthErrorMessage(t: Translator, code: string): string {
   switch (code) {
+    case 'OAUTH_ACCOUNT_LINK_REQUIRED':
+      return t('auth.accountLinkRequiresSignIn');
     case 'GOOGLE_ACCESS_DENIED':
     case 'FACEBOOK_ACCESS_DENIED':
       return t('auth.signInWasCancelled');

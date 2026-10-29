@@ -914,6 +914,8 @@ export const uiEn = {
   "shop.showPhotoValue": "Show photo {value1}",
   "shop.figureVariant": "Figure variant",
   "shop.finish": "Finish",
+  "shop.dispatchTimeUnconfirmed": 'To be confirmed before payment',
+  "shop.dispatchTimeOnProduct": 'See the product dispatch estimate',
   "shop.dispatchTimeValue": "Dispatch time: {value1}",
   "shop.unavailable": "Unavailable",
   "shop.noExtraCharge": "No extra charge",

@@ -2,7 +2,8 @@ import type { CheckoutFormValues, DeliveryMethod, PaymentMethod } from './demo-s
 
 /** Per-tab UI draft shared by both route locales; never a cart, quote or order. */
 export const CHECKOUT_DRAFT_KEY = 'skufnya:checkout-draft';
-const VERSION = 1;
+const VERSION = 2;
+const TTL_MS = 30 * 60 * 1000;
 // Carrier-selected labels can exceed manual-input limits; retain valid order address data.
 const STRING_LIMITS = { fullName: 120, email: 160, phone: 30, city: 200, address: 500, comment: 1000 } as const;
 const DELIVERY_METHODS: readonly DeliveryMethod[] = ['nova-poshta-branch', 'ukrposhta-branch', 'courier', 'pickup'];
@@ -34,14 +35,17 @@ export function readCheckoutDraft(): CheckoutFormValues | null {
     const raw = storage()?.getItem(CHECKOUT_DRAFT_KEY);
     if (!raw) return null;
     const draft = JSON.parse(raw);
-    return draft?.version === VERSION ? validForm(draft.form) : null;
+    if (draft?.version !== VERSION || !Number.isFinite(draft.expiresAt) || draft.expiresAt <= Date.now()) {
+      storage()?.removeItem(CHECKOUT_DRAFT_KEY); return null;
+    }
+    return validForm(draft.form);
   } catch { return null; }
 }
 
 export function saveCheckoutDraft(form: CheckoutFormValues): void {
   const validated = validForm(form);
   if (!validated) return;
-  try { storage()?.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify({ version: VERSION, form: validated })); } catch { /* UI remains usable when storage is unavailable. */ }
+  try { storage()?.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify({ version: VERSION, expiresAt: Date.now() + TTL_MS, form: validated })); } catch { /* UI remains usable when storage is unavailable. */ }
 }
 
 export function clearCheckoutDraft(): void {

@@ -40,6 +40,7 @@ export function localeSwitcherDestination(locale: Locale, href: string, isNotFou
  */
 export function buildLocalizedPath({ locale, path }: { locale: Locale; path: string }): string {
   assertPublishedLocale(locale);
+  // eslint-disable-next-line no-control-regex -- Control characters are intentionally rejected in URLs.
   if (!path.startsWith('/') || path.startsWith('//') || /[\\\s\u0000-\u001f]/u.test(path)) {
     throw new Error(`Expected an internal storefront path: ${path}`);
   }
