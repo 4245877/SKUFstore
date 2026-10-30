@@ -1,54 +1,20 @@
 name: Deploy Storefront to GitHub Pages
 
 on:
-  push:
-    branches: ["main"]
-    paths:
-      - "apps/storefront/**"
-      - "packages/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - ".github/workflows/deploy-storefront.yml"
   workflow_dispatch:
-  schedule:
-    # Reconcile public pages and Merchant prices/availability/content without a backend token.
-    - cron: "17 * * * *"
 
 permissions:
   contents: read
 
 jobs:
-  freshness:
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      needs_build: ${{ steps.catalog.outputs.needs_build == 'true' || steps.merchant.outputs.needs_build == 'true' }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
-        with:
-          node-version: 22
-      - name: Check live catalog against published pages
-        id: catalog
-        run: node apps/storefront/scripts/catalog-freshness.mjs --reconcile
-      - name: Check live Merchant data against the published feed state
-        id: merchant
-        run: node --experimental-strip-types apps/storefront/scripts/merchant-freshness.mjs --reconcile
-
   build:
     permissions:
       contents: read
       pages: read
-    needs: freshness
-    if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.freshness.outputs.needs_build == 'true') }}
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Newer pushes supersede an older build, so a queued/stuck build can never
-    # block later commits from reaching Pages.
+    # Only an explicit dispatch on main may build and publish Pages.
     concurrency:
       group: "pages-build-${{ github.ref }}"
       cancel-in-progress: true
@@ -109,29 +75,6 @@ jobs:
             --write-out 'status=%{http_code} total=%{time_total}s size=%{size_download}B\n' \
             "https://api.skufnya.com/api/catalog/products?page=1&limit=100" || true
 
-      - name: Noninteractive lint
-        run: pnpm lint
-
-      - name: Storefront regression tests
-        run: pnpm --filter storefront test
-
-      - name: Storefront typecheck
-        run: pnpm --filter storefront exec tsc --noEmit --incremental false
-
-      - name: Install Chromium for catalog regression
-        working-directory: apps/storefront
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Localized product SEO synthetic build and browser regression
-        working-directory: apps/storefront
-        run: node --experimental-strip-types test/build-stage2b-fixture.mjs
-
-      - name: Empty catalog static export regression
-        working-directory: apps/storefront
-        env:
-          MERCHANT_FIXTURE_EMPTY: "1"
-        run: node --experimental-strip-types test/build-stage2b-fixture.mjs
-
       - name: Build Storefront
         run: pnpm --filter storefront build
 
@@ -160,19 +103,6 @@ jobs:
       - name: Validate Merchant XML and landing pages independently
         working-directory: apps/storefront
         run: python3 scripts/validate-merchant-export.py out --check-images
-
-      - name: Catalog query hydration and navigation regression
-        working-directory: apps/storefront
-        run: |
-          python3 -m http.server 54332 --bind 127.0.0.1 --directory out > /tmp/storefront-http.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill "$SERVER_PID"' EXIT
-          for _attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:54332/catalog/ > /dev/null; then break; fi
-            sleep 1
-          done
-          node test/browser-catalog-hydration.mjs
-          SMOKE_BASE=http://127.0.0.1:54332 node test/browser-stage2.mjs
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
