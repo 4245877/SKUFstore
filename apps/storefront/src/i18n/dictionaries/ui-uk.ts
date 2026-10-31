@@ -115,7 +115,7 @@ export const uiUk = {
   "account.passwordChangesAreNotAvailableOnlineYet": "Зміна пароля онлайн поки недоступна. Якщо потрібна допомога, зверніться до підтримки.",
   "account.comingSoon": "Скоро",
   "account.socialSignIn": "Вхід через соцмережі",
-  "account.youCanSignInWithGoogleOr": "Увійти через Google або Facebook можна на сторінці входу.",
+  "account.youCanSignInWithGoogleOr": "Увійти через Google можна на сторінці входу.",
   "account.twoFactorAuthentication": "Двофакторна аутентифікація",
   "account.twoFactorAuthenticationIsNotAvailableYet": "Двофакторна автентифікація поки недоступна.",
   "account.theseSecuritySettingsAreNotAvailableYet": "Ці налаштування безпеки поки недоступні.",

@@ -1,4 +1,5 @@
 'use client';
+import { FACEBOOK_LOGIN_ENABLED } from '../../../lib/auth-providers';
 import { presentApiError } from '../../../i18n/api-errors';
 
 import { useI18n } from '../../../i18n/client';
@@ -282,6 +283,7 @@ export default function LoginPage() {
             >
               {t('auth.signInWithGoogle')} </button>
 
+            {FACEBOOK_LOGIN_ENABLED && (
             <button
               type="button"
               className={styles.socialBtn}
@@ -289,6 +291,7 @@ export default function LoginPage() {
               disabled={isLoading}
             >
               {t('auth.signInWithFacebook')} </button>
+            )}
           </div>
 
           <div className={styles.divider} role="separator">

@@ -115,7 +115,7 @@ export const uiEn = {
   "account.passwordChangesAreNotAvailableOnlineYet": "Password changes are not available online yet. Contact support if you need help.",
   "account.comingSoon": "Coming soon",
   "account.socialSignIn": "Social sign-in",
-  "account.youCanSignInWithGoogleOr": "You can sign in with Google or Facebook on the sign-in page.",
+  "account.youCanSignInWithGoogleOr": "You can sign in with Google on the sign-in page.",
   "account.twoFactorAuthentication": "Two-factor authentication",
   "account.twoFactorAuthenticationIsNotAvailableYet": "Two-factor authentication is not available yet.",
   "account.theseSecuritySettingsAreNotAvailableYet": "These security settings are not available yet.",
