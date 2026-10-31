@@ -49,16 +49,14 @@ const FINISHES = (t: Translator): {
   code: FinishType;
   label: string;
   priceDelta: number;
-  leadTimeDays: number;
   isDisabled?: boolean;
   disabledNote?: string;
 }[] => ([
-  { code: 'MONO', label: t('shop.monochromeVersion'), priceDelta: 0, leadTimeDays: 3 },
+  { code: 'MONO', label: t('shop.monochromeVersion'), priceDelta: 0 },
   {
     code: 'PAINTED',
     label: t('shop.artisticPainting'),
     priceDelta: 1200,
-    leadTimeDays: 10,
     isDisabled: true,
     disabledNote: t('shop.temporarilyUnavailable'),
   },
@@ -391,7 +389,7 @@ function FinishSelector({
                 <span className={styles.variantMeta}>
                   {isDisabled
                     ? item.disabledNote ?? t('shop.temporarilyUnavailable')
-                    : t('shop.dispatchTimeValue', { value1: formatDayCount(t, locale, item.leadTimeDays) })}
+                    : t('shop.dispatchTimeOnProduct')}
                 </span>
               </div>
 
@@ -599,6 +597,7 @@ function TabPanel({
     'manufacturerCode',
     'releaseDate',
     'ageRating',
+    'merchant',
   ]);
 
   const extraSpecs = Object.entries(product.attributes ?? {})
@@ -810,7 +809,9 @@ function ProductInfo({
     configurationPrice(basePrice, finishOption.priceDelta +
       (selectedFinish === 'MONO' ? selectedColorPriceDelta : 0));
 
-  const estimatedShippingLabel = t('shop.withinValue', { value1: formatDayCount(t, locale, finishOption.leadTimeDays) });
+  const estimatedShippingLabel = selectedVariant?.leadTimeDays != null
+    ? t('shop.withinValue', { value1: formatDayCount(t, locale, selectedVariant.leadTimeDays) })
+    : t('shop.dispatchTimeUnconfirmed');
   const dispatchDate = selectedVariant && ['PREORDER', 'BACKORDER'].includes(product.saleType)
     ? getProductAvailabilityDate(product, selectedVariant) : undefined;
   const maxQty = 99;
@@ -1190,7 +1191,9 @@ export default function ProductDetailsClient({
 
   const finishOption =
     FINISHES(t).find((item) => item.code === selectedFinish) ?? FINISHES(t)[0];
-  const estimatedShippingLabel = t('shop.withinValue', { value1: formatDayCount(t, locale, finishOption.leadTimeDays) });
+  const estimatedShippingLabel = selectedVariant?.leadTimeDays != null
+    ? t('shop.withinValue', { value1: formatDayCount(t, locale, selectedVariant.leadTimeDays) })
+    : t('shop.dispatchTimeUnconfirmed');
 
   return (
     <main className={styles.page}>

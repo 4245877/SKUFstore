@@ -24,7 +24,6 @@ export function useCartQuote(items: CartItem[], deliveryMethod: OrderDeliveryMet
     void update();
     return () => controller.abort();
     // key captures the complete cart and delivery choice, including cross-tab changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   const current = result.key === key ? result : null;
   const quote = current?.quote ?? null;

@@ -500,7 +500,8 @@ export default function ProfileSettingsPage() {
 
                     value={form.email}
 
-                    onChange={handleFieldChange('email')}
+                    readOnly
+                    title={t('account.emailChangeVerificationRequired')}
 
                     placeholder="name@example.com"
 

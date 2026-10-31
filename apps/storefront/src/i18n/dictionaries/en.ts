@@ -1,6 +1,9 @@
 import type { Dictionary } from '../translate';
 import { uiEn } from './ui-en.ts';
 export const en = {
+  "auth.accountLinkRequiresSignIn": "An account already uses this email. Sign in using your existing method; accounts are not linked automatically.",
+  "account.emailChangeVerificationRequired": "Changing your email requires verification of the new address.",
+
   "catalog.sourceNotice": "Product names and descriptions are shown in their original catalog language. English descriptions are not available yet.",
   "catalog.deliveryNotice": "Delivery within Ukraine only. Prices are in Ukrainian hryvnias (UAH).",
   "catalog.failure.eyebrow": "A brief pause",

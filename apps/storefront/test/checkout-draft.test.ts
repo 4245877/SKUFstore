@@ -35,9 +35,22 @@ describe('shared per-tab checkout draft', () => {
     const data = browser();
     saveCheckoutDraft({ ...form, locale: 'en', currency: 'EUR', items: [{ price: 1 }], quoteToken: 'stale', total: 1 } as CheckoutFormValues);
     const draft = JSON.parse(data.get(CHECKOUT_DRAFT_KEY)!);
-    assert.deepEqual(draft, { version: 1, form });
-    data.set(CHECKOUT_DRAFT_KEY, JSON.stringify({ version: 1, form: { ...form, locale: 'uk', quoteToken: 'stale' } }));
+    assert.deepEqual(draft.form, form);
+    assert.equal(draft.version, 2);
+    assert.ok(draft.expiresAt > Date.now() && draft.expiresAt <= Date.now() + 30 * 60 * 1000);
+    data.set(CHECKOUT_DRAFT_KEY, JSON.stringify({ version: 2, expiresAt: Date.now() + 10000, form: { ...form, locale: 'uk', quoteToken: 'stale' } }));
     assert.deepEqual(readCheckoutDraft(), form);
+  });
+
+  it('expires customer details after thirty minutes and discards unbounded legacy drafts', () => {
+    const data = browser();
+    saveCheckoutDraft(form);
+    const draft = JSON.parse(data.get(CHECKOUT_DRAFT_KEY)!);
+    data.set(CHECKOUT_DRAFT_KEY, JSON.stringify({ ...draft, expiresAt: Date.now() - 1 }));
+    assert.equal(readCheckoutDraft(), null);
+    assert.equal(data.has(CHECKOUT_DRAFT_KEY), false);
+    data.set(CHECKOUT_DRAFT_KEY, JSON.stringify({ version: 1, form }));
+    assert.equal(readCheckoutDraft(), null);
   });
 
   it('retains incomplete inputs exactly without applying order validation or changing selections', () => {
@@ -53,7 +66,7 @@ describe('shared per-tab checkout draft', () => {
   it('rejects corrupt, unknown-version and invalid drafts without guessing payment or delivery', () => {
     const data = browser();
     for (const raw of ['not json', 'null', '[]', JSON.stringify({ version: 2, form }), JSON.stringify({ version: '1', form }),
-      ...[{ ...form, deliveryMethod: 'international' }, { ...form, paymentMethod: 'card' }, { ...form, email: null }, { ...form, city: 123 }, { ...form, phone: 'x'.repeat(31) }, { ...form, address: 'x'.repeat(501) }].map(form => JSON.stringify({ version: 1, form }))]) {
+      ...[{ ...form, deliveryMethod: 'international' }, { ...form, paymentMethod: 'card' }, { ...form, email: null }, { ...form, city: 123 }, { ...form, phone: 'x'.repeat(31) }, { ...form, address: 'x'.repeat(501) }].map(form => JSON.stringify({ version: 2, expiresAt: Date.now() + 10000, form }))]) {
       data.set(CHECKOUT_DRAFT_KEY, raw);
       assert.equal(readCheckoutDraft(), null, raw);
     }
