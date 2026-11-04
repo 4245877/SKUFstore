@@ -14,11 +14,14 @@ Next 15, React 19 и все runtime-зависимости storefront не ме�
 лимит компиляции patterns реальным parser dependency и сохранение correctness
 lint-правил/TS/JSX/CommonJS. Ни один audit exception/ignore не добавлен.
 
-Полный штатный isolated CI будет проверять точный commit, включая frozen install,
-audit, lint, TypeScript, все тесты и статический export/SEO/XML на синтетическом
-каталоге. Отдельно нужен live-catalog Pages build перед публикацией.
-Результат CI будет записан после завершения; этот документ не утверждает его
-успех заранее. Production и ручной workflow не меняются этим коммитом.
+Полный неизменённый isolated CI на
+`6471ba861198c369b02dadc7d6972c6b198eadcd`: **SUCCESS**. Frozen install,
+обязательный audit 0, lint, TypeScript, **198 passed, 0 failed/skipped**,
+Next build и статический export/SEO/XML на синтетическом каталоге прошли.
+cleanupErrors=[], remainingCiContainers={}, productionContainerStateUnchanged=true.
+Source fingerprint: `2aeece6ccb5561e28b819c16ac1d38d82c4686dd1e7901c5aea836674f35ee02`.
+Отдельно нужен live-catalog Pages build после обновления API перед публикацией.
+Production и ручной workflow не меняются этим коммитом.
 
 Источники: [advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249),
 [ESLint 10 migration](https://eslint.org/docs/latest/use/migrate-to-10.0.0),
