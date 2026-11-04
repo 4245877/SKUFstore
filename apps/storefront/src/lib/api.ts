@@ -816,6 +816,8 @@ function normalizeVariants(value: unknown): CatalogProductVariant[] {
 }
 
 export type CatalogProductDetail = LocalizedCatalogFields & {
+  heightMm?: number | null;
+  material?: string | null;
   id: string;
   pricing: ProductPricing;
   title: string;

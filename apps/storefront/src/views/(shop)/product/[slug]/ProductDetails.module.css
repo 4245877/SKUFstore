@@ -996,3 +996,47 @@
     height: var(--hit-min);
   }
 }
+
+/* Purchase facts use the existing palette and remain beside the configuration. */
+.purchaseInfo {
+  margin: 16px 0 22px;
+  padding: 16px 18px 0;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-alt);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.purchaseTitle {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+}
+.purchaseFacts { margin: 0; display: grid; gap: 9px; }
+.purchaseFact { display: grid; grid-template-columns: 105px minmax(0, 1fr); gap: 12px; font-size: 13px; line-height: 1.5; }
+.purchaseFact dt { color: var(--text-muted); }
+.purchaseFact dd { margin: 0; color: var(--text-secondary); white-space: pre-line; }
+.purchaseFact:first-child dd { color: var(--ink); font-weight: 600; }
+.purchasePhotoNote { margin: 12px 0 0; padding-left: 10px; border-left: 2px solid var(--rose); font-size: 12px; line-height: 1.6; color: var(--text-secondary); }
+.purchaseFooter { display: flex; flex-wrap: wrap; gap: 0 16px; align-items: start; margin-top: 10px; border-top: 1px solid var(--border-soft); }
+.purchaseLinks { display: flex; flex-wrap: wrap; gap: 0 18px; }
+.purchaseLinks a { display: inline-flex; align-items: center; min-height: 44px; font-size: 12px; color: var(--deep-rose); text-decoration: underline; text-underline-offset: 3px; }
+.inquiry { flex: 1 1 auto; min-width: 0; }
+.inquiry[open] { flex-basis: 100%; }
+.inquiry summary { padding: 13px 0; min-height: 44px; font-size: 14px; color: var(--deep-rose); cursor: pointer; }
+.inquiryBody { display: grid; gap: 8px; padding: 0 0 16px; }
+.inquiryBody label { font-size: 12px; color: var(--text-secondary); }
+.inquiryBody textarea { width: 100%; min-width: 0; box-sizing: border-box; resize: vertical; padding: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; line-height: 1.5; border-radius: 2px; }
+.inquiryActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.inquiryActions a, .inquiryActions button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 2px; font: inherit; font-size: 12px; line-height: 1.5; color: var(--deep-rose); background: var(--surface); cursor: pointer; text-align: center; }
+.inquiryBody p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--text-secondary); }
+.inquiryBody p:empty { display: none; }
+.purchaseInfo :is(a, button, summary, textarea):focus-visible { outline: 2px solid var(--deep-rose); outline-offset: 3px; }
+@media (max-width: 480px) {
+  .purchaseInfo { padding: 14px 12px 0; }
+  .purchaseFact { grid-template-columns: minmax(0, 1fr); gap: 1px; }
+  .inquiryActions > * { flex: 1 1 100%; }
+  .variantCard { flex-wrap: wrap; }
+  .variantRight { margin-left: auto; }
+}

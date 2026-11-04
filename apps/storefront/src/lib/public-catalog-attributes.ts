@@ -8,6 +8,19 @@ export function publicCatalogAttributes(input: unknown): Record<string, unknown>
     const value = source[key];
     if (['string', 'number', 'boolean'].includes(typeof value)) result[key] = value;
   }
+  if (source.purchaseInfo && typeof source.purchaseInfo === 'object' && !Array.isArray(source.purchaseInfo)) {
+    const info = source.purchaseInfo as Record<string, unknown>;
+    const purchaseInfo: Record<string, string> = {};
+    if (typeof info.assembly === 'string' && ['UNASSEMBLED', 'ASSEMBLED', 'BY_AGREEMENT'].includes(info.assembly)) {
+      purchaseInfo.assembly = info.assembly;
+    }
+    for (const key of ['contentsUk', 'contentsEn']) {
+      if (typeof info[key] === 'string' && info[key].trim() && info[key].trim().length <= 600) {
+        purchaseInfo[key] = info[key].trim();
+      }
+    }
+    if (Object.keys(purchaseInfo).length) result.purchaseInfo = purchaseInfo;
+  }
   if (source.merchant && typeof source.merchant === 'object' && !Array.isArray(source.merchant)) {
     const merchant: Record<string, unknown> = {};
     for (const key of ['enabled', 'content', 'defaultColorSlug', 'imageVariantId', 'imageStorageKey',

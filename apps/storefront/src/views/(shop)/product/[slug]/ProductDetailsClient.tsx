@@ -3,7 +3,9 @@
 import { configurationPrice, defaultProductColorSlug, verifiedOfferImages } from '../../../../lib/merchant-settings';
 import { refreshColorStock } from '../../../../lib/resin-colors';
 
-import { formatDayCount } from '../../../../i18n/presentation';
+import { productSize, productionTime } from '../../../../lib/product-purchase';
+import { restoreProductSelection } from '../../../../lib/product-selection';
+import ProductPurchaseInfo from './ProductPurchaseInfo';
 import { useI18n } from '../../../../i18n/client';
 import { getSourceProductPresentation } from '../../../../i18n/catalog-policy';
 import type { Translator } from '../../../../i18n/translate';
@@ -34,7 +36,7 @@ import {
   resolveSelectedColor,
 } from '../../../../lib/resin-colors';
 import { cartLineKey } from '../../../../lib/cart-lines';
-import { buildProductGalleryImages as buildGalleryImages, pickDefaultProductVariant, getProductAvailabilityDate } from '../../../../lib/product-offer';
+import { buildProductGalleryImages as buildGalleryImages, pickDefaultProductVariant } from '../../../../lib/product-offer';
 import { buildAgeVerifyPath, isAgeVerifiedClient } from '../../../../lib/age-gate';
 import { IconBag, IconBow, IconHeart, IconShare } from '../../../../components/icons';
 import styles from './ProductDetails.module.css';
@@ -311,6 +313,7 @@ function VariantSelector({
               className={`${styles.variantCard} ${isSelected ? styles.variantCardSelected : ''}`}
               onClick={() => onSelect(v)}
               aria-pressed={isSelected}
+              disabled={v.isActive === false}
             >
               <div className={styles.variantSelector}>
                 <div className={styles.variantSelectorDot} />
@@ -386,11 +389,9 @@ function FinishSelector({
 
               <div className={styles.variantLeft}>
                 <span className={styles.variantName}>{item.label}</span>
-                <span className={styles.variantMeta}>
-                  {isDisabled
-                    ? item.disabledNote ?? t('shop.temporarilyUnavailable')
-                    : t('shop.dispatchTimeOnProduct')}
-                </span>
+                {isDisabled ? <span className={styles.variantMeta}>
+                  {item.disabledNote ?? t('shop.temporarilyUnavailable')}
+                </span> : null}
               </div>
 
               <div className={styles.variantRight}>
@@ -427,7 +428,7 @@ function ColorSelector({
 
   return (
     <div className={styles.variantsSection}>
-      <h2 className={styles.variantsTitle}>{t('shop.color')}</h2>
+      <h2 className={styles.variantsTitle}>{t('purchase.materialColor')}</h2>
 
       <div className={styles.variantsList}>
         {colors.map((item) => {
@@ -598,6 +599,7 @@ function TabPanel({
     'releaseDate',
     'ageRating',
     'merchant',
+    'purchaseInfo',
   ]);
 
   const extraSpecs = Object.entries(product.attributes ?? {})
@@ -625,7 +627,7 @@ function TabPanel({
       ? { key: t('shop.color'), value: colorLabelWithStock(selectedColor, t('color.madeToOrder')) }
       : null,
     product.material ? { key: t('shop.material'), value: product.material } : null,
-    product.heightMm != null ? { key: t('shop.height'), value: t('shop.valueMm', { value1: product.heightMm }) } : null,
+    productSize(product, selectedVariant, t) ? { key: t('purchase.size'), value: productSize(product, selectedVariant, t) } : null,
     product.countryOfOrigin
       ? { key: t('shop.countryOfOrigin'), value: product.countryOfOrigin }
       : null,
@@ -724,7 +726,7 @@ function TabPanel({
               )}
 
               <div className={styles.specsRow}>
-                <span className={styles.specsKey}>{t('shop.estimatedDispatch')}</span>
+                <span className={styles.specsKey}>{t('purchase.production')}</span>
                 <span className={styles.specsValue}>{estimatedShippingLabel}</span>
               </div>
 
@@ -748,6 +750,8 @@ function TabPanel({
                 Держим одной строкой, без баннеров: подробности — на /returns. */}
             <p className={styles.descriptionText}>
               {t('shop.madeToOrderNotice')} {t('shop.returnsNotAvailableShort')} </p>
+
+            <p className={styles.descriptionText}>{t('purchase.dispatchNote')}</p>
 
             <p className={styles.descriptionText}>
               {t('shop.seeFullDetailsOnOur')}{' '}
@@ -809,11 +813,6 @@ function ProductInfo({
     configurationPrice(basePrice, finishOption.priceDelta +
       (selectedFinish === 'MONO' ? selectedColorPriceDelta : 0));
 
-  const estimatedShippingLabel = selectedVariant?.leadTimeDays != null
-    ? t('shop.withinValue', { value1: formatDayCount(t, locale, selectedVariant.leadTimeDays) })
-    : t('shop.dispatchTimeUnconfirmed');
-  const dispatchDate = selectedVariant && ['PREORDER', 'BACKORDER'].includes(product.saleType)
-    ? getProductAvailabilityDate(product, selectedVariant) : undefined;
   const maxQty = 99;
 
   useEffect(() => {
@@ -876,7 +875,7 @@ function ProductInfo({
       return;
     }
 
-    if (!selectedVariant || selectedFinish !== 'MONO' || !selectedColor) return;
+    if (!selectedVariant || selectedVariant.isActive === false || selectedFinish !== 'MONO' || !selectedColor) return;
 
     const safeQuantity = Math.max(1, Math.min(quantity, maxQty));
     const sourceProduct = getSourceProductPresentation(product);
@@ -993,15 +992,7 @@ function ProductInfo({
         <span className={styles.priceMain}>{formatMoney(finalPrice, displayCurrency)}</span>
       </div>
 
-      <p className={styles.shippingNote}>
-        {t('shop.estimatedDispatch_1105')} {dispatchDate
-          ? <time dateTime={dispatchDate}>{formatDate(dispatchDate, locale)}</time>
-          : estimatedShippingLabel}
-      </p>
-
-      {selectedMeta ? (
-        <p className={styles.selectedMetaNote}>{selectedMeta}</p>
-      ) : null}
+      <ProductPurchaseInfo product={product} variant={selectedVariant} finish={selectedFinish} color={selectedColor} />
 
       {product.shortDescription ? (
         <p className={styles.shortDesc}>{product.shortDescription}</p>
@@ -1036,7 +1027,7 @@ function ProductInfo({
         <button
           type="button"
           className={styles.btnPrimary}
-          disabled={!selectedVariant || selectedFinish !== 'MONO' || !selectedColor}
+          disabled={!selectedVariant || selectedVariant.isActive === false || selectedFinish !== 'MONO' || !selectedColor}
           onClick={handleAddToCart}
         >
           {product.isAdult && !isAgeVerified ? (
@@ -1090,7 +1081,7 @@ export default function ProductDetailsClient({
   const { locale, t, path } = useI18n();
 
   const defaultVariant =
-    pickDefaultProductVariant(product);
+    pickDefaultProductVariant({ ...product, variants: product.variants.filter(v => v.isActive !== false) });
 
   const buildResinColors = initialResinColors ?? FALLBACK_RESIN_COLORS;
 
@@ -1108,6 +1099,30 @@ export default function ProductDetailsClient({
     userPickedColorRef.current = true;
     setSelectedColorSlug(slug);
   }
+
+  const [selectionRestored, setSelectionRestored] = useState(false);
+  useEffect(() => {
+    try {
+      const selection = restoreProductSelection(sessionStorage.getItem(`skufnya:product:${product.id}`),
+        product.variants, buildResinColors);
+      if (selection) {
+        setSelectedVariant(product.variants.find(v => v.id === selection.variantId) ?? defaultVariant);
+        setSelectedFinish(selection.finish);
+        setSelectedColorSlug(selection.colorSlug);
+        userPickedColorRef.current = true;
+      }
+    } catch { /* Storage can be unavailable; the build default still works. */ }
+    setSelectionRestored(true);
+  }, [product.id]);
+
+  useEffect(() => {
+    if (!selectionRestored || !selectedVariant) return;
+    try {
+      sessionStorage.setItem(`skufnya:product:${product.id}`, JSON.stringify({
+        variantId: selectedVariant.id, finish: selectedFinish, colorSlug: selectedColorSlug,
+      }));
+    } catch { /* The purchase flow does not depend on browser storage. */ }
+  }, [selectionRestored, product.id, selectedVariant, selectedFinish, selectedColorSlug]);
 
   const router = useRouter();
 
@@ -1191,9 +1206,7 @@ export default function ProductDetailsClient({
 
   const finishOption =
     FINISHES(t).find((item) => item.code === selectedFinish) ?? FINISHES(t)[0];
-  const estimatedShippingLabel = selectedVariant?.leadTimeDays != null
-    ? t('shop.withinValue', { value1: formatDayCount(t, locale, selectedVariant.leadTimeDays) })
-    : t('shop.dispatchTimeUnconfirmed');
+  const estimatedShippingLabel = productionTime(selectedVariant, t, locale);
 
   return (
     <main className={styles.page}>
