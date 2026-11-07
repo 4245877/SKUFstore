@@ -12,6 +12,7 @@ import {
   IconTiktok,
   IconViber,
 } from '../icons';
+import { SHOP_TELEGRAM_CHANNEL_URL, SHOP_TELEGRAM_URL, SHOP_VIBER_URL } from '../../lib/shop-contacts';
 import styles from './Footer.module.css';
 
 export default function Footer({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
@@ -50,9 +51,9 @@ export default function Footer({ locale = DEFAULT_LOCALE }: { locale?: Locale })
   };
 
   const socials = [
-    { href: 'https://t.me/SKUFnya_ua', label: 'Telegram', icon: IconTelegram },
-    { href: 'https://t.me/+l3_CI64EkuxlZmYy', label: t('footer.telegramLabel'), icon: IconTelegram },
-    { href: 'viber://chat?number=%2B380938213102', label: 'Viber', icon: IconViber },
+    { href: SHOP_TELEGRAM_URL, label: 'Telegram', icon: IconTelegram },
+    { href: SHOP_TELEGRAM_CHANNEL_URL, label: t('footer.telegramLabel'), icon: IconTelegram },
+    { href: SHOP_VIBER_URL, label: 'Viber', icon: IconViber },
     { href: 'https://www.instagram.com/skufnya_ua', label: 'Instagram', icon: IconInstagram },
     { href: 'https://www.tiktok.com/@skuf_nya', label: 'TikTok', icon: IconTiktok },
     { href: 'mailto:skufnya@gmail.com', label: 'Email', icon: IconMail },
@@ -98,7 +99,7 @@ export default function Footer({ locale = DEFAULT_LOCALE }: { locale?: Locale })
             </a>
 
             <a
-              href="viber://chat?number=%2B380938213102"
+              href={SHOP_VIBER_URL}
               className={styles.contactItem}
               aria-label={t('footer.viber')}
             >
@@ -109,7 +110,7 @@ export default function Footer({ locale = DEFAULT_LOCALE }: { locale?: Locale })
             </a>
 
             <a
-              href="https://t.me/SKUFnya_ua"
+              href={SHOP_TELEGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
               className={styles.contactItem}
@@ -121,7 +122,7 @@ export default function Footer({ locale = DEFAULT_LOCALE }: { locale?: Locale })
             </a>
 
             <a
-              href="https://t.me/+l3_CI64EkuxlZmYy"
+              href={SHOP_TELEGRAM_CHANNEL_URL}
               target="_blank"
               rel="noopener noreferrer"
               className={styles.contactItem}

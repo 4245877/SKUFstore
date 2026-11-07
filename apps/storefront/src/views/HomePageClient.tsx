@@ -3,6 +3,7 @@
 import { countNoun } from '../i18n/presentation';
 import type { PublishedLocale } from '../i18n/locales';
 import { resolveProductPresentation } from '../i18n/catalog-policy';
+import { SHOP_TELEGRAM_CHANNEL_URL } from '../lib/shop-contacts';
 import { useI18n } from '../i18n/client';
 import type { Translator } from '../i18n/translate';
 import Link from '../i18n/navigation'
@@ -591,7 +592,7 @@ export default function HomePageClient() {
             {t('home.weShareReleasesPreordersAndDiscountsOn')} </p>
 
           <Link
-            href="https://t.me/+l3_CI64EkuxlZmYy"
+            href={SHOP_TELEGRAM_CHANNEL_URL}
             target="_blank"
             rel="noopener noreferrer"
             className={s.newsletterCta}

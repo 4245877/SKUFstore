@@ -10,6 +10,7 @@ import {
   IconTiktok,
   IconViber,
 } from '../../../components/icons';
+import { SHOP_TELEGRAM_CHANNEL_URL, SHOP_TELEGRAM_URL, SHOP_VIBER_URL } from '../../../lib/shop-contacts';
 import styles from './ContactsPage.module.css';
 
 /* ─── Дані ─────────────────────────────────────────── */
@@ -47,21 +48,21 @@ const CONTACTS = (t: Translator) => ([
     title: 'Telegram',
     text: t('content.theQuickestWayToAskAboutOrders'),
     label: '@SKUFnya_ua',
-    href: 'https://t.me/SKUFnya_ua',
+    href: SHOP_TELEGRAM_URL,
   },
   {
     icon: IconMegaphone,
     title: t('content.telegramChannel'),
     text: t('content.announcementsNewArrivalsCatalogUpdatesAndImportant'),
     label: t('content.visitChannel'),
-    href: 'https://t.me/+l3_CI64EkuxlZmYy',
+    href: SHOP_TELEGRAM_CHANNEL_URL,
   },
   {
     icon: IconViber,
     title: 'Viber',
     text: t('content.contactUsOnViberForQuickQuestions'),
     label: '+380 93 821 31 02',
-    href: 'tel:+380938213102',
+    href: SHOP_VIBER_URL,
   },
   {
     icon: IconInstagram,
@@ -111,6 +112,8 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export default function ContactsPage() {
   const { locale, t, path } = useI18n();
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [phoneCopyFailed, setPhoneCopyFailed] = useState(false);
 
   return (
     <>
@@ -147,7 +150,7 @@ export default function ContactsPage() {
                 <p className={styles.contactIntroText}>
                   {t('content.forQuickQuestionsAboutOrdersAvailabilityDelivery')} </p>
                 <a
-                  href="https://t.me/SKUFnya_ua"
+                  href={SHOP_TELEGRAM_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.contactIntroLink}
@@ -160,7 +163,7 @@ export default function ContactsPage() {
                 <p className={styles.contactIntroText}>
                   {t('content.followOurTelegramChannelForNewArrivals')} </p>
                 <a
-                  href="https://t.me/+l3_CI64EkuxlZmYy"
+                  href={SHOP_TELEGRAM_CHANNEL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.contactIntroLink}
@@ -172,10 +175,19 @@ export default function ContactsPage() {
               <div className={styles.contactIntroItem}>
                 <p className={styles.contactIntroText}>
                   {t('content.youCanAlsoReachUsOnViber')} </p>
-                <a href="tel:+380938213102" className={styles.contactIntroLink}>
-                  +380 93 821 31 02
+                <a href={SHOP_VIBER_URL} className={styles.contactIntroLink}>
+                  {t('contacts.writeViber')}
                   <span className={styles.contactIntroLinkArrow} aria-hidden="true">→</span>
                 </a>
+                <p>+380 93 821 31 02</p>
+                <a href="tel:+380938213102" className={styles.contactIntroLink}>{t('contacts.call')}</a>
+                <button type="button" className={styles.contactIntroLink} onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText('+380938213102');
+                    setCopiedPhone(true); setPhoneCopyFailed(false);
+                  } catch { setPhoneCopyFailed(true); setCopiedPhone(false); }
+                }}>{t('contacts.copyNumber')}</button>
+                <p role="status">{phoneCopyFailed ? t('contacts.copyManually') : copiedPhone ? t('contacts.numberCopied') : ''}</p>
               </div>
 
               <div className={styles.contactIntroItem}>
