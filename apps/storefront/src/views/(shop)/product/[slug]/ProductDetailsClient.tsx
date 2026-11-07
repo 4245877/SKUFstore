@@ -324,7 +324,7 @@ function VariantSelector({
                 {cover ? (
                   <img
                     src={resolveMediaUrl(cover.url) || ''}
-                    alt={cover.alt || v.name}
+                    alt={cover.alt || variantDisplayName(v, t)}
                     loading="lazy"
                     decoding="async"
                     className={styles.variantThumbImg}
