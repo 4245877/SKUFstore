@@ -121,7 +121,8 @@ function CheckoutSuccessContent() {
       ? lastOrder
       : null;
 
-  const hasOrderReference = Boolean(order || hasQueryReference);
+  // A URL parameter alone is not evidence that the API accepted an order.
+  const hasOrderReference = Boolean(order);
 
   if (!hasOrderReference) {
     return (
