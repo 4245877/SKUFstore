@@ -574,6 +574,7 @@ export default function Header({ locale = DEFAULT_LOCALE, isNotFound = false }: 
         id="mobile-nav"
         className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ''}`}
         aria-hidden={!mobileOpen}
+        inert={!mobileOpen}
         role="dialog"
         aria-modal="true"
         aria-label={t('header.mobileNavigation')}

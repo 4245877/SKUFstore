@@ -675,6 +675,7 @@
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
+  visibility: hidden;
   transition: transform 0.38s var(--ease-out-expo);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -682,6 +683,7 @@
 }
 
 .mobileNavOpen {
+  visibility: visible;
   transform: translateX(0);
 }
 

@@ -69,7 +69,7 @@ function CategoryLinks({
 
     <ul className={styles.listReset}>
 
-      {items.map((item) => {
+      {items.filter(item => item.productCount !== 0).map((item) => {
 
         const isActive = item.slug === currentCategorySlug;
 
