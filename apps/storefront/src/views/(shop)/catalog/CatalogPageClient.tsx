@@ -813,6 +813,20 @@ export default function CatalogPageClient() {
         className={styles.drawer}
         aria-modal="true"
         aria-label={t('shop.catalogFilters')}
+        onKeyDown={(event) => {
+          if (event.key !== 'Tab') return;
+          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+            'a[href], button, input:not([type="hidden"]), select, textarea, [tabindex]',
+          )).filter(node => node.tabIndex >= 0 && !node.matches(':disabled') && node.getClientRects().length > 0);
+          const first = controls[0], last = controls.at(-1);
+          // Native modal focus can reach browser chrome at a boundary. Cycle
+          // explicitly so keyboard navigation remains inside the active filters.
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault(); last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault(); first?.focus();
+          }
+        }}
         onCancel={(event) => { event.preventDefault(); setMobileFiltersOpen(false); }}
         onClose={() => {
           setMobileFiltersOpen(false);
