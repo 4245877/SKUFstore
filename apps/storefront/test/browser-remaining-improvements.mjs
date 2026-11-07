@@ -22,8 +22,9 @@ const seed = { id: JSON.stringify([variant.id, 'MONO', color.slug]), variantId: 
   finish: 'MONO', colorSlug: color.slug, slug: product.slug, name: product.title,
   price: variant.price + color.priceDelta, quantity: 1, currency: 'UAH', subtitle: 'Default' };
 const browserType = process.env.SMOKE_BROWSER === 'firefox' ? firefox : chromium;
-const browser = await browserType.launch({ headless: true, args: browserType === chromium ? ['--no-sandbox'] : [] });
+const browser = await browserType.launch({ headless: true, executablePath: process.env.SMOKE_EXECUTABLE, args: browserType === chromium ? ['--no-sandbox'] : [] });
 const checks = [];
+const record = message => { checks.push(message); console.log(`[PASS] ${message}`); };
 try {
  for (const locale of ['uk', 'en']) {
   const t = getTranslator(locale), prefix = locale === 'en' ? '/en' : '';
@@ -121,7 +122,7 @@ try {
   await go('/catalog/?categorySlug=synthetic-empty');
   assert.ok(page.url().includes('categorySlug=synthetic-empty'));
   assert.ok((await page.locator('main').innerText()).includes(t('shop.noResultsFound')));
-  checks.push(`${locale}: filter initial/contained/returned focus, inert background, Escape, backdrop, breakpoint; empty-category deep link`);
+  record(`${locale}: filter initial/contained/returned focus, inert background, Escape, backdrop, breakpoint; empty-category deep link`);
   for (const kind of ['network', 'server', 'products', 'timeout']) {
     catalogFailure = kind;
     await go('/catalog/');
@@ -135,7 +136,7 @@ try {
   catalogFailure = 'network'; await go('/'); await assistance().first().waitFor(); await managerLinks();
   catalogFailure = ''; await page.getByRole('button', { name: t('catalog.failure.retry'), exact: true }).first().click();
   await page.getByRole('link', { name: product.title, exact: true }).first().waitFor();
-  checks.push(`${locale}: home/catalog network, 5xx, products error, timeout, manual retry and recovery`);
+  record(`${locale}: home/catalog network, 5xx, products error, timeout, manual retry and recovery`);
   await page.evaluate(seed => localStorage.setItem('skufnya:cart', JSON.stringify([seed])), seed);
   for (const kind of ['network', 'server', 'timeout']) {
     quoteFailure = kind; await go('/cart/');
@@ -172,7 +173,7 @@ try {
   await page.getByText('SYNTHETIC-ONLY', { exact: true }).waitFor();
   assert.equal(orderKeys[0], orderKeys[2]);
   assert.equal(await page.evaluate(() => localStorage.getItem('skufnya:cart')), null);
-  checks.push(`${locale}: quote failures/retry, saved cart/draft, blocked submit, order failure without false success, idempotent retry after reload, mocked 201 SPA success`);
+  record(`${locale}: quote failures/retry, saved cart/draft, blocked submit, order failure without false success, idempotent retry after reload, mocked 201 SPA success`);
   for (const width of [320, 390, 430, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 }); await noOverflow(`success ${width}`);
     if (width <= 768) {
@@ -204,7 +205,7 @@ try {
   await page.getByRole('button', { name: t('contacts.copyNumber') }).click();
   assert.ok((await page.getByRole('status').allTextContents()).some(text => text.includes(t('contacts.copyManually'))));
   for (const link of await page.locator('a[href="https://t.me/skufnya_shop"]').all()) { await link.focus(); assert.equal(await link.evaluate(node => document.activeElement === node), true); }
-  checks.push(`${locale}: 320/390/430/768/1440 layouts, closed mobile nav after SPA, unverified success URL, channel/support separation, keyboard links, Viber/call/copy success/failure`);
+  record(`${locale}: 320/390/430/768/1440 layouts, closed mobile nav after SPA, unverified success URL, channel/support separation, keyboard links, Viber/call/copy success/failure`);
   assert.deepEqual(errors, []); assert.deepEqual(unexpected, []);
   await context.close();
  }
