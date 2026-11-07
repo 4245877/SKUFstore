@@ -1,5 +1,6 @@
 'use client';
 
+import { variantDisplayName } from '../../../../lib/variant-presentation';
 import { useRef, useState } from 'react';
 import { formatLocaleDate } from '../../../../i18n/presentation';
 import { getProductAvailabilityDate } from '../../../../lib/product-offer';
@@ -26,7 +27,7 @@ export default function ProductPurchaseInfo({ product, variant, finish, color }:
   const finishLabel = finishDescription(finish, t);
   const context = {
     title: product.title, url: buildProductUrl(product.slug, locale),
-    variant: variant ? [variant.name, variant.outfitLabel, variant.faceLabel].filter(Boolean).join(' · ') : null,
+    variant: variant ? [variantDisplayName(variant, t), ...((variant.name?.trim().toLowerCase() === 'default') ? [] : [variant.outfitLabel, variant.faceLabel])].filter(Boolean).join(' · ') : null,
     size, color: finish === 'MONO' ? color?.name ?? null : null, finish: finishLabel,
   };
   const message = buildProductInquiry(context, t, question);

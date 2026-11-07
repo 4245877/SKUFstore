@@ -6,6 +6,7 @@ import { refreshColorStock } from '../../../../lib/resin-colors';
 import { productSize, productionTime } from '../../../../lib/product-purchase';
 import { restoreProductSelection } from '../../../../lib/product-selection';
 import ProductPurchaseInfo from './ProductPurchaseInfo';
+import { variantDisplayName } from '../../../../lib/variant-presentation';
 import { useI18n } from '../../../../i18n/client';
 import { getSourceProductPresentation } from '../../../../i18n/catalog-policy';
 import type { Translator } from '../../../../i18n/translate';
@@ -334,7 +335,7 @@ function VariantSelector({
               </div>
 
               <div className={styles.variantLeft}>
-                <span className={styles.variantName}>{v.name}</span>
+                <span className={styles.variantName}>{variantDisplayName(v, t)}</span>
 
                 {variantMeta ? (
                   <span className={styles.variantMeta}>{variantMeta}</span>
@@ -880,7 +881,7 @@ function ProductInfo({
     const safeQuantity = Math.max(1, Math.min(quantity, maxQty));
     const sourceProduct = getSourceProductPresentation(product);
     const cartTitle = selectedVariant
-      ? `${sourceProduct.title} — ${selectedVariant.name}`
+      ? `${sourceProduct.title} — ${variantDisplayName(selectedVariant, t)}`
       : sourceProduct.title;
 
     const coverImage =
@@ -1214,7 +1215,7 @@ export default function ProductDetailsClient({
         <div className={styles.productGrid}>
           <Gallery
             images={galleryImages}
-            title={selectedVariant?.name || product.title}
+            title={selectedVariant ? variantDisplayName(selectedVariant, t) : product.title}
             isAdult={product.isAdult}
             isAgeVerified={isAgeVerified}
             verifyHref={verifyHref}
