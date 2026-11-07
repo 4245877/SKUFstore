@@ -1,0 +1,30 @@
+.assistance {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 8px;
+}
+.actions a, .actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  color: var(--mauve);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.actions svg { flex-shrink: 0; }
+.actions a:focus-visible, .actions button:focus-visible {
+  outline: 2px solid var(--mauve);
+  outline-offset: 3px;
+}
