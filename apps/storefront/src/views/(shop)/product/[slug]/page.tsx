@@ -183,6 +183,7 @@ export async function ProductPage({
           }}
         />
         <ProductDetailsClient
+          key={product.id}
           product={product}
           initialResinColors={resinColors}
         />
