@@ -346,7 +346,7 @@ try {
   await page.getByPlaceholder(t('shop.forExampleArrangeWithTheStore')).fill('Узгодити з менеджером');
   await page.locator('input[name="paymentMethod"][value="full-prepayment"]').check();
   await settleNetwork();
-  const draftBeforeSwitch = await page.evaluate(() => sessionStorage.getItem('skufnya:checkout-draft'));
+  const draftBeforeSwitch = await page.evaluate(() => JSON.parse(sessionStorage.getItem('skufnya:checkout-draft')));
   assert.ok(draftBeforeSwitch, 'The shared checkout draft exists before document navigation');
   const quoteCallsBeforeSwitch = quoteCalls.length;
   for (const nextLocale of [target, routeLocale]) {
@@ -363,7 +363,9 @@ try {
     assert.equal(await page.getByPlaceholder('+380 00 000 00 00').inputValue(), '+380501112233');
     assert.equal(await page.getByPlaceholder(nextT('shop.kyiv')).inputValue(), 'Київ');
     assert.equal(await page.getByPlaceholder(nextT('shop.forExampleArrangeWithTheStore')).inputValue(), 'Узгодити з менеджером');
-    assert.equal(await page.evaluate(() => sessionStorage.getItem('skufnya:checkout-draft')), draftBeforeSwitch);
+    const { expiresAt, ...storedDraft } = await page.evaluate(() => JSON.parse(sessionStorage.getItem('skufnya:checkout-draft')));
+    assert.deepEqual(storedDraft, { version: draftBeforeSwitch.version, form: draftBeforeSwitch.form });
+    assert.ok(expiresAt > Date.now() && expiresAt <= Date.now() + 30 * 60 * 1000, 'The restored draft must still expire');
   }
   assert.ok(quoteCalls.length > quoteCallsBeforeSwitch);
   assert.ok(quoteCalls.slice(quoteCallsBeforeSwitch).every(call => call.deliveryMethod === 'pickup'), 'Locale remount must never quote the default delivery method');
@@ -386,7 +388,10 @@ try {
   assert.equal(createCalls[1].quoteToken, 'd'.repeat(64), 'Reviewed retry must use the refreshed quote token');
   assert.notEqual(createCalls[0].quoteToken, createCalls[1].quoteToken);
   assert.deepEqual(createCalls[0].items, createCalls[1].items);
-  const order = await page.evaluate(() => JSON.parse(localStorage.getItem('skufnya:last-order')));
+  const lastOrder = await page.evaluate(() => JSON.parse(sessionStorage.getItem('skufnya:last-order')));
+  assert.ok(lastOrder?.expiresAt > Date.now() && lastOrder.expiresAt <= Date.now() + 30 * 60 * 1000);
+  assert.equal(await page.evaluate(() => localStorage.getItem('skufnya:last-order')), null);
+  const order = lastOrder.data;
   assert.equal(order.items.length, 2);
   assert.equal(order.items[0].variantId, selected.id);
   assert.equal(order.total, price(createCalls[1]).total);
