@@ -377,7 +377,7 @@ try {
   await capture('checkout');
   const confirm = page.getByRole('button', { name: t('shop.confirmOrder') });
   await confirm.click();
-  await page.getByText(t('errors.quoteChanged'), { exact: true }).waitFor();
+  await page.getByRole('alert').filter({ hasText: t('errors.quoteChanged') }).waitFor();
   assert.equal(createCalls.length, 1);
   assert.equal(createCalls[0].quoteToken, 'c'.repeat(64), 'First submit uses the reviewed pickup quote token');
   assert.ok(await page.evaluate(() => !!localStorage.getItem('skufnya:cart')));
