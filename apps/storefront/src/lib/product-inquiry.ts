@@ -1,6 +1,7 @@
 import type { Translator } from '../i18n/translate';
 
-export const SHOP_TELEGRAM_URL = 'https://t.me/SKUFnya_ua';
+import { SHOP_TELEGRAM_URL } from './shop-contacts.ts';
+export { SHOP_TELEGRAM_URL } from './shop-contacts.ts';
 
 export function buildProductInquiry(context: {
   title: string; url: string; variant: string | null; size: string | null;

@@ -1,6 +1,17 @@
 import type { Dictionary } from '../translate';
 import { uiEn } from './ui-en.ts';
 export const en = {
+  "assistance.catalog": "Need help choosing a figure or placing an order? Contact our manager.",
+  "assistance.quote": "We can’t check current prices and delivery right now. Your selected items remain in your cart. Try again or contact our manager.",
+  "assistance.submit": "We haven’t received confirmation of your order. Your cart is saved. Try again or ask our manager whether the order came through.",
+  "assistance.manager": "Message our manager",
+  "shop.standardVariant": "Standard option",
+  "contacts.writeViber": "Message us on Viber",
+  "contacts.call": "Call us",
+  "contacts.copyNumber": "Copy phone number",
+  "contacts.numberCopied": "Phone number copied",
+  "contacts.copyManually": "Couldn’t copy. Select and copy the phone number above.",
+
   "purchase.details": "Order details",
   "purchase.detailsUnknown": "Assembly and package contents agreed before payment",
   "purchase.title": "Your selection",

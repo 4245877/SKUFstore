@@ -735,35 +735,25 @@
   color: var(--mauve);
 }
 /* Drawer */
-.drawerOverlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--overlay-dark, rgba(30,20,22,0.45));
-  z-index: 400;
-  backdrop-filter: blur(2px);
-  animation: fadeIn 0.2s ease both;
-}
-.drawerOverlayOpen {
-  display: block;
-}
 .drawer {
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
+  inset: 0 auto 0 0;
+  margin: 0;
   width: min(300px, 85vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
   background: var(--surface);
-  z-index: 401;
+  color: inherit;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 24px 0 40px;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  transform: translateX(-100%);
-  visibility: hidden;
-  transition:
-    transform 0.32s var(--ease-out-expo),
-    visibility 0.32s var(--ease-out-expo);
+}
+.drawer::backdrop {
+  background: var(--overlay-dark, rgba(30,20,22,0.45));
+  backdrop-filter: blur(2px);
 }
 
 /* Сайдбар-фільтри всередині мобільного drawer */
@@ -772,10 +762,6 @@
   flex-direction: column;
   gap: 2px;
   padding: 0 20px;
-}
-.drawerOpen {
-  transform: translateX(0);
-  visibility: visible;
 }
 .drawerHeader {
   display: flex;

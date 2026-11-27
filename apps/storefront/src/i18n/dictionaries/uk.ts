@@ -1,6 +1,17 @@
 import { uiUk } from './ui-uk.ts';
 /** Complete contract for migrated UI. Existing copy is intentionally preserved, including legacy Russian SEO. */
 export const uk = {
+  "assistance.catalog": "Потрібна допомога з вибором або замовленням? Напишіть менеджеру.",
+  "assistance.quote": "Зараз не вдається перевірити актуальні ціни й доставку. Вибрані товари залишаються у кошику. Спробуйте ще раз або зверніться до менеджера.",
+  "assistance.submit": "Підтвердження замовлення не отримано. Кошик збережено. Повторіть спробу або уточніть у менеджера, чи надійшло замовлення.",
+  "assistance.manager": "Написати менеджеру",
+  "shop.standardVariant": "Стандартний варіант",
+  "contacts.writeViber": "Написати у Viber",
+  "contacts.call": "Зателефонувати",
+  "contacts.copyNumber": "Скопіювати номер",
+  "contacts.numberCopied": "Номер скопійовано",
+  "contacts.copyManually": "Не вдалося скопіювати. Виділіть і скопіюйте номер вище.",
+
   "purchase.details": "Деталі замовлення",
   "purchase.detailsUnknown": "Складання та комплектацію погодимо перед оплатою",
   "purchase.title": "Ваш вибір",

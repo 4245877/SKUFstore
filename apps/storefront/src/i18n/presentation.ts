@@ -1,3 +1,4 @@
+import { presentDefaultSubtitle } from '../lib/variant-presentation.ts';
 import type { OrderConfigurationSnapshot } from '../lib/api.ts';
 import type { CartItem } from '../lib/cart-lines.ts';
 import { LOCALE_PRESENTATION, type PublishedLocale } from './locales.ts';
@@ -63,7 +64,7 @@ export function presentConfiguration(t: Translator, snapshot?: OrderConfiguratio
 
 /** Preserve the variant/source text and replace only its explicit snapshot suffix. */
 export function presentItemSubtitle(t: Translator, subtitle?: string | null, snapshot?: OrderConfigurationSnapshot | null): string {
-  const text = subtitle ?? '';
+  const text = presentDefaultSubtitle(subtitle ?? '', t);
   if (!snapshot) return text;
   const source = [snapshot.finishLabel, snapshot.color?.name].filter(Boolean).join(' · ');
   if (!source) return text;
@@ -76,7 +77,7 @@ export function presentItemSubtitle(t: Translator, subtitle?: string | null, sna
 /** Current cart selections can precede a quote. Translate only their generated UI suffix. */
 export function presentCartItemSubtitle(t: Translator, item: Pick<CartItem, 'subtitle' | 'configurationSnapshot' | 'finish' | 'colorSlug'>): string {
   if (item.configurationSnapshot) return presentItemSubtitle(t, item.subtitle, item.configurationSnapshot);
-  const text = item.subtitle ?? '';
+  const text = presentDefaultSubtitle(item.subtitle ?? '', t);
   const key = item.finish === 'MONO' ? 'shop.monochromeVersion'
     : item.finish === 'PAINTED' ? 'shop.artisticPainting' : null;
   if (!key) return text;

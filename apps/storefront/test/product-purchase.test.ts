@@ -33,6 +33,7 @@ for (const locale of ['uk', 'en'] as const) {
     const context = { title: 'Figure & Фігурка #1', url: 'https://www.skufnya.com/product/figure/',
       variant: 'Large · Armor', size: '35 cm', color: 'Ivory', finish: finishDescription('MONO', t) };
     const draft = buildProductInquiry(context, t, 'Чи є підставка? & extra');
+    assert.ok(draft.split('\n').length >= 8, 'The Telegram draft must contain real line breaks');
     const url = new URL(productInquiryUrl(draft));
     assert.equal(url.origin + url.pathname, 'https://t.me/SKUFnya_ua');
     assert.equal(url.searchParams.get('text'), draft);

@@ -48,6 +48,7 @@ import {
 
 } from "../../../lib/demo-store";
 
+import ApiAssistance from '../../../components/catalog/ApiAssistance';
 import { useCartQuote } from "../../../lib/use-cart-quote";
 
 import { cartOrderItems, orderCartItems } from "../../../lib/cart-lines";
@@ -1021,13 +1022,14 @@ export default function CheckoutPage() {
 
               {pricing.message ? <p role="status">{pricing.message}</p> : null}
 
-              {pricing.error ? <button type="button" onClick={pricing.refresh}>{t('shop.checkAgain')}</button> : null}
+              {pricing.error ? <ApiAssistance context="quote" onRetry={pricing.refresh} /> : null}
 
               {errorMessage ? (
 
                 <div className={styles.errorBox} role="alert">
 
                   {errorMessage}
+                  <ApiAssistance context="submit" />
 
                 </div>
 

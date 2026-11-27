@@ -247,6 +247,8 @@ export default function CatalogPageClient() {
   });
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const filtersDialogRef = useRef<HTMLDialogElement>(null);
+  const filtersTriggerRef = useRef<HTMLButtonElement>(null);
   const [readySearchParamsKey, setReadySearchParamsKey] = useState<string | null>(null);
   const [retryVersion, setRetryVersion] = useState(0);
   const requestInFlight = useRef(false);
@@ -264,17 +266,23 @@ export default function CatalogPageClient() {
     setMobileFiltersOpen(false);
   }, [searchParamsKey]);
 
-  // Блокуємо прокручування фону, поки відкритий drawer фільтрів
+  // Native modal dialog supplies focus containment and makes the background inert.
   useEffect(() => {
-    if (!mobileFiltersOpen) return;
-
+    const dialog = filtersDialogRef.current;
+    if (!mobileFiltersOpen || !dialog || state.kind !== 'ready') return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
+    dialog.showModal();
+    dialog.querySelector<HTMLButtonElement>('button')?.focus();
+    const desktop = window.matchMedia('(min-width: 769px)');
+    const closeOnDesktop = () => { if (desktop.matches) setMobileFiltersOpen(false); };
+    desktop.addEventListener('change', closeOnDesktop);
     return () => {
+      desktop.removeEventListener('change', closeOnDesktop);
+      dialog.close();
       document.body.style.overflow = previousOverflow;
     };
-  }, [mobileFiltersOpen]);
+  }, [mobileFiltersOpen, state.kind]);
 
   useEffect(() => {
     // Do not request (or canonicalize) the empty prerender query before the
@@ -511,7 +519,7 @@ export default function CatalogPageClient() {
 
   if (state.kind === 'categories-error' || state.kind === 'products-error' || (state.kind === 'loading' && state.failure)) {
     return (
-      <div className={styles.page}>
+      <main className={styles.page}>
         <header className={styles.pageHeader}>
           <div className={styles.pageHeaderInner}>
             <nav className={styles.breadcrumb} aria-label={t('content.breadcrumbs')}>
@@ -549,13 +557,13 @@ export default function CatalogPageClient() {
             />
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (state.kind === 'loading') {
     return (
-      <div className={styles.page}>
+      <main className={styles.page}>
         <header className={styles.pageHeader}>
           <div className={styles.pageHeaderInner}>
             <nav className={styles.breadcrumb} aria-label={t('content.breadcrumbs')}>
@@ -592,13 +600,13 @@ export default function CatalogPageClient() {
             />
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (state.kind === 'invalid-category') {
     return (
-      <div className={styles.page}>
+      <main className={styles.page}>
         <header className={styles.pageHeader}>
           <div className={styles.pageHeaderInner}>
             <nav className={styles.breadcrumb} aria-label={t('content.breadcrumbs')}>
@@ -637,7 +645,7 @@ export default function CatalogPageClient() {
             />
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -646,7 +654,7 @@ export default function CatalogPageClient() {
   const safePage = state.safePage;
 
   return (
-    <div className={styles.page}>
+    <main className={styles.page}>
       <header className={styles.pageHeader}>
         <div className={styles.pageHeaderInner}>
           <nav className={styles.breadcrumb} aria-label={t('content.breadcrumbs')}>
@@ -693,6 +701,7 @@ export default function CatalogPageClient() {
             <div className={styles.toolbarLeft}>
               <button
                 type="button"
+                ref={filtersTriggerRef}
                 className={styles.filterToggle}
                 onClick={() => setMobileFiltersOpen(true)}
                 aria-haspopup="dialog"
@@ -798,21 +807,36 @@ export default function CatalogPageClient() {
         </div>
       </div>
 
-      <div
-        className={`${styles.drawerOverlay} ${
-          mobileFiltersOpen ? styles.drawerOverlayOpen : ''
-        }`}
-        onClick={() => setMobileFiltersOpen(false)}
-        aria-hidden="true"
-      />
-
-      <aside
+      <dialog
+        ref={filtersDialogRef}
         id="catalog-filters-drawer"
-        className={`${styles.drawer} ${mobileFiltersOpen ? styles.drawerOpen : ''}`}
-        role="dialog"
+        className={styles.drawer}
         aria-modal="true"
         aria-label={t('shop.catalogFilters')}
-        aria-hidden={!mobileFiltersOpen}
+        onKeyDown={(event) => {
+          if (event.key !== 'Tab') return;
+          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+            'a[href], button, input:not([type="hidden"]), select, textarea, [tabindex]',
+          )).filter(node => node.tabIndex >= 0 && !node.matches(':disabled') && node.getClientRects().length > 0);
+          const first = controls[0], last = controls.at(-1);
+          // Native modal focus can reach browser chrome at a boundary. Cycle
+          // explicitly so keyboard navigation remains inside the active filters.
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault(); last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault(); first?.focus();
+          }
+        }}
+        onCancel={(event) => { event.preventDefault(); setMobileFiltersOpen(false); }}
+        onClose={() => {
+          setMobileFiltersOpen(false);
+          if (window.matchMedia('(max-width: 768px)').matches) filtersTriggerRef.current?.focus();
+        }}
+        onClick={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          if (event.target === event.currentTarget && (event.clientX < rect.left || event.clientX > rect.right ||
+              event.clientY < rect.top || event.clientY > rect.bottom)) setMobileFiltersOpen(false);
+        }}
       >
         <div className={styles.drawerHeader}>
           <span className={styles.drawerTitle}>{t('shop.filters')}</span>
@@ -837,7 +861,7 @@ export default function CatalogPageClient() {
           currentMinPrice={currentMinPrice}
           currentMaxPrice={currentMaxPrice}
         />
-      </aside>
-    </div>
+      </dialog>
+    </main>
   );
 }

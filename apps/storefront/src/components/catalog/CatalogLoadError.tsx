@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import ApiAssistance from './ApiAssistance';
 import { useId } from 'react';
 import { useI18n } from '../../i18n/client';
 import type { TranslationKey } from '../../i18n/translate';
@@ -88,6 +89,7 @@ export default function CatalogLoadError({ kind, retrying, onRetry }: Props) {
             </svg>
             {t(retrying ? 'catalog.failure.retrying' : 'catalog.failure.retry')}
           </button>
+          <ApiAssistance />
           <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
             {t(retrying ? 'catalog.failure.status.retrying' : 'catalog.failure.status.unavailable')}
           </p>

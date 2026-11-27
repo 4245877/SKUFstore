@@ -25,6 +25,7 @@ import {
   updateCartItemQuantity,
 } from "../../../lib/demo-store";
 
+import ApiAssistance from '../../../components/catalog/ApiAssistance';
 import { useCartQuote } from "../../../lib/use-cart-quote";
 import { IconCart } from "../../../components/icons";
 import styles from "./CartPage.module.css";
@@ -48,6 +49,7 @@ type CartItemRowProps = {
 type OrderSummaryProps = {
   quote: OrderQuote | null;
   message: string | null;
+  error?: string;
   retry: () => void;
   items: CartItem[];
   subtotal: number;
@@ -254,7 +256,7 @@ function CartItemRow({ item, onQtyChange, onRemove }: CartItemRowProps) {
 }
 
 function OrderSummary({
-  quote, message, retry,
+  quote, message, retry, error,
   items,
   subtotal,
   currency,
@@ -331,7 +333,7 @@ function OrderSummary({
           </div>
 
           {message ? <p role="status">{message}</p> : null}
-          {!quote ? <button type="button" onClick={retry}>{t('shop.checkAgain')}</button> : null}
+          {error ? <ApiAssistance context="quote" onRetry={retry} /> : null}
           <Link href={checkoutHref} className={styles.checkoutBtn} aria-disabled={!quote}
             onClick={(event) => { if (!quote) event.preventDefault(); }}>
             {checkoutLabel}
@@ -510,7 +512,7 @@ export default function CartPage() {
   const isEmpty = isReady && items.length === 0;
 
   return (
-    <div className={styles.cartPage}>
+    <main className={styles.cartPage}>
       <nav
         className={styles.breadcrumb}
         aria-label={PAGE_COPY(t).breadcrumb.ariaLabel}
@@ -665,6 +667,7 @@ export default function CartPage() {
             <OrderSummary
               quote={quote}
               message={pricing.message}
+              error={pricing.error}
               retry={pricing.refresh}
               items={items}
               subtotal={subtotal}
@@ -675,6 +678,6 @@ export default function CartPage() {
           ) : null}
         </div>
       )}
-    </div>
+    </main>
   );
 }
