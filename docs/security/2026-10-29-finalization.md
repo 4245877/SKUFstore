@@ -1,3 +1,6 @@
+> Historical candidate report as of 29 October 2026. Publication/CI state below
+> describes that date. See the [current Pages workflow](../../README.md).
+
 # Storefront security candidate — 29.10.2026
 
 Changes from the previous local stage are retained: read-only email, safer OAuth linking messages, no automatic POST retries, persistent idempotency key without order PII, per-tab expiring order/draft data and legacy localStorage cleanup.
