@@ -1,9 +1,9 @@
 # SKUFstore
 
-Публичная витрина SKUFnya: Next.js 15.5.28, React 19, TypeScript.
+Публичная витрина SKUFnya: Next.js 15.5.29, React 19, TypeScript.
 Production — статический экспорт GitHub Pages, API — отдельный
 `4245877/SKUFnya` по `https://api.skufnya.com`.
-Актуальность описания: 04.11.2026; серверный checkout —
+Описание актуально на 27.11.2026. Серверный checkout —
 `/home/hpelitdesk/apps/SKUFstore`.
 
 ## Архитектура и структура
@@ -17,7 +17,7 @@ Production — статический экспорт GitHub Pages, API — от�
 | `apps/storefront/src/lib` | API, согласованный snapshot сборки, SEO/Merchant, хранение выбора/черновика и серверные котировки |
 | `apps/storefront/test` | Постоянные unit-, export- и browser-регрессии, синтетические fixtures |
 | `apps/storefront/scripts` | Finalize export, XML validator, catalog/Merchant freshness и отчёты |
-| `.github/workflows/deploy-storefront.yml` | Только ручная сборка и публикация Pages из main |
+| `.github/workflows/deploy-storefront.yml` | Публикация Pages при push в `main` и по ручному запуску из `main` |
 | `docs` | Действующие пояснения, тестирование и датированная история |
 
 При сборке bulk export, контрольные листинги и цвета проверяются на
@@ -80,16 +80,16 @@ DEPLOY_TARGET=pages NEXT_PUBLIC_API_URL=https://api.skufnya.com pnpm build
 его. Для тестовой сборки используйте [docs/TESTING.md](docs/TESTING.md).
 `pnpm start` относится к server-режиму и не обслуживает статический Pages export.
 
-Workflow запускается только `workflow_dispatch` на main, без push-trigger и
-cron. Он собирает живой каталог, проверяет export/SEO/XML, публикует Pages,
-затем проверяет catalog/Merchant freshness. Он не запускает все unit/browser
-тесты: их выполняют отдельно до публикации. Обновление товара/перевода в
-админке само не публикует Pages; статические карточки требуют новой ручной
-сборки. Сначала разворачивается согласованный API, затем витрина.
+Workflow запускается при push в `main` или вручную через Actions →
+Deploy Storefront to GitHub Pages → Run workflow → `main`. Перед публикацией
+проверяются зависимости, lint, TypeScript, unit-тесты, полный экспорт живого
+каталога, SEO, Merchant XML и изображения. После публикации сайт и Merchant-фид
+сверяются с текущими данными API. Для обновления
+статических страниц после изменений только в админке используйте ручной запуск.
 
-Публикация и переключение production требуют отдельного разрешения.
-Откат Pages — к известному совместимому артефакту/коммиту с повторной проверкой
-экспорта и API; нельзя вслепую возвращать security-исправления и прежние secrets.
+При выпуске согласованного изменения API сначала разворачивается API, затем
+витрина. Для отката Pages используйте revert изменений в `main` и повторную
+проверку экспорта и совместимости API с действующими исправлениями безопасности.
 
 Серверный backend и backup: [SKUFnya/RUNBOOK](../SKUFnya/ops/RUNBOOK.md).
 Главная точка входа: [docs/README.md](docs/README.md).

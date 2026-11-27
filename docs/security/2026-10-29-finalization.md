@@ -1,5 +1,5 @@
 > Historical candidate report as of 29 October 2026. Publication/CI state below
-> describes that date. Current setup and manual Pages workflow: [README](../../README.md).
+> describes that date. See the [current Pages workflow](../../README.md).
 
 # Storefront security candidate — 29.10.2026
 

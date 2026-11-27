@@ -10,10 +10,9 @@ pnpm lint
 ```
 
 `pnpm test` выполняет все `apps/storefront/test/*.test.ts` встроенным Node
-runner с `--experimental-strip-types`. Это 17 постоянных файлов: cart/checkout,
-цены, локализация/представление, статусы, цвета, SEO/sitemap, Merchant,
-snapshot/freshness, доступность каталога и security client. Они не требуют
-production credentials. Node 20 не поддерживает нужный режим этих тестов.
+runner с `--experimental-strip-types`. Тесты покрывают cart/checkout, цены,
+локализацию, варианты, SEO/sitemap, Merchant, snapshot/freshness, доступность
+каталога и безопасность клиента и зависимостей. Для их запуска нужен Node 22.
 
 ## Сборка и export guards
 
@@ -68,7 +67,6 @@ Fixtures с внутренними manufacturing-полями нужны для 
 из публичных HTML/RSC/JS и не являются утечкой настоящих данных.
 
 `catalog-freshness.mjs` и `merchant-freshness.mjs` выполняют read-only сверку
-живого API с опубликованным сайтом. Это отдельные сетевые проверки, а не
-подтверждение успешного offline-теста. Deployment workflow запускает export
-guards и freshness; unit/typecheck/lint и все browser scripts отдельно не
-выполняет. Автоматический CI/publish этой ревизией не включается.
+живого API с опубликованным сайтом. Workflow публикации запускает аудит
+зависимостей, lint, TypeScript, unit-тесты и export guards до деплоя,
+затем проверяет freshness. Browser scripts запускаются отдельно.

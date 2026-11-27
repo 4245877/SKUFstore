@@ -1,6 +1,8 @@
 name: Deploy Storefront to GitHub Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -14,7 +16,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Only an explicit dispatch on main may build and publish Pages.
+    # New runs supersede older builds. Deployments have a separate lock.
     concurrency:
       group: "pages-build-${{ github.ref }}"
       cancel-in-progress: true
@@ -46,6 +48,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check dependencies and storefront before publishing
+        run: |
+          pnpm audit --audit-level moderate
+          pnpm lint
+          pnpm typecheck
+          pnpm test
 
       # Two cheap requests so a failed build can be told apart at a glance:
       # API down/slow, versus the build itself. Anything heavier here eats the
