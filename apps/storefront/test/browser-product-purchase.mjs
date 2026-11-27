@@ -134,8 +134,10 @@ try {
   await page.goto(`${base}${locale === 'en' ? '' : '/en'}/product/${multiple.slug}/`); await page.waitForLoadState('networkidle');
   assert.equal(await page.locator('[class*="variantsSection"]').first().getByRole('button').nth(1).getAttribute('aria-pressed'), 'true');
   await go(multiple);
-  await page.goto(base + prefix + '/catalog/'); await page.goBack(); await page.waitForLoadState('networkidle');
-  assert.equal(await variantButtons.nth(1).getAttribute('aria-pressed'), 'true');
+  await page.goto(base + prefix + '/catalog/');
+  await page.goBack();
+  // History navigation can finish before React restores the saved selection.
+  await variantButtons.nth(1).and(page.locator('[aria-pressed="true"]')).waitFor({ timeout: 10000 });
   await page.getByRole('button', { name: t('shop.addToCart'), exact: true }).click();
   const cart = await page.evaluate(() => JSON.parse(localStorage.getItem('skufnya:cart')));
   const line = cart.find(item => item.variantId === variant.id && item.colorSlug === color.slug);
